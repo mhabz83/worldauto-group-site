@@ -1,0 +1,118 @@
+/* ============================================================================
+   WAG GROUP — UNIFIED BRAND TOKENS
+   Single source of truth shared by the WorldAuto Group site and the Madar site.
+   Decisions locked 2026-07-07:
+     - Dual accent: blue = structure/links, orange = energy/emphasis
+     - Sans-led: Suisse Intl everywhere (no serif)
+     - Synced by hand between the two projects (copy this file into each app)
+   Reconciles WorldAuto (#02040a navy, blue #0b6fd8) with Madar
+   (#060a3d navy, orange #ff6340, Suisse) into one system.
+   ============================================================================ */
+
+/* ---- Fonts (files live beside this in ./fonts) --------------------------- */
+@font-face {
+  font-family: "Suisse Intl";
+  src: url("/fonts/SuisseIntl-Regular.woff2") format("woff2"),
+       url("/fonts/SuisseIntl-Regular.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Suisse Intl";
+  src: url("/fonts/SuisseIntl-Light.woff2") format("woff2"),
+       url("/fonts/SuisseIntl-Light.woff") format("woff");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* ---- Foundation: one navy scale (between WAG near-black and Madar navy) - */
+  --wag-navy-900: #02040f; /* deepest — page base on WorldAuto */
+  --wag-navy-800: #04061a;
+  --wag-navy-700: #060a3d; /* Madar's signature navy — hero/elevated surfaces */
+  --wag-navy-600: #0a1030;
+  --wag-navy-500: #172e64; /* Madar mid-blue */
+  --wag-ink:      #07090e; /* near-black text for light surfaces */
+  --wag-paper:    #ffffff;
+  --wag-mist:     #e1e1ed; /* light gray surface */
+
+  /* ---- Dual accent (the unified signature) -------------------------------- */
+  --wag-blue:        #0b6fd8; /* STRUCTURE / links / primary actions */
+  --wag-blue-hover:  #2e8fef;
+  --wag-blue-light:  #89aeff;
+  --wag-orange:      #ff6340; /* ENERGY / emphasis / highlights */
+  --wag-orange-deep: #fb441a;
+
+  /* ---- Semantic layer — remaps per theme (default = dark) ------------------ */
+  --bg-base:    var(--wag-navy-900);
+  --bg-panel:   var(--wag-navy-800);
+  --bg-raised:  var(--wag-navy-700);
+
+  --text-hi:    #ffffff;
+  --text-mid:   rgba(255, 255, 255, 0.82);
+  --text-low:   rgba(255, 255, 255, 0.56);
+  --text-faint: rgba(255, 255, 255, 0.5); /* AA floor at micro sizes */
+
+  --accent:          var(--wag-blue);       /* structure */
+  --accent-hover:    var(--wag-blue-hover);
+  --accent-glow:     rgba(11, 111, 216, 0.32);
+  --accent-glow-soft:rgba(11, 111, 216, 0.14);
+
+  --highlight:       var(--wag-orange);     /* energy */
+  --highlight-hover: var(--wag-orange-deep);
+  --highlight-glow:  rgba(255, 99, 64, 0.30);
+
+  --hairline:        rgba(255, 255, 255, 0.09);
+  --hairline-strong: rgba(255, 255, 255, 0.18);
+
+  /* ---- Type — sans-led ---------------------------------------------------- */
+  --font-sans: "Suisse Intl", ui-sans-serif, system-ui, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, monospace;
+  /* fluid display scale */
+  --fs-display: clamp(3rem, 8vw, 8.5rem);
+  --fs-h1:      clamp(2.25rem, 5vw, 4.5rem);
+  --fs-h2:      clamp(1.75rem, 3.4vw, 3rem);
+  --fs-h3:      clamp(1.25rem, 2vw, 1.75rem);
+  --fs-body:    clamp(1rem, 1.1vw, 1.125rem);
+  --fs-kicker:  0.75rem; /* mono labels / eyebrows */
+  --tracking-kicker: 0.18em;
+
+  /* ---- Space, radius, motion ---------------------------------------------- */
+  --gutter: clamp(1.25rem, 4vw, 4rem);
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-pill: 999px;
+
+  --ease-reveal: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast:   200ms;
+  --dur-med:    450ms;
+  --dur-reveal: 800ms;
+}
+
+/* ---- Light theme (Madar uses light sections; WorldAuto can too) ---------- */
+.ui-light {
+  --bg-base:   var(--wag-paper);
+  --bg-panel:  var(--wag-mist);
+  --bg-raised: #ffffff;
+  --text-hi:   var(--wag-ink);
+  --text-mid:  rgba(7, 9, 14, 0.78);
+  --text-low:  rgba(7, 9, 14, 0.56);
+  --text-faint:rgba(7, 9, 14, 0.5);
+  --hairline:        rgba(7, 9, 14, 0.10);
+  --hairline-strong: rgba(7, 9, 14, 0.20);
+}
+
+/* Explicit dark (for sections that override a light parent) */
+.ui-dark {
+  --bg-base:   var(--wag-navy-900);
+  --bg-panel:  var(--wag-navy-800);
+  --bg-raised: var(--wag-navy-700);
+  --text-hi:   #ffffff;
+  --text-mid:  rgba(255, 255, 255, 0.82);
+  --text-low:  rgba(255, 255, 255, 0.56);
+  --text-faint:rgba(255, 255, 255, 0.5);
+  --hairline:        rgba(255, 255, 255, 0.09);
+  --hairline-strong: rgba(255, 255, 255, 0.18);
+}

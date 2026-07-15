@@ -1,0 +1,342 @@
+@import "tailwindcss";
+@import "./tokens.css";
+
+/* ------------------------------------------------------------------ */
+/*  MADAR — sits on the shared WAG brand tokens (app/tokens.css).      */
+/*  tokens.css owns colour, dual accent, Suisse, spacing, motion.      */
+/*  Below: only Madar/WAG-specific extras the components still use.    */
+/* ------------------------------------------------------------------ */
+
+:root {
+  /* scrims (follow the text column; never letterbox) */
+  --scrim-hero: linear-gradient(97deg, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0.16) 62%);
+  --scrim-plate: linear-gradient(97deg, rgba(0, 0, 0, 0.66), rgba(0, 0, 0, 0.18) 58%);
+  --scrim-foot: linear-gradient(to top, rgba(2, 4, 15, 0.92), rgba(2, 4, 15, 0) 42%);
+
+  /* glow companions for the dual accent */
+  --accent-glow: rgba(11, 111, 216, 0.32);
+  --accent-glow-soft: rgba(11, 111, 216, 0.14);
+
+  --radius-card: 4px;
+  --stagger: 80ms;
+
+  /* rhythm */
+  --space-section: clamp(6rem, 14vh, 11rem);
+  --space-section-tight: clamp(4rem, 9vh, 7rem);
+  --measure-body: 68ch;
+
+  /* type scale (sans-led; kept for component compatibility) */
+  --type-editorial: clamp(2.75rem, 7.4vw, 7rem);
+  --type-editorial-sub: clamp(2.25rem, 5vw, 4.5rem);
+  --type-heading: clamp(1.75rem, 3vw, 3rem);
+  --type-body: clamp(1rem, 1.1vw, 1.125rem);
+  --type-kicker: 0.6875rem;
+  --type-mono: 0.65625rem;
+
+  --track-kicker: 0.3em;
+  --track-heading: 0.03em;
+  --track-mono: 0.14em;
+}
+
+@theme inline {
+  --color-base: var(--bg-base);
+  --color-panel: var(--bg-panel);
+  --color-raised: var(--bg-raised);
+  --color-hi: var(--text-hi);
+  --color-mid: var(--text-mid);
+  --color-low: var(--text-low);
+  --color-faint: var(--text-faint);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-highlight: var(--highlight);
+  --color-highlight-hover: var(--highlight-hover);
+  --color-hairline: var(--hairline);
+  --color-hairline-strong: var(--hairline-strong);
+
+  /* sans-led: every family utility resolves to Suisse */
+  --font-serif: var(--font-sans);
+  --font-grotesk: var(--font-sans);
+  --font-sans-util: var(--font-sans);
+  --font-mono: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, monospace;
+
+  --radius-card: 4px;
+
+  --ease-reveal: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ------------------------------------------------------------------ */
+/*  base                                                               */
+/* ------------------------------------------------------------------ */
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  background: var(--bg-base);
+  color: var(--text-mid);
+  font-family: var(--font-sans);
+  font-size: var(--type-body);
+  line-height: 1.7;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--text-hi);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-hover);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ------------------------------------------------------------------ */
+/*  type voices                                                        */
+/* ------------------------------------------------------------------ */
+
+.type-editorial {
+  font-family: var(--font-serif);
+  font-size: var(--type-editorial);
+  font-weight: 380;
+  line-height: 1.02;
+  letter-spacing: -0.015em;
+  color: var(--text-hi);
+  font-variation-settings: "opsz" 144;
+}
+
+.type-editorial-sub {
+  font-family: var(--font-serif);
+  font-size: var(--type-editorial-sub);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  color: var(--text-hi);
+  font-variation-settings: "opsz" 100;
+}
+
+.type-heading {
+  font-family: var(--font-grotesk);
+  font-size: var(--type-heading);
+  font-weight: 500;
+  line-height: 1.12;
+  letter-spacing: var(--track-heading);
+  text-transform: uppercase;
+  color: var(--text-hi);
+}
+
+.type-kicker {
+  font-family: var(--font-grotesk);
+  font-size: var(--type-kicker);
+  font-weight: 600;
+  letter-spacing: var(--track-kicker);
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+
+.type-mono {
+  font-family: var(--font-mono);
+  font-size: var(--type-mono);
+  font-weight: 400;
+  letter-spacing: var(--track-mono);
+  text-transform: uppercase;
+  line-height: 1.6;
+  font-variant-numeric: tabular-nums;
+}
+
+.type-body {
+  max-inline-size: var(--measure-body);
+}
+
+.serif-italic {
+  font-family: var(--font-sans);
+  font-style: italic;
+}
+
+/* ------------------------------------------------------------------ */
+/*  effects                                                            */
+/* ------------------------------------------------------------------ */
+
+/* film grain — heroes only, 2-3% */
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 240px 240px;
+  z-index: 3;
+}
+
+/* cold glow — the only place the accent physically glows */
+.glow-accent {
+  box-shadow:
+    0 0 0 1px var(--accent-glow-soft),
+    0 0 24px var(--accent-glow),
+    0 0 80px var(--accent-glow-soft);
+}
+
+/* underline sweep for inline links */
+.link-sweep {
+  position: relative;
+  text-decoration: none;
+}
+.link-sweep::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: -2px;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: 100% 50%;
+  transition: transform var(--dur-med) var(--ease-reveal);
+}
+.link-sweep:hover::after,
+.link-sweep:focus-visible::after {
+  transform: scaleX(1);
+  transform-origin: 0% 50%;
+}
+
+/* chip idle drift */
+@keyframes chip-drift {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+.chip-drift {
+  animation: chip-drift 6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .chip-drift {
+    animation: none;
+  }
+}
+
+/* headline clip-path line wipe */
+@keyframes line-wipe {
+  from {
+    clip-path: inset(0 0 100% 0);
+    transform: translateY(14px);
+  }
+  to {
+    clip-path: inset(-0.25em 0 -0.25em 0);
+    transform: translateY(0);
+  }
+}
+.line-wipe {
+  clip-path: inset(-0.25em 0 -0.25em 0);
+}
+.line-wipe[data-animate="true"] {
+  animation: line-wipe var(--dur-reveal) var(--ease-reveal) both;
+  animation-delay: var(--line-delay, 0ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .line-wipe[data-animate="true"] {
+    animation: none;
+  }
+}
+
+/* ambient nebula field (Metalab register): two soft radial washes, slow drift */
+@keyframes nebula-a {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(4%, -3%) scale(1.08); }
+}
+@keyframes nebula-b {
+  0%, 100% { transform: translate(0, 0) scale(1.05); }
+  50% { transform: translate(-5%, 4%) scale(1); }
+}
+.nebula-a,
+.nebula-b {
+  position: absolute;
+  inset: -20%;
+  pointer-events: none;
+}
+.nebula-a {
+  background: radial-gradient(38% 42% at 24% 38%, rgba(11, 111, 216, 0.13), transparent 70%);
+  animation: nebula-a 26s ease-in-out infinite;
+}
+.nebula-b {
+  background: radial-gradient(44% 40% at 76% 68%, rgba(46, 143, 239, 0.07), transparent 70%);
+  animation: nebula-b 32s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nebula-a,
+  .nebula-b {
+    animation: none;
+  }
+}
+
+/* hero entrance: transform-only rise so text paints immediately (LCP-safe) */
+@keyframes hero-rise {
+  from { transform: translateY(16px); }
+  to { transform: translateY(0); }
+}
+.hero-rise {
+  animation: hero-rise var(--dur-reveal) var(--ease-reveal) both;
+  animation-delay: var(--rise-delay, 0ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-rise {
+    animation: none;
+  }
+}
+
+/* slow hero drift (background plate) */
+@keyframes hero-drift {
+  from { transform: scale(1.04) translateY(0); }
+  to { transform: scale(1.09) translateY(-1.2%); }
+}
+.hero-drift {
+  animation: hero-drift 36s linear infinite alternate;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-drift {
+    animation: none;
+    transform: scale(1.04);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  GSAP scroll-reveal — pre-hydration hidden state (no flash).        */
+/*  Gated on html.gsap so no-JS visitors always see content, and       */
+/*  reduced-motion visitors get it immediately.                        */
+/* ------------------------------------------------------------------ */
+html.gsap [data-reveal] {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  html.gsap [data-reveal] {
+    opacity: 1;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Header fade — keeps content legible as it scrolls under the fixed  */
+/*  nav. A soft dark gradient sits behind the header, taller than the  */
+/*  bar itself, fading to transparent so it never reads as a solid bar.*/
+/* ------------------------------------------------------------------ */
+.header-fade::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 160%;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(2, 4, 15, 0.92) 0%,
+    rgba(2, 4, 15, 0.72) 45%,
+    rgba(2, 4, 15, 0) 100%
+  );
+}

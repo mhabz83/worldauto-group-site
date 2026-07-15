@@ -1,0 +1,222 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import * as THREE from "three";
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
+import { Line2 } from "three/examples/jsm/lines/Line2.js";
+import { LineGeometry } from "three/examples/jsm/lines/LineGeometry.js";
+import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
+
+/* Madar-style hero: a road of glowing light-trails. Every trail is a parallel
+   lane offset from ONE road centerline, so they run together and converge to a
+   vanishing point in perspective — a highway seen head-on, not tangled string.
+   Fat lines + heavy bloom + a travelling brightness pulse (traffic) + a gentle
+   scroll-driven camera. */
+
+const COLORS = {
+  blue: new THREE.Color("#2e8fef"),
+  cyan: new THREE.Color("#3c96ff"),
+  orange: new THREE.Color("#ff6340"),
+  red: new THREE.Color("#ff3b2f"),
+  gold: new THREE.Color("#ffcf47"),
+};
+
+const LANES = 15;
+const PPT = 88; // points per lane
+const GROUND = -1.6;
+
+// stable per-load
+let seed = 20260714;
+const rand = () => {
+  seed = (seed * 16807) % 2147483647;
+  return (seed - 1) / 2147483646;
+};
+
+export function NeonJourney() {
+  const mountRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const mount = mountRef.current;
+    if (!mount) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let W = window.innerWidth;
+    let H = window.innerHeight;
+
+    const scene = new THREE.Scene();
+    // Madar blue: brighter blue "sky" up top fading to dark navy road below
+    const bgCv = document.createElement("canvas");
+    bgCv.width = 4;
+    bgCv.height = 512;
+    const bgCtx = bgCv.getContext("2d");
+    if (bgCtx) {
+      const g = bgCtx.createLinearGradient(0, 0, 0, 512);
+      g.addColorStop(0.0, "#173a72");
+      g.addColorStop(0.38, "#0e2650");
+      g.addColorStop(0.66, "#081930");
+      g.addColorStop(1.0, "#040d24");
+      bgCtx.fillStyle = g;
+      bgCtx.fillRect(0, 0, 4, 512);
+    }
+    const bgTex = new THREE.CanvasTexture(bgCv);
+    bgTex.colorSpace = THREE.SRGBColorSpace;
+    scene.background = bgTex;
+    scene.fog = new THREE.Fog(0x0b1e46, 34, 100);
+
+    const camera = new THREE.PerspectiveCamera(48, W / H, 0.1, 260);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(W, H);
+    mount.appendChild(renderer.domElement);
+
+    const composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene, camera));
+    const bloom = new UnrealBloomPass(new THREE.Vector2(W, H), 1.1, 0.8, 0.0);
+    composer.addPass(bloom);
+
+    const mat = new LineMaterial({
+      vertexColors: true,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      worldUnits: true,
+      linewidth: 0.11,
+    });
+    mat.resolution.set(W, H);
+
+    // ONE road centerline, t: 0 (near camera) -> 1 (far horizon)
+    const center = (t: number, out: THREE.Vector3) => {
+      const z = 16 - t * 92; // recede
+      const x = 2 + Math.pow(t, 1.7) * 15; // gentle bend to the right (Madar-like)
+      const y = GROUND + t * 0.6; // slight rise to the horizon
+      return out.set(x, y, z);
+    };
+    const cA = new THREE.Vector3();
+    const cB = new THREE.Vector3();
+    const tangent = (t: number, out: THREE.Vector3) => {
+      center(Math.max(0, t - 0.008), cA);
+      center(Math.min(1, t + 0.008), cB);
+      return out.copy(cB).sub(cA).normalize();
+    };
+
+    type Lane = { geo: LineGeometry; base: THREE.Color; colBuf: Float32Array; phase: number; speed: number };
+    const lanes: Lane[] = [];
+
+    const c = new THREE.Vector3();
+    const tg = new THREE.Vector3();
+    const perp = new THREE.Vector3();
+
+    for (let k = 0; k < LANES; k++) {
+      const off = (k - (LANES - 1) / 2) * 1.55; // lateral lane offset (parallel rails)
+      const posBuf = new Float32Array(PPT * 3);
+      for (let j = 0; j < PPT; j++) {
+        const t = j / (PPT - 1);
+        center(t, c);
+        tangent(t, tg);
+        perp.set(tg.z, 0, -tg.x).normalize(); // across-road, on the ground
+        posBuf[j * 3] = c.x + perp.x * off;
+        posBuf[j * 3 + 1] = c.y + perp.y * off;
+        posBuf[j * 3 + 2] = c.z + perp.z * off;
+      }
+      const geo = new LineGeometry();
+      geo.setPositions(posBuf);
+
+      // colour by lane: Madar mix — mostly blue + cyan rails, orange / red streaks, a little gold
+      const r = rand();
+      const base =
+        r < 0.55
+          ? COLORS.blue
+          : r < 0.68
+            ? COLORS.cyan
+            : r < 0.85
+              ? COLORS.orange
+              : r < 0.97
+                ? COLORS.red
+                : COLORS.gold;
+      const colBuf = new Float32Array(PPT * 3);
+      geo.setColors(colBuf);
+
+      scene.add(new Line2(geo, mat));
+      lanes.push({ geo, base, colBuf, phase: rand() * Math.PI * 2, speed: 0.6 + rand() * 0.7 });
+    }
+
+    let progress = reduce ? 0.05 : 0;
+    const onScroll = () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      progress = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+    };
+
+    const tmp = new THREE.Color();
+    const paint = (time: number) => {
+      for (const ln of lanes) {
+        const cb = ln.colBuf;
+        for (let j = 0; j < PPT; j++) {
+          const s = j / (PPT - 1);
+          const fadeIn = Math.min(1, s * 6); // ease near tip in
+          const fadeFar = 1 - THREE.MathUtils.smoothstep(s, 0.45, 1.0) * 0.9; // dim into distance
+          const taper = fadeIn * (0.28 + 0.72 * fadeFar);
+          const pulse = 0.5 + 0.5 * Math.sin(time * ln.speed * 1.5 - s * 9 + ln.phase); // traffic flow
+          const b = taper * pulse * 1.4;
+          tmp.copy(ln.base).multiplyScalar(b);
+          cb[j * 3] = tmp.r;
+          cb[j * 3 + 1] = tmp.g;
+          cb[j * 3 + 2] = tmp.b;
+        }
+        ln.geo.setColors(cb);
+      }
+    };
+
+    const positionCamera = (p: number) => {
+      // look down the road toward the right-side vanishing point; left stays clear for the headline
+      const camX = -5 + THREE.MathUtils.smoothstep(p, 0, 1) * 5;
+      const camY = GROUND + 4.4 - THREE.MathUtils.smoothstep(p, 0.4, 1) * 2.2;
+      const camZ = 18 - p * 9;
+      camera.position.set(camX, camY, camZ);
+      camera.lookAt(9, GROUND + 1.6, -34);
+    };
+
+    const onResize = () => {
+      W = window.innerWidth;
+      H = window.innerHeight;
+      camera.aspect = W / H;
+      camera.updateProjectionMatrix();
+      renderer.setSize(W, H);
+      composer.setSize(W, H);
+      mat.resolution.set(W, H);
+    };
+
+    let raf = 0;
+    const frame = () => {
+      paint(performance.now() * 0.001);
+      positionCamera(reduce ? 0.05 : progress);
+      composer.render();
+      raf = requestAnimationFrame(frame);
+    };
+
+    onScroll();
+    if (reduce) {
+      paint(1.2);
+      positionCamera(0.05);
+      composer.render();
+    } else {
+      frame();
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
+      renderer.dispose();
+      composer.dispose();
+      mat.dispose();
+      lanes.forEach((l) => l.geo.dispose());
+      if (renderer.domElement.parentNode === mount) mount.removeChild(renderer.domElement);
+    };
+  }, []);
+
+  return <div ref={mountRef} className="fixed inset-0 z-0" aria-hidden />;
+}
