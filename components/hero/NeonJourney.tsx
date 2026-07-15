@@ -39,6 +39,7 @@ const WORLD_SCALE = 1 / 7.7;
 const COLORS = {
   background: 0x000835, // clear + fog + scene background
   lineBlue: 0x1367fe,
+  lineCyan: 0x42d7ff,
   lineOrange: 0xff4200,
   lineWhite: 0xffffff,
   vehicle: 0x000000,
@@ -178,6 +179,24 @@ const FASTTRACK_DESTINATION = {
   minDetailChain: 0.045,
 } as const;
 
+const AUTODATA_DESTINATION = {
+  raw: 0.3,
+  scene: 0.23,
+  depthBeyondTarget: 0.021,
+  sideOffset: 0.009,
+  structureRadius: 0.00007,
+  sensorRadius: 0.000052,
+  laneRadius: 0.000078,
+  baseRoadOpacity: 0.03,
+  mobileScale: 1.08,
+  modelWidth: 0.0215,
+  edgeThresholdDeg: 34,
+  sensorThresholdDeg: 42,
+  minStructureChain: 0.11,
+  minSensorChain: 0.04,
+  scanDepth: 0.014,
+} as const;
+
 const FAKE_FLOOR = {
   size: 0.1,
   position: new THREE.Vector3(-0.135, 0, 0.64),
@@ -204,6 +223,7 @@ const LOOK_POINTS: [number, number, number][] = [
 const ASSETS = {
   suv: "/webgl-lines/suv-licensed.glb",
   fasttrack: "/webgl-lines/fasttrack-service.glb",
+  autodata: "/webgl-lines/autodata-scanner.glb",
   lines: "/webgl-lines/scene-16.obj",
 };
 
@@ -1124,6 +1144,203 @@ export function NeonJourney() {
     );
     scene.add(fasttrackGroup);
 
+    /* ----------------------- AutoData inspection stop ------------------- */
+    const autodataGroup = new THREE.Group();
+    autodataGroup.name = "destination_autodata_inspection_lane";
+    autodataGroup.visible = false;
+
+    const autodataCamera = camCurve.getPoint(AUTODATA_DESTINATION.scene);
+    const autodataTarget = lookCurve.getPoint(AUTODATA_DESTINATION.scene);
+    const autodataForward = autodataTarget.clone().sub(autodataCamera).setY(0).normalize();
+    const autodataRight = new THREE.Vector3()
+      .crossVectors(autodataForward, new THREE.Vector3(0, 1, 0))
+      .normalize();
+    const autodataPosition = autodataTarget
+      .clone()
+      .addScaledVector(autodataForward, AUTODATA_DESTINATION.depthBeyondTarget)
+      .addScaledVector(autodataRight, AUTODATA_DESTINATION.sideOffset);
+    autodataPosition.y = 0.00012;
+    autodataGroup.position.copy(autodataPosition);
+    autodataGroup.rotation.y = Math.atan2(
+      autodataCamera.x - autodataPosition.x,
+      autodataCamera.z - autodataPosition.z,
+    );
+
+    const adPoint = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
+    const autodataApproachPaths: THREE.Vector3[][] = [-0.0072, 0.0072].map((x) => [
+      adPoint(x * 0.08, 0.00011, 0.046),
+      adPoint(x * 0.32, 0.00011, 0.032),
+      adPoint(x * 0.68, 0.00011, 0.017),
+      adPoint(x, 0.00011, 0.001),
+      adPoint(x, 0.00011, -0.015),
+    ]);
+    const autodataApproach = buildFasttrackMesh(
+      autodataApproachPaths,
+      AUTODATA_DESTINATION.laneRadius,
+      true,
+      COLORS.lineCyan,
+    );
+    if (autodataApproach) {
+      autodataApproach.mesh.name = "autodata_inspection_approach";
+      autodataGroup.add(autodataApproach.mesh);
+    }
+
+    // Three restrained translucent scan slices travel through the tunnel. The
+    // downloaded model's original opaque scan cone was intentionally removed.
+    const autodataScanPlanes: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>[] = [];
+    const autodataScanFrames: NonNullable<ReturnType<typeof buildFasttrackMesh>>[] = [];
+    for (let index = 0; index < 3; index++) {
+      const geometry = new THREE.PlaneGeometry(0.0172, 0.0076);
+      const material = new THREE.MeshBasicMaterial({
+        color: COLORS.lineCyan,
+        transparent: true,
+        opacity: 0,
+        blending: THREE.AdditiveBlending,
+        depthTest: true,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      });
+      const plane = new THREE.Mesh(geometry, material);
+      plane.name = `autodata_scan_slice_${index + 1}`;
+      plane.position.set(0, 0.0038, -0.002);
+      autodataScanPlanes.push(plane);
+      autodataGroup.add(plane);
+      disposables.push(geometry, material);
+
+      const frame = buildFasttrackMesh(
+        [[
+          adPoint(-0.00855, 0.00015, 0),
+          adPoint(-0.00855, 0.00755, 0),
+          adPoint(0.00855, 0.00755, 0),
+          adPoint(0.00855, 0.00015, 0),
+        ]],
+        AUTODATA_DESTINATION.sensorRadius,
+        true,
+        COLORS.lineCyan,
+      );
+      if (frame) {
+        frame.mesh.name = `autodata_scan_frame_${index + 1}`;
+        autodataScanFrames.push(frame);
+        autodataGroup.add(frame.mesh);
+      }
+    }
+
+    let autodataStructure: {
+      mesh: THREE.Object3D;
+      material: THREE.ShaderMaterial;
+    } | null = null;
+
+    new GLTFLoader().load(
+      ASSETS.autodata,
+      (gltf) => {
+        if (disposed) return;
+
+        gltf.scene.updateMatrixWorld(true);
+        const sourceBounds = new THREE.Box3().setFromObject(gltf.scene);
+        const sourceSize = sourceBounds.getSize(new THREE.Vector3());
+        const sourceCenter = sourceBounds.getCenter(new THREE.Vector3());
+        const assetScale = AUTODATA_DESTINATION.modelWidth / sourceSize.x;
+        const offset = new THREE.Vector3(
+          -sourceCenter.x,
+          -sourceBounds.min.y,
+          -sourceBounds.max.z,
+        );
+
+        const bodyMaterial = new THREE.MeshBasicMaterial({ color: 0x00020a });
+        const lineColor = new THREE.Color().setHex(COLORS.lineCyan, THREE.LinearSRGBColorSpace);
+        const boost = TUBES.detailBoostBlue;
+        lineColor.setRGB(
+          boost.k * lineColor.r ** boost.gamma,
+          boost.k * lineColor.g ** boost.gamma,
+          boost.k * lineColor.b ** boost.gamma,
+        );
+        const lineMaterial = new THREE.ShaderMaterial({
+          vertexShader: LINE_VERT,
+          fragmentShader: LINE_FRAG,
+          transparent: true,
+          depthTest: true,
+          depthWrite: false,
+          fog: true,
+          lights: false,
+          uniforms: THREE.UniformsUtils.merge([
+            THREE.UniformsLib.fog,
+            {
+              uColor: { value: lineColor },
+              uTime: { value: 0 },
+              uSize: { value: 1 },
+              uSpeed: { value: 0 },
+              uHideCorners: { value: false },
+              uAlpha: { value: 0 },
+            },
+          ]),
+        });
+
+        const tubeGeometries: THREE.BufferGeometry[] = [];
+        gltf.scene.traverse((object) => {
+          if (!(object as THREE.Mesh).isMesh) return;
+          const mesh = object as THREE.Mesh;
+          mesh.material = bodyMaterial;
+          const isSensor = /AD_(scanner|overhead_sensor)/i.test(mesh.name);
+          const threshold = isSensor
+            ? AUTODATA_DESTINATION.sensorThresholdDeg
+            : AUTODATA_DESTINATION.edgeThresholdDeg;
+          const minimumLength = isSensor
+            ? AUTODATA_DESTINATION.minSensorChain
+            : AUTODATA_DESTINATION.minStructureChain;
+          const worldRadius = isSensor
+            ? AUTODATA_DESTINATION.sensorRadius
+            : AUTODATA_DESTINATION.structureRadius;
+          const edges = new THREE.EdgesGeometry(mesh.geometry, threshold);
+          for (const points of chainEdgeSegments(edges)) {
+            let length = 0;
+            for (let i = 1; i < points.length; i++) {
+              length += points[i].distanceTo(points[i - 1]);
+            }
+            if (length < minimumLength) continue;
+            for (const point of points) point.applyMatrix4(mesh.matrixWorld);
+            tubeGeometries.push(new THREE.TubeGeometry(
+              new PolylineCurve(points),
+              Math.max(points.length - 1, 1),
+              worldRadius / assetScale,
+              TUBES.radialSegments,
+              false,
+            ));
+          }
+          edges.dispose();
+        });
+
+        const mergedEdges = mergeGeometries(tubeGeometries, false);
+        tubeGeometries.forEach((geometry) => geometry.dispose());
+        if (!mergedEdges) {
+          bodyMaterial.dispose();
+          lineMaterial.dispose();
+          return;
+        }
+
+        const scannerRoot = new THREE.Group();
+        scannerRoot.name = "autodata_ccby_vehicle_inspection_scanner";
+        scannerRoot.scale.setScalar(assetScale);
+        gltf.scene.position.copy(offset);
+        const lineMesh = new THREE.Mesh(mergedEdges, lineMaterial);
+        lineMesh.position.copy(offset);
+        scannerRoot.add(gltf.scene, lineMesh);
+        autodataGroup.add(scannerRoot);
+        autodataStructure = { mesh: scannerRoot, material: lineMaterial };
+
+        lineMaterials.push(lineMaterial);
+        disposables.push(bodyMaterial, lineMaterial, mergedEdges);
+        gltf.scene.traverse((object) => {
+          if ((object as THREE.Mesh).isMesh) {
+            disposables.push((object as THREE.Mesh).geometry);
+          }
+        });
+        renderStatic();
+      },
+      undefined,
+      (error) => console.error("AutoData scanner load failed", error),
+    );
+    scene.add(autodataGroup);
+
     const projectedBounds = (object: THREE.Object3D, fitCamera: THREE.Camera) => {
       const box = new THREE.Box3().setFromObject(object);
       const low = box.min;
@@ -1460,10 +1677,48 @@ export function NeonJourney() {
         fasttrackAccents.material.uniforms.uAlpha.value = fasttrackVisibility * 0.9;
         fasttrackAccents.material.uniforms.uSpeed.value = 0.32 + fasttrackVisibility * 0.25;
       }
+
+      const autodataEnter = THREE.MathUtils.smoothstep(timelineProgress, 0.245, 0.284);
+      const autodataLeave = 1 - THREE.MathUtils.smoothstep(timelineProgress, 0.326, 0.368);
+      const autodataVisibility = autodataEnter * autodataLeave;
+      const autodataArrival = autodataVisibility * autodataVisibility;
+      autodataGroup.visible = autodataVisibility > 0.002;
+      const autodataResponsiveScale = W <= SUV_FIT.mobileBreakpoint
+        ? AUTODATA_DESTINATION.mobileScale
+        : 1;
+      autodataGroup.scale.setScalar(
+        autodataResponsiveScale * THREE.MathUtils.lerp(0.97, 1, autodataVisibility),
+      );
+      autodataGroup.position.y = autodataPosition.y - (1 - autodataVisibility) * 0.0004;
+      if (autodataStructure) {
+        autodataStructure.material.uniforms.uAlpha.value = autodataVisibility * 0.94;
+      }
+      if (autodataApproach) {
+        autodataApproach.material.uniforms.uAlpha.value = autodataVisibility * 0.86;
+        autodataApproach.material.uniforms.uSpeed.value = 0.34 + autodataVisibility * 0.28;
+      }
+      autodataScanPlanes.forEach((plane, index) => {
+        const phase = (t * 0.055 + index / autodataScanPlanes.length) % 1;
+        plane.position.z = -0.001 - phase * AUTODATA_DESTINATION.scanDepth;
+        plane.material.opacity = autodataVisibility
+          * (0.04 + Math.sin(phase * Math.PI) * 0.12);
+        const frame = autodataScanFrames[index];
+        if (frame) {
+          frame.mesh.position.z = plane.position.z;
+          frame.material.uniforms.uAlpha.value = autodataVisibility
+            * (0.28 + Math.sin(phase * Math.PI) * 0.58);
+          frame.material.uniforms.uSpeed.value = 0.24;
+        }
+      });
+
+      const activeDestinationArrival = Math.max(fasttrackArrival, autodataArrival);
+      const activeRoadOpacity = fasttrackArrival >= autodataArrival
+        ? FASTTRACK_DESTINATION.baseRoadOpacity
+        : AUTODATA_DESTINATION.baseRoadOpacity;
       const baseRoadAlpha = THREE.MathUtils.lerp(
         1,
-        FASTTRACK_DESTINATION.baseRoadOpacity,
-        fasttrackArrival,
+        activeRoadOpacity,
+        activeDestinationArrival,
       );
       for (const material of roadMaterials) {
         material.uniforms.uAlpha.value = baseRoadAlpha;
