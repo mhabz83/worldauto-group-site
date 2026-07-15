@@ -157,6 +157,27 @@ const JOURNEY_POSES = [
 const JOURNEY_ACCENT_COLORS = JOURNEY_POSES.map((pose) => new THREE.Color(pose.accent));
 const JOURNEY_HOLD = 0.026;
 
+// The five company cards are real arrival points in the same continuous
+// world. Each destination is intentionally sparse: one architectural idea and
+// one road transformation, rather than five miniature literal dioramas.
+const DESTINATION_SPECS = [
+  { id: "fasttrack", raw: 0.2, scene: 0.14, accent: 0x1367fe, side: -1 },
+  { id: "autodata", raw: 0.3, scene: 0.23, accent: 0x42d7ff, side: 1 },
+  { id: "axxion", raw: 0.4, scene: 0.33, accent: 0xff4200, side: -1 },
+  { id: "pag-direct", raw: 0.5, scene: 0.43, accent: 0x8a6cff, side: 1 },
+  { id: "vicimus", raw: 0.6, scene: 0.54, accent: 0x34e39b, side: -1 },
+] as const;
+
+const DESTINATIONS = {
+  sideOffset: 0.014,
+  structureRadius: 0.000052,
+  roadRadius: 0.000062,
+  enter: 0.068,
+  settle: 0.026,
+  leave: 0.072,
+  mobileScale: 1.16,
+} as const;
+
 const FAKE_FLOOR = {
   size: 0.1,
   position: new THREE.Vector3(-0.135, 0, 0.64),
@@ -621,6 +642,20 @@ function journeyAccent(raw: number, target: THREE.Color): THREE.Color {
   return target.copy(JOURNEY_ACCENT_COLORS[index]).lerp(JOURNEY_ACCENT_COLORS[index + 1], transition);
 }
 
+function destinationVisibility(raw: number, center: number): number {
+  const enter = THREE.MathUtils.smoothstep(
+    raw,
+    center - DESTINATIONS.enter,
+    center - DESTINATIONS.settle,
+  );
+  const leave = 1 - THREE.MathUtils.smoothstep(
+    raw,
+    center + DESTINATIONS.settle,
+    center + DESTINATIONS.leave,
+  );
+  return enter * leave;
+}
+
 function fovForWidth(w: number): number {
   if (w <= 640) return CAMERA.fovSm;
   if (w <= 1024) return CAMERA.fovMd;
@@ -844,6 +879,224 @@ export function NeonJourney() {
     const circleLines: THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>[] = [];
     let renderStatic = () => {}; // re-render hook for reduced motion
     let fittedVehicle: THREE.Group | null = null;
+
+    /* ----------------------- company destinations ----------------------- */
+    const point = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
+    const framePath = (width: number, height: number, z: number, base = 0) => [
+      point(-width / 2, base, z),
+      point(-width / 2, base + height, z),
+      point(width / 2, base + height, z),
+      point(width / 2, base, z),
+    ];
+    const groundCircle = (cx: number, cz: number, radius: number, segments = 28) =>
+      Array.from({ length: segments + 1 }, (_, index) => {
+        const angle = (index / segments) * Math.PI * 2;
+        return point(cx + Math.cos(angle) * radius, 0.00012, cz + Math.sin(angle) * radius);
+      });
+    const verticalCircle = (cx: number, cy: number, cz: number, radius: number, segments = 24) =>
+      Array.from({ length: segments + 1 }, (_, index) => {
+        const angle = (index / segments) * Math.PI * 2;
+        return point(cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius, cz);
+      });
+
+    const createDestinationMesh = (
+      paths: THREE.Vector3[][],
+      hex: number,
+      radius: number,
+      pulse: boolean,
+    ) => {
+      const tubeGeometries = paths
+        .filter((path) => path.length > 1)
+        .map((path) => new THREE.TubeGeometry(
+          new PolylineCurve(path),
+          Math.max(12, (path.length - 1) * 6),
+          radius,
+          6,
+          false,
+        ));
+      const geometry = mergeGeometries(tubeGeometries, false);
+      tubeGeometries.forEach((item) => item.dispose());
+      if (!geometry) return null;
+
+      const color = new THREE.Color().setHex(hex, THREE.LinearSRGBColorSpace).multiplyScalar(1.35);
+      const material = new THREE.ShaderMaterial({
+        vertexShader: LINE_VERT,
+        fragmentShader: LINE_FRAG,
+        transparent: true,
+        depthTest: true,
+        depthWrite: false,
+        fog: true,
+        lights: false,
+        uniforms: THREE.UniformsUtils.merge([
+          THREE.UniformsLib.fog,
+          {
+            uColor: { value: color },
+            uTime: { value: 0 },
+            uSize: { value: pulse ? 5 : 1 },
+            uSpeed: { value: pulse ? 0.82 : 0.16 },
+            uHideCorners: { value: false },
+            uAlpha: { value: 0 },
+          },
+        ]),
+      });
+      const mesh = new THREE.Mesh(geometry, material);
+      lineMaterials.push(material);
+      disposables.push(geometry, material);
+      return { mesh, material };
+    };
+
+    type DestinationRuntime = {
+      id: (typeof DESTINATION_SPECS)[number]["id"];
+      raw: number;
+      group: THREE.Group;
+      baseY: number;
+      materials: THREE.ShaderMaterial[];
+      roadMaterials: THREE.ShaderMaterial[];
+      scanBeam?: THREE.Mesh;
+    };
+    const destinationRuntimes: DestinationRuntime[] = [];
+
+    DESTINATION_SPECS.forEach((spec) => {
+      const group = new THREE.Group();
+      group.name = `destination_${spec.id}`;
+
+      const cameraPoint = camCurve.getPoint(spec.scene);
+      const focusPoint = lookCurve.getPoint(spec.scene);
+      const forward = focusPoint.clone().sub(cameraPoint).setY(0).normalize();
+      const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+      const center = focusPoint.clone().addScaledVector(right, DESTINATIONS.sideOffset * spec.side);
+      center.y = 0.00015;
+      group.position.copy(center);
+      group.rotation.y = Math.atan2(cameraPoint.x - center.x, cameraPoint.z - center.z);
+      group.visible = false;
+
+      const structurePaths: THREE.Vector3[][] = [];
+      const roadPaths: THREE.Vector3[][] = [];
+      let scanBeamPath: THREE.Vector3[][] | null = null;
+
+      if (spec.id === "fasttrack") {
+        // Forecourt canopy + four repeatable service bays. The highway fans
+        // into parallel operating lanes as the camera arrives.
+        structurePaths.push(framePath(0.044, 0.015, -0.006));
+        structurePaths.push([
+          point(-0.022, 0.015, -0.006), point(-0.018, 0.018, 0.004),
+          point(0.018, 0.018, 0.004), point(0.022, 0.015, -0.006),
+        ]);
+        [-0.0165, -0.0055, 0.0055, 0.0165].forEach((x) => {
+          structurePaths.push([point(x, 0, -0.006), point(x, 0.012, -0.006)]);
+          roadPaths.push([point(x * 0.35, 0.0001, 0.044), point(x, 0.0001, 0.01), point(x, 0.0001, -0.026)]);
+        });
+      } else if (spec.id === "autodata") {
+        // Three scanner gates turn the road into a measured data grid.
+        [-0.011, 0, 0.011].forEach((z, index) => {
+          structurePaths.push(framePath(0.032 - index * 0.002, 0.017, z));
+        });
+        [-0.012, -0.004, 0.004, 0.012].forEach((x) => {
+          roadPaths.push([point(x, 0.0001, 0.038), point(x, 0.0001, -0.03)]);
+        });
+        [-0.024, -0.012, 0, 0.012, 0.024].forEach((z) => {
+          roadPaths.push([point(-0.018, 0.0001, z), point(0.018, 0.0001, z)]);
+        });
+        scanBeamPath = [[point(-0.017, 0.009, 0), point(0.017, 0.009, 0)]];
+      } else if (spec.id === "axxion") {
+        // A single claim enters, branches through routing logic, then resolves
+        // into three approved endpoints.
+        roadPaths.push([point(0, 0.0001, 0.042), point(0, 0.0001, 0.004)]);
+        [-0.018, 0, 0.018].forEach((x) => {
+          roadPaths.push([point(0, 0.0001, 0.004), point(x, 0.0001, -0.022)]);
+          structurePaths.push(verticalCircle(x, 0.007, -0.022, 0.0042));
+          structurePaths.push([point(x, 0.0001, -0.022), point(x, 0.003, -0.022)]);
+        });
+        structurePaths.push(verticalCircle(0, 0.009, 0.004, 0.005));
+      } else if (spec.id === "pag-direct") {
+        // A dealership facade frames three calm display loops: arrival turns
+        // into presentation rather than another branching network.
+        structurePaths.push(framePath(0.048, 0.016, -0.009));
+        [-0.012, 0, 0.012].forEach((x) => {
+          structurePaths.push([point(x, 0, -0.009), point(x, 0.016, -0.009)]);
+          roadPaths.push(groundCircle(x, 0.008, 0.0065));
+        });
+        structurePaths.push([
+          point(-0.024, 0.016, -0.009), point(-0.018, 0.019, 0.003),
+          point(0.018, 0.019, 0.003), point(0.024, 0.016, -0.009),
+        ]);
+        roadPaths.push([point(0, 0.0001, 0.042), point(0, 0.0001, 0.016)]);
+      } else {
+        // Vicimus resolves the road into a connected lifecycle graph. Nodes
+        // are deliberately few and legible instead of a generic particle fog.
+        const nodes = [
+          [-0.019, 0.007, 0.008], [-0.008, 0.015, -0.004], [0.006, 0.009, 0.006],
+          [0.019, 0.017, -0.006], [-0.014, 0.022, -0.018], [0.012, 0.025, -0.02],
+        ] as const;
+        const links = [[0, 1], [0, 2], [1, 2], [1, 4], [2, 3], [2, 5], [3, 5]] as const;
+        nodes.forEach(([x, y, z]) => structurePaths.push(verticalCircle(x, y, z, 0.0027)));
+        links.forEach(([a, b]) => {
+          const start = nodes[a];
+          const end = nodes[b];
+          structurePaths.push([
+            point(start[0], start[1], start[2]),
+            point(end[0], end[1], end[2]),
+          ]);
+        });
+        roadPaths.push([point(0, 0.0001, 0.044), point(-0.008, 0.0001, 0.014), point(0.006, 0.0001, 0.006)]);
+        nodes.slice(0, 4).forEach(([x, , z]) => {
+          roadPaths.push([point(0.006, 0.0001, 0.006), point(x, 0.0001, z)]);
+        });
+      }
+
+      const structure = createDestinationMesh(
+        structurePaths,
+        spec.accent,
+        DESTINATIONS.structureRadius,
+        false,
+      );
+      const road = createDestinationMesh(
+        roadPaths,
+        spec.accent,
+        DESTINATIONS.roadRadius,
+        true,
+      );
+      const materials: THREE.ShaderMaterial[] = [];
+      const roadMaterials: THREE.ShaderMaterial[] = [];
+      if (structure) {
+        structure.mesh.name = `${spec.id}_architecture`;
+        group.add(structure.mesh);
+        materials.push(structure.material);
+      }
+      if (road) {
+        road.mesh.name = `${spec.id}_road_transform`;
+        group.add(road.mesh);
+        materials.push(road.material);
+        roadMaterials.push(road.material);
+      }
+
+      let scanBeam: THREE.Mesh | undefined;
+      if (scanBeamPath) {
+        const scan = createDestinationMesh(
+          scanBeamPath,
+          COLORS.lineWhite,
+          DESTINATIONS.structureRadius * 1.15,
+          false,
+        );
+        if (scan) {
+          scanBeam = scan.mesh;
+          scanBeam.name = "autodata_scan_beam";
+          group.add(scanBeam);
+          materials.push(scan.material);
+        }
+      }
+
+      scene.add(group);
+      destinationRuntimes.push({
+        id: spec.id,
+        raw: spec.raw,
+        group,
+        baseY: group.position.y,
+        materials,
+        roadMaterials,
+        scanBeam,
+      });
+    });
 
     const projectedBounds = (object: THREE.Object3D, fitCamera: THREE.Camera) => {
       const box = new THREE.Box3().setFromObject(object);
@@ -1156,6 +1409,25 @@ export function NeonJourney() {
       const t = elapsedMs / 500;
       for (const m of lineMaterials) m.uniforms.uTime.value = t;
       fakeFloorMat.uniforms.uTime.value = t;
+
+      destinationRuntimes.forEach((destination) => {
+        const visibility = destinationVisibility(timelineProgress, destination.raw);
+        destination.group.visible = visibility > 0.002;
+        const responsiveScale = W <= SUV_FIT.mobileBreakpoint ? DESTINATIONS.mobileScale : 1;
+        const arrivalScale = THREE.MathUtils.lerp(0.94, 1, visibility);
+        destination.group.scale.setScalar(responsiveScale * arrivalScale);
+        destination.group.position.y = destination.baseY - (1 - visibility) * 0.0025;
+        destination.materials.forEach((material) => {
+          material.uniforms.uAlpha.value = visibility;
+        });
+        destination.roadMaterials.forEach((material) => {
+          material.uniforms.uSpeed.value = 0.48 + visibility * 0.72;
+        });
+        if (destination.scanBeam) {
+          destination.scanBeam.position.z = Math.sin(t * 0.38) * 0.0105;
+        }
+      });
+
       circleLines.forEach((mesh, i) => {
         const s = 0.01 * Math.floor(i / 4);
         mesh.material.uniforms.uAlpha.value = THREE.MathUtils.clamp(
