@@ -91,24 +91,22 @@ function Header() {
     );
     stops.forEach((stop) => observer.observe(stop));
 
-    let frame = 0;
-    const updateProgress = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        const main = document.querySelector<HTMLElement>(".landing-journey");
-        if (!main || !progressRef.current) return;
-        const max = Math.max(1, main.scrollHeight - window.innerHeight);
-        progressRef.current.style.transform = `scaleX(${Math.min(1, Math.max(0, window.scrollY / max))})`;
-      });
+    // Progress rail: ScrollTrigger already owns scroll on this page, so it
+    // drives the fill too — no parallel window scroll listener. It also
+    // re-measures on resize/refresh for free.
+    const setFill = (progress: number) => {
+      if (progressRef.current) progressRef.current.style.transform = `scaleX(${progress})`;
     };
-    updateProgress();
-    window.addEventListener("scroll", updateProgress, { passive: true });
-    window.addEventListener("resize", updateProgress);
+    const progressTrigger = ScrollTrigger.create({
+      start: 0,
+      end: "max",
+      onUpdate: (self) => setFill(self.progress),
+      onRefresh: (self) => setFill(self.progress),
+    });
+    setFill(progressTrigger.progress);
     return () => {
       observer.disconnect();
-      cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", updateProgress);
-      window.removeEventListener("resize", updateProgress);
+      progressTrigger.kill();
     };
   }, []);
 
