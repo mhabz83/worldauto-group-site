@@ -22,6 +22,9 @@ export function ScrollFX() {
   useEffect(() => {
     const items = gsap.utils.toArray<HTMLElement>("[data-reveal]");
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const hasParallax = document.querySelector("[data-parallax]");
+
+    if (items.length === 0 && !hasParallax) return;
 
     if (reduce) {
       gsap.set(items, { clearProps: "all", opacity: 1, y: 0 });

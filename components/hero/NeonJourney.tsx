@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { Reflector } from "three/examples/jsm/objects/Reflector.js";
@@ -11,6 +13,8 @@ import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPa
 import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
 import { FullScreenQuad } from "three/examples/jsm/postprocessing/Pass.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+
+gsap.registerPlugin(ScrollTrigger);
 
 /* Faithful rebuild of the Madar Platform WebGL hero, from the full recovery in
    /tmp/wag-build/madar-webgl-recovery (NOTES.md is the spec).
@@ -63,7 +67,7 @@ const CAMERA = {
 const BLOOM = { strength: 0.5, radius: 0, threshold: 0 };
 
 const RENDER = {
-  pixelRatio: 2,
+  pixelRatio: 1.75,
   exposure: 0.7,
 };
 
@@ -127,22 +131,21 @@ const FLOOR = {
   fadeEnd: 0.11, //   tracks fog .02 → .15 so far reflections dissolve)
 };
 
-// Madar scroll freeze/dwell windows (NOTES.md §4), in svh-hundred units.
-// Whole-page scroll 0→1 maps onto 0→totalUnits; each window subtracts
-// (1 - amount) of its span from what feeds the camera, so progress
-// advances, HOLDS through the band (e.g. the crossroads), then advances.
-// Frozen total = 8.75 units, so progress still lands exactly on 1.
-const SCROLL_DWELL = {
-  totalUnits: 21.75,
-  progressUnits: 13,
-  freezes: [
-    { start: 4.05, end: 7.8, amount: 0 },
-    { start: 11.1, end: 12.6, amount: 0 },
-    { start: 15, end: 16.5, amount: 0 },
-    { start: 19.2, end: 20.7, amount: 0 },
-    { start: 20.7, end: 21.7, amount: 0.5 }, // half-speed run-out
-  ],
-};
+const JOURNEY_POSES = [
+  { raw: 0, scene: 0, accent: 0x1367fe },
+  { raw: 0.1, scene: 0.06, accent: 0x1367fe },
+  { raw: 0.2, scene: 0.14, accent: 0x1367fe },
+  { raw: 0.3, scene: 0.23, accent: 0x42d7ff },
+  { raw: 0.4, scene: 0.33, accent: 0xff4200 },
+  { raw: 0.5, scene: 0.43, accent: 0x8a6cff },
+  { raw: 0.6, scene: 0.54, accent: 0x34e39b },
+  { raw: 0.7, scene: 0.65, accent: 0x1367fe },
+  { raw: 0.8, scene: 0.77, accent: 0xff4200 },
+  { raw: 0.9, scene: 0.89, accent: 0x42d7ff },
+  { raw: 1, scene: 1, accent: 0x1367fe },
+] as const;
+const JOURNEY_ACCENT_COLORS = JOURNEY_POSES.map((pose) => new THREE.Color(pose.accent));
+const JOURNEY_HOLD = 0.026;
 
 const FAKE_FLOOR = {
   size: 0.1,
@@ -560,16 +563,32 @@ function smoothDamp(
   return target + (change + temp) * exp;
 }
 
-/** Madar's freeze-window scroll mapping: raw page progress (0→1) becomes
- *  camera progress that advances, dwells through each freeze band, then
- *  advances again — instead of a linear sweep. */
-function dwellProgress(p01: number): number {
-  const e = p01 * SCROLL_DWELL.totalUnits;
-  let eff = e;
-  for (const f of SCROLL_DWELL.freezes) {
-    eff -= Math.max(0, Math.min(e, f.end) - f.start) * (1 - f.amount);
+/** Holds the camera at each content stop, then eases through the road segment. */
+function journeyProgress(raw: number): number {
+  const p = THREE.MathUtils.clamp(raw, 0, 1);
+  for (let index = 0; index < JOURNEY_POSES.length - 1; index++) {
+    const current = JOURNEY_POSES[index];
+    const next = JOURNEY_POSES[index + 1];
+    const leave = index === 0 ? current.raw : current.raw + JOURNEY_HOLD;
+    const arrive = index === JOURNEY_POSES.length - 2 ? next.raw : next.raw - JOURNEY_HOLD;
+    if (p <= leave) return current.scene;
+    if (p < arrive) {
+      const local = THREE.MathUtils.clamp((p - leave) / (arrive - leave), 0, 1);
+      const eased = 1 - Math.pow(1 - local, 4);
+      return THREE.MathUtils.lerp(current.scene, next.scene, eased);
+    }
+    if (p <= next.raw + JOURNEY_HOLD) return next.scene;
   }
-  return THREE.MathUtils.clamp(eff / SCROLL_DWELL.progressUnits, 0, 1);
+  return 1;
+}
+
+function journeyAccent(raw: number, target: THREE.Color): THREE.Color {
+  const p = THREE.MathUtils.clamp(raw, 0, 1);
+  const scaled = p * (JOURNEY_POSES.length - 1);
+  const index = Math.min(JOURNEY_POSES.length - 2, Math.floor(scaled));
+  const local = scaled - index;
+  const transition = THREE.MathUtils.smoothstep(local, 0.32, 0.68);
+  return target.copy(JOURNEY_ACCENT_COLORS[index]).lerp(JOURNEY_ACCENT_COLORS[index + 1], transition);
 }
 
 function fovForWidth(w: number): number {
@@ -588,6 +607,7 @@ export function NeonJourney() {
   useEffect(() => {
     const mount = mountRef.current;
     if (!mount) return;
+    document.documentElement.classList.remove("webgl-unavailable");
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let W = window.innerWidth;
     let H = window.innerHeight;
@@ -598,9 +618,10 @@ export function NeonJourney() {
     try {
       renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
     } catch {
-      return; // no WebGL: leave the plain background
+      document.documentElement.classList.add("webgl-unavailable");
+      return;
     }
-    renderer.setPixelRatio(RENDER.pixelRatio);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, RENDER.pixelRatio));
     renderer.setSize(W, H);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = RENDER.exposure;
@@ -661,6 +682,7 @@ export function NeonJourney() {
       fragmentShader: POST_FRAG,
     });
     composer.addPass(postPass);
+    const accentColor = new THREE.Color(JOURNEY_POSES[0].accent);
 
     /* ------------------------------- camera path -------------------------- */
     const toVec = (p: [number, number, number]) => new THREE.Vector3(p[0], p[1], p[2]);
@@ -671,8 +693,27 @@ export function NeonJourney() {
     const floorGeo = new THREE.PlaneGeometry(FLOOR.size, FLOOR.size);
     const texLoader = new THREE.TextureLoader();
     const loadFloorMap = (url: string) => {
-      const t = texLoader.load(url);
+      // Seed a valid neutral pixel so the first render never samples an
+      // image-less texture while the AVIF is still decoding.
+      const seed = document.createElement("canvas");
+      seed.width = seed.height = 1;
+      const seedContext = seed.getContext("2d");
+      if (seedContext) {
+        seedContext.fillStyle = "#8080ff";
+        seedContext.fillRect(0, 0, 1, 1);
+      }
+      const t = new THREE.Texture<TexImageSource>(seed);
       t.wrapS = t.wrapT = THREE.RepeatWrapping;
+      t.needsUpdate = true;
+      texLoader.load(url, (loaded) => {
+        if (disposed) {
+          loaded.dispose();
+          return;
+        }
+        t.image = loaded.image;
+        t.needsUpdate = true;
+        loaded.dispose();
+      });
       return t;
     };
     const roughTex = loadFloorMap(FLOOR.roughnessMap);
@@ -854,7 +895,10 @@ export function NeonJourney() {
         renderStatic();
       },
       undefined,
-      (e) => console.error("[NeonJourney] suv.glb failed", e),
+      (e) => {
+        document.documentElement.classList.add("webgl-unavailable");
+        console.error("[NeonJourney] vehicle asset failed", e);
+      },
     );
 
     new OBJLoader().load(
@@ -963,17 +1007,25 @@ export function NeonJourney() {
         renderStatic();
       },
       undefined,
-      (e) => console.error("[NeonJourney] scene-16.obj failed", e),
+      (e) => {
+        document.documentElement.classList.add("webgl-unavailable");
+        console.error("[NeonJourney] road asset failed", e);
+      },
     );
 
     /* ------------------------------- scroll ------------------------------- */
+    let timelineProgress = 0;
     let rawProgress = 0;
-    const readScroll = () => {
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      // Madar dwell windows: progress advances, holds, advances (SmoothDamped after)
-      rawProgress = max > 0 ? dwellProgress(THREE.MathUtils.clamp(window.scrollY / max, 0, 1)) : 0;
-    };
-    readScroll();
+    const journeyTrigger = ScrollTrigger.create({
+      start: 0,
+      end: "max",
+      onUpdate: (self) => {
+        timelineProgress = self.progress;
+        rawProgress = journeyProgress(timelineProgress);
+      },
+    });
+    timelineProgress = journeyTrigger.progress;
+    rawProgress = journeyProgress(timelineProgress);
 
     let smoothed = reduce ? REDUCED_MOTION_PROGRESS : rawProgress;
     const progressVel = { v: 0 };
@@ -1024,6 +1076,9 @@ export function NeonJourney() {
           1,
         );
       });
+      const accent = journeyAccent(timelineProgress, accentColor);
+      const gradient = postPass.uniforms.uGradient1Color.value as THREE.Vector3;
+      gradient.set(accent.r * 0.34, accent.g * 0.34, accent.b * 0.42);
     };
 
     /* ------------------------------- resize ------------------------------- */
@@ -1038,12 +1093,13 @@ export function NeonJourney() {
       composer.setSize(W, H);
       const pr = renderer.getPixelRatio();
       (postPass.uniforms.uResolution.value as THREE.Vector2).set(W * pr, H * pr);
-      readScroll();
+      ScrollTrigger.refresh();
       if (reduce) renderStatic();
     };
 
     /* -------------------------------- loop -------------------------------- */
     let raf = 0;
+    let running = false;
     let last = performance.now();
     const frame = () => {
       const now = performance.now();
@@ -1056,6 +1112,22 @@ export function NeonJourney() {
       raf = requestAnimationFrame(frame);
     };
 
+    const startLoop = () => {
+      if (running || reduce || document.hidden) return;
+      running = true;
+      last = performance.now();
+      raf = requestAnimationFrame(frame);
+    };
+    const stopLoop = () => {
+      if (!running) return;
+      running = false;
+      cancelAnimationFrame(raf);
+    };
+    const onVisibilityChange = () => {
+      if (document.hidden) stopLoop();
+      else startLoop();
+    };
+
     renderStatic = () => {
       if (!reduce || disposed) return;
       updateCamera(REDUCED_MOTION_PROGRESS, startTime + CAMERA.introMs);
@@ -1066,26 +1138,29 @@ export function NeonJourney() {
     if (reduce) {
       renderStatic();
     } else {
-      raf = requestAnimationFrame(frame);
+      startLoop();
       window.addEventListener("mousemove", onMouseMove, { passive: true });
     }
-    window.addEventListener("scroll", readScroll, { passive: true });
     window.addEventListener("resize", onResize);
+    document.addEventListener("visibilitychange", onVisibilityChange);
 
     /* ------------------------------- cleanup ------------------------------ */
     return () => {
       disposed = true;
-      cancelAnimationFrame(raf);
-      window.removeEventListener("scroll", readScroll);
+      stopLoop();
       window.removeEventListener("resize", onResize);
       window.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      journeyTrigger.kill();
       reflector.dispose();
       disposables.forEach((d) => d.dispose());
       composer.dispose();
+      renderer.forceContextLoss();
       renderer.dispose();
+      document.documentElement.classList.remove("webgl-unavailable");
       if (renderer.domElement.parentNode === mount) mount.removeChild(renderer.domElement);
     };
   }, []);
 
-  return <div ref={mountRef} className="fixed inset-0 z-0" aria-hidden />;
+  return <div ref={mountRef} className="journey-webgl fixed inset-0 z-0" aria-hidden />;
 }
