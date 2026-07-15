@@ -392,7 +392,9 @@ export function LandingJourney() {
         .journey-primary-cta { margin-top: 1.7rem; }.journey-back-to-top { display: flex; width: fit-content; min-height: 44px; align-items: center; gap: .55rem; margin-top: 1rem; color: rgba(255,255,255,.82); font-size: .82rem; text-underline-offset: .35em; }.journey-footer { display: flex; justify-content: space-between; gap: 1.5rem; margin-top: 4rem; padding-top: 1.2rem; border-top: 1px solid rgba(255,255,255,.13); color: var(--text-mid); font-size: .7rem; }
         .journey-footer p { margin: 0; }
         @media (max-width: 900px) {
-          .journey-header { height: 64px; grid-template-columns: 1fr auto; }.journey-desktop-nav,.journey-header-cta { display: none; }.journey-wordmark { font-size: .82rem; }
+          .journey-header { height: 64px; grid-template-columns: 1fr auto auto; }.journey-desktop-nav { display: none; }.journey-wordmark { font-size: .82rem; }
+          /* Keep the one primary action visible on phones; the menu still lists Partner. */
+          .journey-header-cta { min-height: 40px; padding: .5rem .75rem; font-size: .72rem; }
           .journey-menu-toggle { display: grid; width: 44px; height: 44px; place-content: center; gap: 6px; padding: 0; border: 0; background: transparent; color: #fff; cursor: pointer; }
           .journey-menu-toggle span { display: block; width: 22px; height: 1px; background: currentColor; transition: transform var(--dur-fast) var(--ease-reveal); }
           .journey-menu-toggle[aria-expanded="true"] span:first-child { transform: translateY(3.5px) rotate(45deg); }.journey-menu-toggle[aria-expanded="true"] span:last-child { transform: translateY(-3.5px) rotate(-45deg); }
@@ -405,7 +407,7 @@ export function LandingJourney() {
           .journey-static-image { object-position: 65% center; }.journey-stop,.journey-stop--end { align-items: flex-end; justify-content: stretch; padding: 5rem 0 0; }
           .journey-stop:first-child { min-height: 100svh !important; }
           .journey-panel,.journey-stop--end .journey-panel { width: 100%; padding: 5.5rem var(--gutter) max(1.5rem,env(safe-area-inset-bottom)); background: linear-gradient(0deg,rgba(0,5,31,.98),rgba(0,8,53,.84) 62%,transparent); }
-          .journey-panel h1,.journey-panel h2 { font-size: clamp(2.45rem,12vw,4.6rem); }.journey-pillars,.journey-stats { grid-template-columns: 1fr; gap: .85rem; }.journey-pillars article>p:last-child { display: none; }.journey-footer { flex-direction: column; }
+          .journey-panel h1,.journey-panel h2 { font-size: clamp(2.45rem,12vw,4.6rem); }.journey-pillars,.journey-stats { grid-template-columns: 1fr; gap: .85rem; }.journey-pillars article>p:last-child { font-size: .84rem; }.journey-footer { flex-direction: column; }
         }
         @media (prefers-reduced-motion: reduce) {
           /* NeonJourney renders one motionless 3D frame in reduced-motion
