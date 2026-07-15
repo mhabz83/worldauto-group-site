@@ -170,6 +170,12 @@ const FASTTRACK_DESTINATION = {
   accentRadius: 0.000072,
   baseRoadOpacity: 0.025,
   mobileScale: 1.12,
+  modelWidth: 0.024,
+  edgeThresholdDeg: 32,
+  detailThresholdDeg: 40,
+  detailRadius: 0.000058,
+  minStructureChain: 0.12,
+  minDetailChain: 0.045,
 } as const;
 
 const FAKE_FLOOR = {
@@ -197,6 +203,7 @@ const LOOK_POINTS: [number, number, number][] = [
 
 const ASSETS = {
   suv: "/webgl-lines/suv-licensed.glb",
+  fasttrack: "/webgl-lines/fasttrack-service.glb",
   lines: "/webgl-lines/scene-16.obj",
 };
 
@@ -886,25 +893,6 @@ export function NeonJourney() {
     const ftPoint = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
     const bayEdges = [-0.012, -0.004, 0.004, 0.012];
     const bayCenters = [-0.008, 0, 0.008];
-    const fasttrackStructurePaths: THREE.Vector3[][] = [
-      // Four bold front posts make three unmistakable open service portals.
-      ...bayEdges.map((x) => [
-        ftPoint(x, 0, 0),
-        ftPoint(x, 0.0064, 0),
-      ]),
-      // Double fascia gives the canopy real visual weight without enclosing it.
-      [ftPoint(-0.012, 0.0064, 0), ftPoint(0.012, 0.0064, 0)],
-      [ftPoint(-0.0116, 0.00745, -0.00055), ftPoint(0.0116, 0.00745, -0.00055)],
-      ...bayEdges.map((x) => [
-        ftPoint(x, 0.0064, 0),
-        ftPoint(x * 0.97, 0.00745, -0.00055),
-      ]),
-      // Short roof runners create depth while keeping the bays visibly open.
-      ...bayEdges.map((x) => [
-        ftPoint(x * 0.97, 0.00745, -0.00055),
-        ftPoint(x * 0.9, 0.00685, -0.0065),
-      ]),
-    ];
 
     // The original highway visibly becomes the forecourt: four blue lane
     // boundaries fan into the three portal openings, with an orange work line
@@ -997,12 +985,10 @@ export function NeonJourney() {
       return { mesh, material };
     };
 
-    const fasttrackStructure = buildFasttrackMesh(
-      fasttrackStructurePaths,
-      FASTTRACK_DESTINATION.structureRadius,
-      false,
-      COLORS.lineBlue,
-    );
+    let fasttrackStructure: {
+      mesh: THREE.Object3D;
+      material: THREE.ShaderMaterial;
+    } | null = null;
     const fasttrackLanes = buildFasttrackMesh(
       fasttrackLanePaths,
       FASTTRACK_DESTINATION.laneRadius,
@@ -1015,10 +1001,6 @@ export function NeonJourney() {
       true,
       COLORS.lineOrange,
     );
-    if (fasttrackStructure) {
-      fasttrackStructure.mesh.name = "fasttrack_forecourt";
-      fasttrackGroup.add(fasttrackStructure.mesh);
-    }
     if (fasttrackLanes) {
       fasttrackLanes.mesh.name = "fasttrack_service_lanes";
       fasttrackGroup.add(fasttrackLanes.mesh);
@@ -1027,6 +1009,119 @@ export function NeonJourney() {
       fasttrackAccents.mesh.name = "fasttrack_service_pits";
       fasttrackGroup.add(fasttrackAccents.mesh);
     }
+
+    // The destination uses the licensed modular garage kit rather than a
+    // procedural icon. We keep the solid architecture almost black and draw
+    // only feature edges, preserving the same sparse-neon language as the SUV.
+    new GLTFLoader().load(
+      ASSETS.fasttrack,
+      (gltf) => {
+        if (disposed) return;
+
+        gltf.scene.updateMatrixWorld(true);
+        const sourceBounds = new THREE.Box3().setFromObject(gltf.scene);
+        const sourceSize = sourceBounds.getSize(new THREE.Vector3());
+        const sourceCenter = sourceBounds.getCenter(new THREE.Vector3());
+        const assetScale = FASTTRACK_DESTINATION.modelWidth / sourceSize.x;
+        const offset = new THREE.Vector3(
+          -sourceCenter.x,
+          -sourceBounds.min.y,
+          -sourceBounds.max.z,
+        );
+
+        const bodyMaterial = new THREE.MeshBasicMaterial({ color: 0x000106 });
+        const lineColor = new THREE.Color().setHex(COLORS.lineBlue, THREE.LinearSRGBColorSpace);
+        const boost = TUBES.detailBoostBlue;
+        lineColor.setRGB(
+          boost.k * lineColor.r ** boost.gamma,
+          boost.k * lineColor.g ** boost.gamma,
+          boost.k * lineColor.b ** boost.gamma,
+        );
+        const lineMaterial = new THREE.ShaderMaterial({
+          vertexShader: LINE_VERT,
+          fragmentShader: LINE_FRAG,
+          transparent: true,
+          depthTest: true,
+          depthWrite: false,
+          fog: true,
+          lights: false,
+          uniforms: THREE.UniformsUtils.merge([
+            THREE.UniformsLib.fog,
+            {
+              uColor: { value: lineColor },
+              uTime: { value: 0 },
+              uSize: { value: 1 },
+              uSpeed: { value: 0 },
+              uHideCorners: { value: false },
+              uAlpha: { value: 0 },
+            },
+          ]),
+        });
+
+        const tubeGeometries: THREE.BufferGeometry[] = [];
+        gltf.scene.traverse((object) => {
+          if (!(object as THREE.Mesh).isMesh) return;
+          const mesh = object as THREE.Mesh;
+          mesh.material = bodyMaterial;
+          const isEquipment = /FT_(lift|tire|floor_jack)/i.test(mesh.name);
+          const threshold = isEquipment
+            ? FASTTRACK_DESTINATION.detailThresholdDeg
+            : FASTTRACK_DESTINATION.edgeThresholdDeg;
+          const minimumLength = isEquipment
+            ? FASTTRACK_DESTINATION.minDetailChain
+            : FASTTRACK_DESTINATION.minStructureChain;
+          const worldRadius = isEquipment
+            ? FASTTRACK_DESTINATION.detailRadius
+            : FASTTRACK_DESTINATION.structureRadius;
+          const edges = new THREE.EdgesGeometry(mesh.geometry, threshold);
+          for (const points of chainEdgeSegments(edges)) {
+            let length = 0;
+            for (let i = 1; i < points.length; i++) {
+              length += points[i].distanceTo(points[i - 1]);
+            }
+            if (length < minimumLength) continue;
+            for (const point of points) point.applyMatrix4(mesh.matrixWorld);
+            tubeGeometries.push(new THREE.TubeGeometry(
+              new PolylineCurve(points),
+              Math.max(points.length - 1, 1),
+              worldRadius / assetScale,
+              TUBES.radialSegments,
+              false,
+            ));
+          }
+          edges.dispose();
+        });
+
+        const mergedEdges = mergeGeometries(tubeGeometries, false);
+        tubeGeometries.forEach((geometry) => geometry.dispose());
+        if (!mergedEdges) {
+          bodyMaterial.dispose();
+          lineMaterial.dispose();
+          return;
+        }
+
+        const garageRoot = new THREE.Group();
+        garageRoot.name = "fasttrack_licensed_three_bay_service_garage";
+        garageRoot.scale.setScalar(assetScale);
+        gltf.scene.position.copy(offset);
+        const lineMesh = new THREE.Mesh(mergedEdges, lineMaterial);
+        lineMesh.position.copy(offset);
+        garageRoot.add(gltf.scene, lineMesh);
+        fasttrackGroup.add(garageRoot);
+        fasttrackStructure = { mesh: garageRoot, material: lineMaterial };
+
+        lineMaterials.push(lineMaterial);
+        disposables.push(bodyMaterial, lineMaterial, mergedEdges);
+        gltf.scene.traverse((object) => {
+          if ((object as THREE.Mesh).isMesh) {
+            disposables.push((object as THREE.Mesh).geometry);
+          }
+        });
+        renderStatic();
+      },
+      undefined,
+      (error) => console.error("FastTrack garage load failed", error),
+    );
     scene.add(fasttrackGroup);
 
     const projectedBounds = (object: THREE.Object3D, fitCamera: THREE.Camera) => {
