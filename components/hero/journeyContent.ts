@@ -13,24 +13,24 @@ export const journeyContent = {
     statement: "We build and run automotive operations, then productize what works.",
     pillars: [
       {
-        number: "01",
+        cue: "Deploy",
         title: "Quick Service, Plug and Play",
         body:
           "A standardized quick-service network, ready to deploy: site formats, equipment kits, an operating stack, a technician academy and parts supply.",
       },
       {
-        number: "02",
+        cue: "Understand",
         title: "Data & Software",
         body: "Vehicle valuations, inspections and history intelligence, built to bank standards.",
       },
       {
-        number: "03",
+        cue: "Orchestrate",
         title: "Automotive FinTech",
         body:
           "Financial infrastructure around the vehicle: claims administration and insurer-grade workflows.",
       },
       {
-        number: "04",
+        cue: "Transfer",
         title: "Consulting & Training",
         body:
           "Operator know-how, transferred. Advisory and technician training for automotive networks.",

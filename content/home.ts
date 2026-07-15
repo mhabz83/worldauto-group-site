@@ -8,7 +8,7 @@ export const hero = {
   /* Option 1 from content/copy-options.md */
   headlineLines: ["automotive, run like", "infrastructure."],
   italicWord: "infrastructure.",
-  sub: "Four operating companies across the UAE and North America. One group standard for service, data and retail. Part of Skelmore since 1994.",
+  sub: "Five operating companies across the UAE and North America. One group standard for service, data and retail. Part of Skelmore since 1994.",
   ctaPrimary: { label: "The Companies", href: "#companies" },
   ctaSecondary: { label: "Partner With Us", href: "#partner" },
   image: {

@@ -47,13 +47,6 @@ const ALDAR_LEGS: [number, number][] = [
   [-0.16, 0], [-0.09, 0.28], [0.09, 0.28], [0.16, 0], [-0.16, 0],
 ];
 
-function colourFor(name: string): THREE.Color {
-  const n = name.toLowerCase();
-  if (n.includes("orange")) return COL_ORANGE;
-  if (n.includes("white")) return COL_WHITE;
-  return COL_BLUE;
-}
-
 // each road trail gets a two-colour gradient that flows along its length (Madar look)
 function gradientFor(name: string): [THREE.Color, THREE.Color] {
   const n = name.toLowerCase();

@@ -297,6 +297,9 @@ export default function SuvNeonScrollHero({
     >
       <div className="suvHero__stage">
         {/* The image is both the no-JS/reduced-motion frame and WebGL fallback. */}
+        {/* The fallback must stay a native image because its exact decoded
+            element is uploaded into the WebGL texture at runtime. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img ref={fallbackRef} className="suvHero__fallback" src={imageSrc} alt={alt} fetchPriority="high" />
         <canvas ref={canvasRef} className="suvHero__canvas" aria-hidden="true" />
         <div className="suvHero__copy">{children}</div>

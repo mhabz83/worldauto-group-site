@@ -10,6 +10,11 @@ colors:
   signal-orange-deep: "#fb441a"
   structure-blue: "#0b6fd8"
   structure-blue-hover: "#2e8fef"
+  company-fasttrack: "#1367FE"
+  company-autodata: "#42D7FF"
+  company-axxion: "#FF4200"
+  company-pag-direct: "#8A6CFF"
+  company-vicimus: "#34E39B"
   ink: "#07090e"
   paper: "#ffffff"
 typography:
@@ -106,6 +111,18 @@ A palette of one deep navy ground, two accents with fixed jobs, and white worked
 **The One Signal Rule.** Signal Orange appears on no more than 10% of any screen. Rarity is what makes it read as a signal rather than decoration.
 
 **The Two Accents, One Voice Rule.** Blue is structure, orange is energy. Never swap their jobs — links and wayfinding are blue, emphasis and action are orange.
+
+### Company Wayfinding Accents
+
+The five company accents are a deliberate journey-navigation system, not a general-purpose palette. Each color appears only within its company's stop, where it identifies the company through labels, hairlines, capability outlines and scene lighting:
+
+- **FastTrack — Electric Blue** (`#1367FE`)
+- **AutoData — Cyan** (`#42D7FF`)
+- **Axxion — Orange** (`#FF4200`)
+- **PAG Direct — Violet** (`#8A6CFF`)
+- **Vicimus — Green** (`#34E39B`)
+
+Signal Orange (`#ff6340`) remains the single dominant energy accent for group-level calls to action. Company colors never migrate into shared buttons, global navigation or unrelated content; their role is local identity and wayfinding only.
 
 ## 3. Typography
 

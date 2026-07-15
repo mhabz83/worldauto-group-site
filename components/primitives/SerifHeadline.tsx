@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { useInView } from "framer-motion";
 import { cn } from "@/lib/cn";
 
@@ -42,11 +42,6 @@ export function SerifHeadline({
 }: SerifHeadlineProps) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "0px 0px -10% 0px" });
-  const [animate, setAnimate] = useState(false);
-
-  useEffect(() => {
-    if (inView) setAnimate(true);
-  }, [inView]);
 
   return (
     <div ref={ref}>
@@ -59,7 +54,7 @@ export function SerifHeadline({
         {lines.map((line, i) => (
           <span
             key={line}
-            data-animate={animate}
+            data-animate={inView}
             className="line-wipe block"
             style={{
               ["--line-delay" as string]: `${i * 140}ms`,

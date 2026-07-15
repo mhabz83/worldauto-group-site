@@ -53,7 +53,7 @@ const CAMERA = {
   near: 0.001,
   far: 0.15,
   smoothTime: 0.2, // SmoothDamp on scroll progress (Madar value)
-  introMs: 3000, // preloader sweep duration
+  introMs: 0, // locked opening pose; scroll is the only camera driver
   // recovered preloader sweep start pose ("Z" array, pose 0)
   introFrom: {
     position: new THREE.Vector3(-0.04072, 0.00461, 0.73854),
@@ -61,13 +61,15 @@ const CAMERA = {
   },
   // push the scene right so the left third stays clear for the headline
   viewShiftX: 0.13, // fraction of viewport width
-  parallax: { x: 0.008, y: 0.004 }, // mouse-look offset on the target (world units)
 };
 
-const BLOOM = { strength: 0.5, radius: 0, threshold: 0 };
+const BLOOM = { strength: 0.28, radius: 0, threshold: 0.12 };
 
 const RENDER = {
-  pixelRatio: 1.75,
+  maxWidth: 3840,
+  maxHeight: 2160,
+  maxPixelRatio: 2,
+  msaaSamples: 4,
   exposure: 0.7,
 };
 
@@ -76,10 +78,10 @@ const TUBES = {
   roadRadius: 585e-7,
   thinRadius: 3e-5,
   detailRadius: 3e-5,
-  radialSegments: 5,
+  radialSegments: 8,
   roadSegments: 500,
   roadSegmentsShort: 200, // curves shorter than 0.1 world units
-  roadDarken: -20, // per-channel 0-255 darken on road-ish colors
+  roadDarken: -10, // stable core stays above bloom threshold along the full trail
   // Non-road (truck wireframe / detail) lines only: emissive boost so they
   // read as bright as Madar's under the page's legibility scrim (which
   // multiplies the canvas down ~0.8). Per-channel: c' = k * c^gamma.
@@ -93,21 +95,29 @@ const TUBES = {
   detailBoostWhite: { gamma: 1, k: 2 },
 };
 
-// SUV replaces Madar's truck. suv.glb is normalized offline (Blender): a
-// boxy full-size luxury SUV (upright Range-Rover-style silhouette, built
-// from the client's logo-free references via image→3D + edge-preserving
-// cleanup — NO voxel remesh / smoothing, planar dissolve + QEM collapse so
-// the hard panel lines survive), front facing +Z, nose-to-tail length 1.0,
-// sitting on y=0, centred in x/z. Placement below puts it where the truck
-// sat (over the glow pool), heading the same way down the diagonal road.
+// SUV replaces Madar's truck. The licensed source is normalized offline by
+// scripts/export_suv_web.py: front facing +Z, nose-to-tail length 1.0, tyres
+// on y=0, centred in x/z. Body, wheels and brakes remain separate so the
+// silhouette and circular wheel geometry survive every camera position.
 const SUV = {
   position: new THREE.Vector3(-0.138, 0, 0.632),
   rotationY: 1.62, // nose to screen-right; opening camera looks along -z, so
   // side-on = heading ~+x (π/2), plus a hair so a hint of the front shows
-  length: 0.033, // world units nose-to-tail (the truck read ~0.05 incl. trailer)
-  edgeThresholdDeg: 36, // EdgesGeometry crease angle — feature edges ONLY (36° keeps the boxy SUV's long panel lines continuous without triangle-web noise)
-  minChainLength: 0.035, // drop edge specks shorter than this (GLB units, car=1)
+  length: 0.033,
+  edgeThresholdDeg: 36,
+  minChainLength: 0.035,
 };
+const SUV_FIT = {
+  desktopWidthNdc: 0.68, // 34% of viewport width
+  desktopHeightNdc: 0.66,
+  mobileWidthNdc: 1.34, // 67% of viewport width
+  mobileHeightNdc: 0.72,
+  desktopCenterX: 0.42, // centre-right, with the left third protected
+  mobileCenterX: 0,
+  centerY: 0.1,
+  mobileBreakpoint: 900,
+  safety: 0.94,
+} as const;
 const LINES_OFFSET = new THREE.Vector3(0, 0, 0.5);
 
 const FLOOR = {
@@ -171,7 +181,7 @@ const LOOK_POINTS: [number, number, number][] = [
 ];
 
 const ASSETS = {
-  suv: "/webgl-lines/suv.glb",
+  suv: "/webgl-lines/suv-licensed.glb",
   lines: "/webgl-lines/scene-16.obj",
 };
 
@@ -182,10 +192,6 @@ const REDUCED_MOTION_PROGRESS = 0; // static representative frame
 
 const LINE_VERT = /* glsl */ `
 varying vec2 vUv;
-uniform float uTime;
-varying float vProgress;
-uniform float uSize;
-uniform float uSpeed;
 
 #include <fog_pars_vertex>
 
@@ -193,9 +199,6 @@ void main() {
     vUv = uv;
 
     vec4 pos = modelViewMatrix * vec4(position, 1.0);
-
-    // Animation progress
-    vProgress = smoothstep(-0.5, 0.5, sin(vUv.x * uSize + uTime)) * uSpeed;
 
     gl_Position = projectionMatrix * pos;
 
@@ -207,22 +210,37 @@ void main() {
 
 const LINE_FRAG = /* glsl */ `
 uniform vec3 uColor;
+uniform float uTime;
 uniform float uSize;
 uniform float uSpeed;
 uniform float uAlpha;
 uniform bool uHideCorners;
 varying vec2 vUv;
-varying float vProgress;
 
 #include <fog_pars_fragment>
 
 void main() {
 
-    // line tails
-    float hideCorners = uHideCorners ? smoothstep(0., 0.1, vUv.x) * smoothstep(1., 0.9, vUv.x) : 1.0;
+    // Fade only at genuine authored endpoints. The previous 10% fade made
+    // long roads visibly lose energy before reaching the screen edge.
+    // Fixed UV feather keeps this shader portable across WebGL drivers; using
+    // fwidth here requires derivative extensions and can prevent compilation.
+    float endpointAA = 0.002;
+    float endpointWidth = 0.018;
+    float hideCorners = uHideCorners
+      ? smoothstep(0.0, endpointWidth + endpointAA, vUv.x)
+        * (1.0 - smoothstep(1.0 - endpointWidth - endpointAA, 1.0, vUv.x))
+      : 1.0;
 
-    // two colors
-    vec3 finalcolor = mix(uColor, (uColor * 3.), vProgress);
+    // A constant 1x core keeps every trail crisp and equally illuminated.
+    // Motion is a narrow, continuous Gaussian packet with modest energy;
+    // unlike the old 1x→3x sine, it never flashes the whole line through the
+    // bloom threshold or produces hard temporal bands.
+    float repeatCount = max(1.0, uSize * 0.18);
+    float phase = fract(vUv.x * repeatCount - uTime * 0.09 * uSpeed);
+    float distanceToPacket = min(phase, 1.0 - phase);
+    float packet = exp(-distanceToPacket * distanceToPacket / 0.0072) * uSpeed;
+    vec3 finalcolor = uColor * (1.0 + packet * 0.58);
 
     gl_FragColor.rgba = vec4(finalcolor, uAlpha * hideCorners);
 
@@ -479,15 +497,27 @@ void main() {
 
 /** Madar's own curve: straight linear segments between recovered points. */
 class PolylineCurve extends THREE.Curve<THREE.Vector3> {
+  private cumulative: number[];
+  private totalLength: number;
+
   constructor(private pts: THREE.Vector3[]) {
     super();
+    this.cumulative = [0];
+    for (let index = 1; index < pts.length; index++) {
+      this.cumulative.push(this.cumulative[index - 1] + pts[index].distanceTo(pts[index - 1]));
+    }
+    this.totalLength = this.cumulative[this.cumulative.length - 1] || 1;
   }
+
   getPoint(t: number, target = new THREE.Vector3()): THREE.Vector3 {
-    const n = this.pts.length - 1;
-    const f = THREE.MathUtils.clamp(t, 0, 1) * n;
-    const i = Math.min(Math.floor(f), n - 1);
-    return target.lerpVectors(this.pts[i], this.pts[i + 1], f - i);
+    const distance = THREE.MathUtils.clamp(t, 0, 1) * this.totalLength;
+    let index = 0;
+    while (index < this.cumulative.length - 2 && this.cumulative[index + 1] < distance) index++;
+    const start = this.cumulative[index];
+    const segmentLength = Math.max(this.cumulative[index + 1] - start, Number.EPSILON);
+    return target.lerpVectors(this.pts[index], this.pts[index + 1], (distance - start) / segmentLength);
   }
+
   getPointAt(u: number, target = new THREE.Vector3()): THREE.Vector3 {
     return this.getPoint(u, target);
   }
@@ -612,16 +642,23 @@ export function NeonJourney() {
     let W = window.innerWidth;
     let H = window.innerHeight;
     let disposed = false;
+    const targetPixelRatio = () => Math.max(0.75, Math.min(
+      window.devicePixelRatio,
+      RENDER.maxPixelRatio,
+      RENDER.maxWidth / W,
+      RENDER.maxHeight / H,
+    ));
+    let renderPixelRatio = targetPixelRatio();
 
     /* ------------------------------ renderer ------------------------------ */
     let renderer: THREE.WebGLRenderer;
     try {
-      renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
+      renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
     } catch {
       document.documentElement.classList.add("webgl-unavailable");
       return;
     }
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, RENDER.pixelRatio));
+    renderer.setPixelRatio(renderPixelRatio);
     renderer.setSize(W, H);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = RENDER.exposure;
@@ -650,6 +687,9 @@ export function NeonJourney() {
 
     /* ------------------------------ composer ------------------------------ */
     const composer = new EffectComposer(renderer);
+    composer.setPixelRatio(renderPixelRatio);
+    composer.renderTarget1.samples = RENDER.msaaSamples;
+    composer.renderTarget2.samples = RENDER.msaaSamples;
     composer.addPass(new RenderPass(scene, camera));
     const bloom = new UnrealBloomPass(new THREE.Vector2(W, H), BLOOM.strength, BLOOM.radius, BLOOM.threshold);
     composer.addPass(bloom);
@@ -658,7 +698,7 @@ export function NeonJourney() {
     const postPass = new ShaderPass({
       uniforms: {
         tDiffuse: { value: null },
-        uResolution: { value: new THREE.Vector2(W * RENDER.pixelRatio, H * RENDER.pixelRatio) },
+        uResolution: { value: new THREE.Vector2(W * renderPixelRatio, H * renderPixelRatio) },
         uNoiseStrength: { value: 0 },
         uCAMaxDistortion: { value: 0 },
         uCAScale: { value: 1 },
@@ -803,6 +843,66 @@ export function NeonJourney() {
     const lineMaterials: THREE.ShaderMaterial[] = [];
     const circleLines: THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>[] = [];
     let renderStatic = () => {}; // re-render hook for reduced motion
+    let fittedVehicle: THREE.Group | null = null;
+
+    const projectedBounds = (object: THREE.Object3D, fitCamera: THREE.Camera) => {
+      const box = new THREE.Box3().setFromObject(object);
+      const low = box.min;
+      const high = box.max;
+      const corners = [
+        new THREE.Vector3(low.x, low.y, low.z), new THREE.Vector3(low.x, low.y, high.z),
+        new THREE.Vector3(low.x, high.y, low.z), new THREE.Vector3(low.x, high.y, high.z),
+        new THREE.Vector3(high.x, low.y, low.z), new THREE.Vector3(high.x, low.y, high.z),
+        new THREE.Vector3(high.x, high.y, low.z), new THREE.Vector3(high.x, high.y, high.z),
+      ].map((point) => point.project(fitCamera));
+      return {
+        width: Math.max(...corners.map((point) => point.x)) - Math.min(...corners.map((point) => point.x)),
+        height: Math.max(...corners.map((point) => point.y)) - Math.min(...corners.map((point) => point.y)),
+        center: box.getCenter(new THREE.Vector3()).project(fitCamera),
+        worldCenter: box.getCenter(new THREE.Vector3()),
+      };
+    };
+
+    const fitVehicleToOpeningFrame = () => {
+      if (!fittedVehicle) return;
+
+      // Always derive from the authored pose so repeated resizes cannot
+      // accumulate scale or position errors.
+      fittedVehicle.position.copy(SUV.position);
+      fittedVehicle.scale.setScalar(SUV.length);
+      fittedVehicle.updateMatrixWorld(true);
+
+      const fitCamera = new THREE.PerspectiveCamera(fovForWidth(W), W / H, CAMERA.near, CAMERA.far);
+      fitCamera.position.copy(toVec(CAM_POINTS[0]));
+      fitCamera.setViewOffset(W, H, -CAMERA.viewShiftX * W, 0, W, H);
+      fitCamera.lookAt(toVec(LOOK_POINTS[0]));
+      fitCamera.updateProjectionMatrix();
+      fitCamera.updateMatrixWorld(true);
+
+      const mobile = W <= SUV_FIT.mobileBreakpoint;
+      const targetWidth = mobile ? SUV_FIT.mobileWidthNdc : SUV_FIT.desktopWidthNdc;
+      const targetHeight = mobile ? SUV_FIT.mobileHeightNdc : SUV_FIT.desktopHeightNdc;
+      const initial = projectedBounds(fittedVehicle, fitCamera);
+      const scaleFactor = Math.min(targetWidth / initial.width, targetHeight / initial.height) * SUV_FIT.safety;
+      fittedVehicle.scale.multiplyScalar(THREE.MathUtils.clamp(scaleFactor, 0.2, 2.5));
+      fittedVehicle.updateMatrixWorld(true);
+
+      const fitted = projectedBounds(fittedVehicle, fitCamera);
+      const desiredX = mobile ? SUV_FIT.mobileCenterX : SUV_FIT.desktopCenterX;
+      const forward = new THREE.Vector3();
+      fitCamera.getWorldDirection(forward);
+      const depth = Math.max(
+        CAMERA.near * 2,
+        fitted.worldCenter.clone().sub(fitCamera.position).dot(forward),
+      );
+      const halfHeight = Math.tan(THREE.MathUtils.degToRad(fitCamera.fov * 0.5)) * depth;
+      const halfWidth = halfHeight * fitCamera.aspect;
+      const right = new THREE.Vector3().setFromMatrixColumn(fitCamera.matrixWorld, 0);
+      const up = new THREE.Vector3().setFromMatrixColumn(fitCamera.matrixWorld, 1);
+      fittedVehicle.position.addScaledVector(right, (desiredX - fitted.center.x) * halfWidth);
+      fittedVehicle.position.addScaledVector(up, (SUV_FIT.centerY - fitted.center.y) * halfHeight);
+      fittedVehicle.updateMatrixWorld(true);
+    };
 
     new GLTFLoader().load(
       ASSETS.suv,
@@ -810,6 +910,7 @@ export function NeonJourney() {
         if (disposed) return;
         // normalized GLB (car length 1, front +Z, on y=0) → world placement
         const vehicle = new THREE.Group();
+        fittedVehicle = vehicle;
         vehicle.position.copy(SUV.position);
         vehicle.rotation.y = SUV.rotationY;
         vehicle.scale.setScalar(SUV.length);
@@ -892,6 +993,7 @@ export function NeonJourney() {
 
         vehicle.add(gltf.scene);
         scene.add(vehicle);
+        fitVehicleToOpeningFrame();
         renderStatic();
       },
       undefined,
@@ -1030,16 +1132,6 @@ export function NeonJourney() {
     let smoothed = reduce ? REDUCED_MOTION_PROGRESS : rawProgress;
     const progressVel = { v: 0 };
 
-    /* --------------------------- mouse parallax --------------------------- */
-    let mouseX = 0;
-    let mouseY = 0;
-    let px = 0;
-    let py = 0;
-    const onMouseMove = (e: MouseEvent) => {
-      mouseX = (e.clientX / W) * 2 - 1;
-      mouseY = (e.clientY / H) * 2 - 1;
-    };
-
     /* ---------------------------- camera update --------------------------- */
     const startTime = performance.now();
     const posV = new THREE.Vector3();
@@ -1047,7 +1139,7 @@ export function NeonJourney() {
     const updateCamera = (progress: number, now: number) => {
       camCurve.getPoint(progress, posV);
       lookCurve.getPoint(progress, tgtV);
-      if (!reduce) {
+      if (!reduce && CAMERA.introMs > 0) {
         // intro sweep from the recovered preloader pose into the path
         const introT = THREE.MathUtils.clamp((now - startTime) / CAMERA.introMs, 0, 1);
         if (introT < 1) {
@@ -1055,10 +1147,6 @@ export function NeonJourney() {
           posV.lerpVectors(CAMERA.introFrom.position, posV, k);
           tgtV.lerpVectors(CAMERA.introFrom.target, tgtV, k);
         }
-        px += (mouseX - px) * 0.05;
-        py += (mouseY - py) * 0.05;
-        tgtV.x += px * CAMERA.parallax.x;
-        tgtV.y -= py * CAMERA.parallax.y;
       }
       camera.position.copy(posV);
       camera.lookAt(tgtV);
@@ -1089,8 +1177,12 @@ export function NeonJourney() {
       camera.fov = fovForWidth(W);
       applyViewShift();
       camera.updateProjectionMatrix();
+      renderPixelRatio = targetPixelRatio();
+      renderer.setPixelRatio(renderPixelRatio);
+      composer.setPixelRatio(renderPixelRatio);
       renderer.setSize(W, H);
       composer.setSize(W, H);
+      fitVehicleToOpeningFrame();
       const pr = renderer.getPixelRatio();
       (postPass.uniforms.uResolution.value as THREE.Vector2).set(W * pr, H * pr);
       ScrollTrigger.refresh();
@@ -1139,7 +1231,6 @@ export function NeonJourney() {
       renderStatic();
     } else {
       startLoop();
-      window.addEventListener("mousemove", onMouseMove, { passive: true });
     }
     window.addEventListener("resize", onResize);
     document.addEventListener("visibilitychange", onVisibilityChange);
@@ -1149,7 +1240,6 @@ export function NeonJourney() {
       disposed = true;
       stopLoop();
       window.removeEventListener("resize", onResize);
-      window.removeEventListener("mousemove", onMouseMove);
       document.removeEventListener("visibilitychange", onVisibilityChange);
       journeyTrigger.kill();
       reflector.dispose();

@@ -12,14 +12,10 @@ export function useCountUp(target: number, duration = 1400) {
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, margin: "0px 0px -10% 0px" });
   const reduced = useReducedMotion();
-  const [value, setValue] = useState(reduced ? target : 0);
+  const [value, setValue] = useState(0);
 
   useEffect(() => {
-    if (!inView) return;
-    if (reduced) {
-      setValue(target);
-      return;
-    }
+    if (!inView || reduced) return;
     let raf = 0;
     const start = performance.now();
     const tick = (now: number) => {
@@ -33,5 +29,5 @@ export function useCountUp(target: number, duration = 1400) {
     return () => cancelAnimationFrame(raf);
   }, [inView, target, duration, reduced]);
 
-  return { ref, value };
+  return { ref, value: reduced ? target : value };
 }

@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     template: "%s · World Automotive Group",
   },
   description:
-    "World Automotive Group is the automotive arm of Skelmore. Four operating companies across the UAE and North America: FastTrack, AutoData, Axxion and PAG Direct.",
+    "World Automotive Group is the automotive arm of Skelmore. Five operating companies across the UAE and North America: FastTrack, AutoData, Axxion, PAG Direct and Vicimus.",
 };
 
 export default function RootLayout({
