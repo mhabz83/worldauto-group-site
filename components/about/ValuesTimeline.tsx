@@ -230,6 +230,19 @@ export function ValuesTimeline() {
               }
             />
           </div>
+          {/* mobile-only center pin, appears with the timeline phase */}
+          <div
+            className={
+              "ax-tl-mobile ax-pin ax-pin--large ax-tl-mobile-pin" +
+              (!braidHidden ? " ax-pin--visible" : "")
+            }
+            style={{ "--pin-x": "50%", "--pin-y": "50%" } as React.CSSProperties}
+            aria-hidden="true"
+          >
+            <PinBorder />
+            <div className="ax-pin__background" />
+            <div className="ax-pin__dot" />
+          </div>
           <p
             className={
               "ax-progress-ind ax-small" + (indHidden ? " ax-progress-ind--hidden" : "")

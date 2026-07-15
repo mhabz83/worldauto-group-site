@@ -378,7 +378,7 @@ export function CompaniesCarousel() {
               ))}
               <div className="ax-team-card-nav">
                 <p className="ax-team-counter" aria-hidden="true">
-                  {String(idx + 1).padStart(2, "0")} — {String(companies.length).padStart(2, "0")}
+                  {String(idx + 1).padStart(2, "0")} / {String(companies.length).padStart(2, "0")}
                 </p>
                 <div className="ax-carousel-nav">
                   <NavButton onTrigger={prev} label={`Previous company (showing ${active.name})`}>

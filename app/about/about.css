@@ -304,6 +304,20 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   transform: scaleX(var(--p, 0));
   transform-origin: 0 50%;
 }
+@media (max-width: 640px) {
+  .ax-header {
+    padding: 10px 15px;
+  }
+  .ax-header-wordmark {
+    font-size: 0.78rem;
+    letter-spacing: 0.18em;
+  }
+  .ax-header-cta {
+    padding: 10px 12px;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+  }
+}
 .ax-menu-toggle {
   display: inline-flex;
   flex-direction: column;
@@ -468,15 +482,16 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
 }
 .ax-pin__label {
   position: absolute;
-  left: 50px;
+  left: calc(clamp(66px, 8.3vw, 120px) / 2 + 14px);
   top: 50%;
   transform: translateY(-50%);
-  color: rgba(255, 255, 255, 0.78);
+  color: rgba(255, 255, 255, 0.84);
   font-size: 0.8125rem;
   font-weight: 300;
   white-space: nowrap;
   opacity: 0;
   transition: opacity 0.6s var(--ax-ease-flicker);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
   z-index: 1;
 }
 .ax-pin--visible .ax-pin-border,
@@ -1084,7 +1099,7 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
 }
 .ax-testimonial-card .ax-team-desc {
   margin-top: 1.2rem;
-  min-height: 9.8em;
+  min-height: 7.5em;
   color: rgba(255, 255, 255, 0.85);
 }
 .ax-team-link {
@@ -1282,8 +1297,14 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
     justify-content: flex-start;
     padding-top: clamp(170px, 26svh, 260px);
   }
+  .ax-values-text-inner {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
   .ax-values-text-col {
-    grid-column: 1 / span 4;
+    grid-column: 1 / -1;
+  }
+  .ax-value-body {
+    min-height: 0;
   }
 }
 /* progress indicator 01|04 */
@@ -1316,6 +1337,10 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   align-self: flex-end;
   text-align: right;
   color: rgba(255, 255, 255, 0.5);
+}
+.ax-tl-mobile-pin {
+  transform: translate(-50%, -50%);
+  z-index: 2;
 }
 /* desktop timeline items */
 .ax-tl-item {
@@ -1435,6 +1460,17 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   .ax-careers-top h2,
   .ax-careers-top p {
     grid-column: 1 / -1;
+  }
+  .ax-careers-top {
+    margin-bottom: 4rem;
+  }
+  .ax-careers-sticky {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+  .ax-careers-bottom {
+    margin-top: 4rem;
+    padding-bottom: clamp(6rem, 40vw, 12rem);
   }
 }
 /* stacked sticky cards — recovered grid + state table, verbatim numbers */
@@ -1772,6 +1808,14 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     gap: 10px;
+  }
+  .ax-team-content {
+    position: static !important;
+    pointer-events: auto;
+    margin-top: 2rem;
+  }
+  .ax-testimonial-card {
+    grid-column: 1 / -1;
   }
   .ax-carousel .ax-slide {
     flex: 0 0 min(63vw, 420px);
