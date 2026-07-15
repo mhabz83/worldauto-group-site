@@ -24,7 +24,7 @@ import {
   SCRUB_SMOOTH,
   waypointTrigger,
 } from "./engine";
-import { FlickerText, FlickerTitle, useRevealManager } from "./reveal";
+import { FlickerText, FlickerTitle, GlitchLabel, useRevealManager } from "./reveal";
 import { ArrowDown, Chevron, GlowSvg, OrbitalSvg, PinBorder } from "./svgs";
 import { LeadershipCarousel, CompaniesCarousel } from "./Carousels";
 import { ValuesTimeline } from "./ValuesTimeline";
@@ -110,8 +110,13 @@ function AboutHeader() {
           ))}
         </nav>
         <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-          <Link href={nav.cta.href} className="ax-header-cta">
-            {nav.cta.label}
+          <Link
+            href={nav.cta.href}
+            className="ax-header-cta"
+            data-ax-glitch
+            aria-label={nav.cta.label}
+          >
+            <GlitchLabel text={nav.cta.label} />
           </Link>
           <button
             type="button"

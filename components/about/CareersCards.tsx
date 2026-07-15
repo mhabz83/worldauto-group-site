@@ -12,7 +12,7 @@ import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { journeyContent } from "@/components/hero/journeyContent";
 import { gsap, waypointTrigger } from "./engine";
-import { FlickerTitle } from "./reveal";
+import { FlickerTitle, GlitchLabel } from "./reveal";
 
 const cards = [
   {
@@ -184,8 +184,13 @@ export function CareersCards() {
             {journeyContent.partner.body}
           </p>
           <div className="ax-cta-action" data-about-reveal="fade-in">
-            <Link href="/contact" className="ax-btn-primary">
-              Partner With Us →
+            <Link
+              href="/contact"
+              className="ax-btn-primary"
+              data-ax-glitch
+              aria-label="Partner With Us"
+            >
+              <GlitchLabel text="Partner With Us" /> →
             </Link>
           </div>
         </div>

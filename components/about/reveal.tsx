@@ -181,6 +181,26 @@ export function FlickerText({
   );
 }
 
+/** char-split label for glitch-hover buttons (btn--glitch port) */
+export function GlitchLabel({ text }: { text: string }) {
+  return (
+    <span aria-hidden="true">
+      {text.split(" ").map((word, w) => (
+        <span key={w}>
+          {w > 0 ? " " : ""}
+          <span className="ax-word">
+            {Array.from(word).map((ch, c) => (
+              <span key={c} className="char">
+                {ch}
+              </span>
+            ))}
+          </span>
+        </span>
+      ))}
+    </span>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /* hooks                                                               */
 /* ------------------------------------------------------------------ */
