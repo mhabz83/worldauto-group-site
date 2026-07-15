@@ -164,9 +164,11 @@ const FASTTRACK_DESTINATION = {
   raw: 0.2,
   scene: 0.14,
   depthBeyondTarget: 0.023,
-  sideOffset: -0.009,
-  structureRadius: 0.000022,
-  laneRadius: 0.000027,
+  sideOffset: -0.025,
+  structureRadius: 0.000082,
+  laneRadius: 0.000088,
+  accentRadius: 0.000072,
+  baseRoadOpacity: 0.025,
   mobileScale: 1.12,
 } as const;
 
@@ -854,6 +856,7 @@ export function NeonJourney() {
       roughTex, normalTex, blurRT, blurMat, blurQuad,
     ];
     const lineMaterials: THREE.ShaderMaterial[] = [];
+    const roadMaterials: THREE.ShaderMaterial[] = [];
     const circleLines: THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>[] = [];
     let renderStatic = () => {}; // re-render hook for reduced motion
     let fittedVehicle: THREE.Group | null = null;
@@ -881,29 +884,72 @@ export function NeonJourney() {
     );
 
     const ftPoint = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
+    const bayEdges = [-0.012, -0.004, 0.004, 0.012];
+    const bayCenters = [-0.008, 0, 0.008];
     const fasttrackStructurePaths: THREE.Vector3[][] = [
-      // Low, shallow canopy: two roof rails and four columns imply three bays
-      // without drawing a literal building around the viewer.
-      [ftPoint(-0.0105, 0.0068, 0), ftPoint(0.0105, 0.0068, 0)],
-      [ftPoint(-0.0092, 0.0078, -0.0075), ftPoint(0.0092, 0.0078, -0.0075)],
-      [ftPoint(-0.0105, 0.0068, 0), ftPoint(-0.0092, 0.0078, -0.0075)],
-      [ftPoint(0.0105, 0.0068, 0), ftPoint(0.0092, 0.0078, -0.0075)],
-      [ftPoint(-0.0105, 0, 0), ftPoint(-0.0105, 0.0068, 0)],
-      [ftPoint(-0.0035, 0, 0), ftPoint(-0.0035, 0.0068, 0)],
-      [ftPoint(0.0035, 0, 0), ftPoint(0.0035, 0.0068, 0)],
-      [ftPoint(0.0105, 0, 0), ftPoint(0.0105, 0.0068, 0)],
+      // Four bold front posts make three unmistakable open service portals.
+      ...bayEdges.map((x) => [
+        ftPoint(x, 0, 0),
+        ftPoint(x, 0.0064, 0),
+      ]),
+      // Double fascia gives the canopy real visual weight without enclosing it.
+      [ftPoint(-0.012, 0.0064, 0), ftPoint(0.012, 0.0064, 0)],
+      [ftPoint(-0.0116, 0.00745, -0.00055), ftPoint(0.0116, 0.00745, -0.00055)],
+      ...bayEdges.map((x) => [
+        ftPoint(x, 0.0064, 0),
+        ftPoint(x * 0.97, 0.00745, -0.00055),
+      ]),
+      // Short roof runners create depth while keeping the bays visibly open.
+      ...bayEdges.map((x) => [
+        ftPoint(x * 0.97, 0.00745, -0.00055),
+        ftPoint(x * 0.9, 0.00685, -0.0065),
+      ]),
     ];
-    const fasttrackLanePaths = [-0.007, 0, 0.007].map((x) => [
-      ftPoint(0, 0.00008, 0.024),
-      ftPoint(x * 0.45, 0.00008, 0.013),
-      ftPoint(x, 0.00008, 0.002),
-      ftPoint(x, 0.00008, -0.009),
-    ]);
+
+    // The original highway visibly becomes the forecourt: four blue lane
+    // boundaries fan into the three portal openings, with an orange work line
+    // down the centre of each bay.
+    const fasttrackLanePaths: THREE.Vector3[][] = [
+      ...bayEdges.map((x) => [
+        ftPoint(x * 0.08, 0.0001, 0.048),
+        ftPoint(x * 0.32, 0.0001, 0.034),
+        ftPoint(x * 0.62, 0.0001, 0.021),
+        ftPoint(x * 0.84, 0.0001, 0.009),
+        ftPoint(x, 0.0001, 0.001),
+        ftPoint(x * 0.98, 0.0001, -0.009),
+      ]),
+    ];
+    const fasttrackAccentPaths: THREE.Vector3[][] = [
+      ...bayCenters.map((x) => [
+        ftPoint(x * 0.06, 0.00013, 0.046),
+        ftPoint(x * 0.28, 0.00013, 0.032),
+        ftPoint(x * 0.58, 0.00013, 0.018),
+        ftPoint(x, 0.00013, 0.002),
+        ftPoint(x, 0.00013, -0.0085),
+      ]),
+      // Recessed service pits and paired lift rails are the functional cue.
+      ...bayCenters.flatMap((x) => [
+        [
+          ftPoint(x - 0.00235, 0.00016, -0.001),
+          ftPoint(x - 0.00235, 0.00016, -0.008),
+          ftPoint(x + 0.00235, 0.00016, -0.008),
+          ftPoint(x + 0.00235, 0.00016, -0.001),
+        ],
+        [ftPoint(x - 0.0011, 0.0002, -0.002), ftPoint(x - 0.0011, 0.0002, -0.007)],
+        [ftPoint(x + 0.0011, 0.0002, -0.002), ftPoint(x + 0.0011, 0.0002, -0.007)],
+      ]),
+      // Three compact illuminated fascia markers, one per service bay.
+      ...bayCenters.map((x) => [
+        ftPoint(x - 0.00125, 0.00692, 0.00008),
+        ftPoint(x + 0.00125, 0.00692, 0.00008),
+      ]),
+    ];
 
     const buildFasttrackMesh = (
       paths: THREE.Vector3[][],
       radius: number,
       pulse: boolean,
+      color: number,
     ) => {
       const parts = paths.map((path) => new THREE.TubeGeometry(
         new PolylineCurve(path),
@@ -916,6 +962,15 @@ export function NeonJourney() {
       parts.forEach((part) => part.dispose());
       if (!geometry) return null;
 
+      const colorValue = new THREE.Color().setHex(color, THREE.LinearSRGBColorSpace);
+      const boost = color === COLORS.lineOrange
+        ? TUBES.detailBoostOrange
+        : TUBES.detailBoostBlue;
+      colorValue.setRGB(
+        boost.k * colorValue.r ** boost.gamma,
+        boost.k * colorValue.g ** boost.gamma,
+        boost.k * colorValue.b ** boost.gamma,
+      );
       const material = new THREE.ShaderMaterial({
         vertexShader: LINE_VERT,
         fragmentShader: LINE_FRAG,
@@ -927,7 +982,7 @@ export function NeonJourney() {
         uniforms: THREE.UniformsUtils.merge([
           THREE.UniformsLib.fog,
           {
-            uColor: { value: new THREE.Color().setHex(COLORS.lineBlue, THREE.LinearSRGBColorSpace) },
+            uColor: { value: colorValue },
             uTime: { value: 0 },
             uSize: { value: pulse ? 4 : 1 },
             uSpeed: { value: pulse ? 0.5 : 0 },
@@ -946,11 +1001,19 @@ export function NeonJourney() {
       fasttrackStructurePaths,
       FASTTRACK_DESTINATION.structureRadius,
       false,
+      COLORS.lineBlue,
     );
     const fasttrackLanes = buildFasttrackMesh(
       fasttrackLanePaths,
       FASTTRACK_DESTINATION.laneRadius,
       true,
+      COLORS.lineBlue,
+    );
+    const fasttrackAccents = buildFasttrackMesh(
+      fasttrackAccentPaths,
+      FASTTRACK_DESTINATION.accentRadius,
+      true,
+      COLORS.lineOrange,
     );
     if (fasttrackStructure) {
       fasttrackStructure.mesh.name = "fasttrack_forecourt";
@@ -959,6 +1022,10 @@ export function NeonJourney() {
     if (fasttrackLanes) {
       fasttrackLanes.mesh.name = "fasttrack_service_lanes";
       fasttrackGroup.add(fasttrackLanes.mesh);
+    }
+    if (fasttrackAccents) {
+      fasttrackAccents.mesh.name = "fasttrack_service_pits";
+      fasttrackGroup.add(fasttrackAccents.mesh);
     }
     scene.add(fasttrackGroup);
 
@@ -1215,6 +1282,7 @@ export function NeonJourney() {
           mesh.name = name;
           container.add(mesh);
           lineMaterials.push(mat);
+          if (roadish) roadMaterials.push(mat);
           disposables.push(geo, mat);
           if (name.includes("crossroad_orange_circle_")) {
             mat.uniforms.uAlpha.value = 0; // fades in on scroll
@@ -1277,6 +1345,7 @@ export function NeonJourney() {
       const fasttrackEnter = THREE.MathUtils.smoothstep(timelineProgress, 0.145, 0.184);
       const fasttrackLeave = 1 - THREE.MathUtils.smoothstep(timelineProgress, 0.226, 0.268);
       const fasttrackVisibility = fasttrackEnter * fasttrackLeave;
+      const fasttrackArrival = fasttrackVisibility * fasttrackVisibility;
       fasttrackGroup.visible = fasttrackVisibility > 0.002;
       const fasttrackResponsiveScale = W <= SUV_FIT.mobileBreakpoint
         ? FASTTRACK_DESTINATION.mobileScale
@@ -1286,11 +1355,23 @@ export function NeonJourney() {
       );
       fasttrackGroup.position.y = fasttrackPosition.y - (1 - fasttrackVisibility) * 0.00045;
       if (fasttrackStructure) {
-        fasttrackStructure.material.uniforms.uAlpha.value = fasttrackVisibility * 0.58;
+        fasttrackStructure.material.uniforms.uAlpha.value = fasttrackVisibility * 0.94;
       }
       if (fasttrackLanes) {
-        fasttrackLanes.material.uniforms.uAlpha.value = fasttrackVisibility * 0.42;
-        fasttrackLanes.material.uniforms.uSpeed.value = 0.32 + fasttrackVisibility * 0.28;
+        fasttrackLanes.material.uniforms.uAlpha.value = fasttrackVisibility * 0.88;
+        fasttrackLanes.material.uniforms.uSpeed.value = 0.38 + fasttrackVisibility * 0.32;
+      }
+      if (fasttrackAccents) {
+        fasttrackAccents.material.uniforms.uAlpha.value = fasttrackVisibility * 0.9;
+        fasttrackAccents.material.uniforms.uSpeed.value = 0.32 + fasttrackVisibility * 0.25;
+      }
+      const baseRoadAlpha = THREE.MathUtils.lerp(
+        1,
+        FASTTRACK_DESTINATION.baseRoadOpacity,
+        fasttrackArrival,
+      );
+      for (const material of roadMaterials) {
+        material.uniforms.uAlpha.value = baseRoadAlpha;
       }
 
       circleLines.forEach((mesh, i) => {
