@@ -157,6 +157,19 @@ const JOURNEY_POSES = [
 const JOURNEY_ACCENT_COLORS = JOURNEY_POSES.map((pose) => new THREE.Color(pose.accent));
 const JOURNEY_HOLD = 0.026;
 
+// One deliberately restrained benchmark destination. It sits beyond the
+// FastTrack camera target (never around the camera), stays smaller than the
+// SUV in frame, and fades away before the AutoData stop.
+const FASTTRACK_DESTINATION = {
+  raw: 0.2,
+  scene: 0.14,
+  depthBeyondTarget: 0.023,
+  sideOffset: -0.009,
+  structureRadius: 0.000022,
+  laneRadius: 0.000027,
+  mobileScale: 1.12,
+} as const;
+
 const FAKE_FLOOR = {
   size: 0.1,
   position: new THREE.Vector3(-0.135, 0, 0.64),
@@ -845,6 +858,110 @@ export function NeonJourney() {
     let renderStatic = () => {}; // re-render hook for reduced motion
     let fittedVehicle: THREE.Group | null = null;
 
+    /* ---------------------- FastTrack benchmark stop --------------------- */
+    const fasttrackGroup = new THREE.Group();
+    fasttrackGroup.name = "destination_fasttrack_benchmark";
+    fasttrackGroup.visible = false;
+
+    const fasttrackCamera = camCurve.getPoint(FASTTRACK_DESTINATION.scene);
+    const fasttrackTarget = lookCurve.getPoint(FASTTRACK_DESTINATION.scene);
+    const fasttrackForward = fasttrackTarget.clone().sub(fasttrackCamera).setY(0).normalize();
+    const fasttrackRight = new THREE.Vector3()
+      .crossVectors(fasttrackForward, new THREE.Vector3(0, 1, 0))
+      .normalize();
+    const fasttrackPosition = fasttrackTarget
+      .clone()
+      .addScaledVector(fasttrackForward, FASTTRACK_DESTINATION.depthBeyondTarget)
+      .addScaledVector(fasttrackRight, FASTTRACK_DESTINATION.sideOffset);
+    fasttrackPosition.y = 0.00012;
+    fasttrackGroup.position.copy(fasttrackPosition);
+    fasttrackGroup.rotation.y = Math.atan2(
+      fasttrackCamera.x - fasttrackPosition.x,
+      fasttrackCamera.z - fasttrackPosition.z,
+    );
+
+    const ftPoint = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
+    const fasttrackStructurePaths: THREE.Vector3[][] = [
+      // Low, shallow canopy: two roof rails and four columns imply three bays
+      // without drawing a literal building around the viewer.
+      [ftPoint(-0.0105, 0.0068, 0), ftPoint(0.0105, 0.0068, 0)],
+      [ftPoint(-0.0092, 0.0078, -0.0075), ftPoint(0.0092, 0.0078, -0.0075)],
+      [ftPoint(-0.0105, 0.0068, 0), ftPoint(-0.0092, 0.0078, -0.0075)],
+      [ftPoint(0.0105, 0.0068, 0), ftPoint(0.0092, 0.0078, -0.0075)],
+      [ftPoint(-0.0105, 0, 0), ftPoint(-0.0105, 0.0068, 0)],
+      [ftPoint(-0.0035, 0, 0), ftPoint(-0.0035, 0.0068, 0)],
+      [ftPoint(0.0035, 0, 0), ftPoint(0.0035, 0.0068, 0)],
+      [ftPoint(0.0105, 0, 0), ftPoint(0.0105, 0.0068, 0)],
+    ];
+    const fasttrackLanePaths = [-0.007, 0, 0.007].map((x) => [
+      ftPoint(0, 0.00008, 0.024),
+      ftPoint(x * 0.45, 0.00008, 0.013),
+      ftPoint(x, 0.00008, 0.002),
+      ftPoint(x, 0.00008, -0.009),
+    ]);
+
+    const buildFasttrackMesh = (
+      paths: THREE.Vector3[][],
+      radius: number,
+      pulse: boolean,
+    ) => {
+      const parts = paths.map((path) => new THREE.TubeGeometry(
+        new PolylineCurve(path),
+        Math.max(8, (path.length - 1) * 8),
+        radius,
+        6,
+        false,
+      ));
+      const geometry = mergeGeometries(parts, false);
+      parts.forEach((part) => part.dispose());
+      if (!geometry) return null;
+
+      const material = new THREE.ShaderMaterial({
+        vertexShader: LINE_VERT,
+        fragmentShader: LINE_FRAG,
+        transparent: true,
+        depthTest: true,
+        depthWrite: false,
+        fog: true,
+        lights: false,
+        uniforms: THREE.UniformsUtils.merge([
+          THREE.UniformsLib.fog,
+          {
+            uColor: { value: new THREE.Color().setHex(COLORS.lineBlue, THREE.LinearSRGBColorSpace) },
+            uTime: { value: 0 },
+            uSize: { value: pulse ? 4 : 1 },
+            uSpeed: { value: pulse ? 0.5 : 0 },
+            uHideCorners: { value: false },
+            uAlpha: { value: 0 },
+          },
+        ]),
+      });
+      const mesh = new THREE.Mesh(geometry, material);
+      lineMaterials.push(material);
+      disposables.push(geometry, material);
+      return { mesh, material };
+    };
+
+    const fasttrackStructure = buildFasttrackMesh(
+      fasttrackStructurePaths,
+      FASTTRACK_DESTINATION.structureRadius,
+      false,
+    );
+    const fasttrackLanes = buildFasttrackMesh(
+      fasttrackLanePaths,
+      FASTTRACK_DESTINATION.laneRadius,
+      true,
+    );
+    if (fasttrackStructure) {
+      fasttrackStructure.mesh.name = "fasttrack_forecourt";
+      fasttrackGroup.add(fasttrackStructure.mesh);
+    }
+    if (fasttrackLanes) {
+      fasttrackLanes.mesh.name = "fasttrack_service_lanes";
+      fasttrackGroup.add(fasttrackLanes.mesh);
+    }
+    scene.add(fasttrackGroup);
+
     const projectedBounds = (object: THREE.Object3D, fitCamera: THREE.Camera) => {
       const box = new THREE.Box3().setFromObject(object);
       const low = box.min;
@@ -1156,6 +1273,26 @@ export function NeonJourney() {
       const t = elapsedMs / 500;
       for (const m of lineMaterials) m.uniforms.uTime.value = t;
       fakeFloorMat.uniforms.uTime.value = t;
+
+      const fasttrackEnter = THREE.MathUtils.smoothstep(timelineProgress, 0.145, 0.184);
+      const fasttrackLeave = 1 - THREE.MathUtils.smoothstep(timelineProgress, 0.226, 0.268);
+      const fasttrackVisibility = fasttrackEnter * fasttrackLeave;
+      fasttrackGroup.visible = fasttrackVisibility > 0.002;
+      const fasttrackResponsiveScale = W <= SUV_FIT.mobileBreakpoint
+        ? FASTTRACK_DESTINATION.mobileScale
+        : 1;
+      fasttrackGroup.scale.setScalar(
+        fasttrackResponsiveScale * THREE.MathUtils.lerp(0.97, 1, fasttrackVisibility),
+      );
+      fasttrackGroup.position.y = fasttrackPosition.y - (1 - fasttrackVisibility) * 0.00045;
+      if (fasttrackStructure) {
+        fasttrackStructure.material.uniforms.uAlpha.value = fasttrackVisibility * 0.58;
+      }
+      if (fasttrackLanes) {
+        fasttrackLanes.material.uniforms.uAlpha.value = fasttrackVisibility * 0.42;
+        fasttrackLanes.material.uniforms.uSpeed.value = 0.32 + fasttrackVisibility * 0.28;
+      }
+
       circleLines.forEach((mesh, i) => {
         const s = 0.01 * Math.floor(i / 4);
         mesh.material.uniforms.uAlpha.value = THREE.MathUtils.clamp(
