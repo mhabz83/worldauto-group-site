@@ -1934,51 +1934,13 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   }
 }
 
-/* --- world map in the commitment statement slot ---------------------- */
+/* --- world map: full-bleed plate in the commitment statement slot ----- */
 .ax-commitment-statement--map {
-  grid-column: 5 / -1;            /* the map earns more width than the line */
-}
-@media (max-width: 767px) {
-  .ax-commitment-statement--map {
-    grid-column: 1 / -1;
-  }
-}
-.ax-world-map {
-  position: relative;
-  --map-pin-line: clamp(28px, 3vw, 44px);
+  grid-column: 1 / -1;
+  margin-inline: calc(-1 * var(--ax-pad));  /* reach the browser edges */
 }
 .ax-world-map img {
   width: 100%;
   height: auto;
   display: block;
-  border-radius: 6px;
-}
-.ax-world-map .ax-pin {
-  --pin-size: 28px;
-}
-.ax-world-map .ax-pin__line-x {
-  width: var(--map-pin-line);
-}
-.ax-world-map .ax-pin__line-y {
-  height: var(--map-pin-line);
-}
-.ax-world-map .ax-pin__label {
-  left: calc(var(--map-pin-line) / 2 + 10px);
-  font-size: 0.75rem;
-}
-/* dense gulf cluster: send labels into empty water/desert */
-.ax-world-map .ax-pin--label-left .ax-pin__label {
-  left: auto;
-  right: calc(var(--map-pin-line) / 2 + 10px);
-}
-.ax-world-map .ax-pin--label-top .ax-pin__label {
-  left: 50%;
-  top: auto;
-  bottom: calc(var(--map-pin-line) / 2 + 8px);
-  transform: translateX(-50%);
-}
-.ax-map-caption {
-  margin-top: clamp(14px, 1.8vh, 24px);
-  color: rgba(255, 255, 255, 0.72);
-  max-width: 52ch;
 }
