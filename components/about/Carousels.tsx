@@ -144,6 +144,9 @@ export function TeamCarousel() {
   const listRef = useRef<HTMLUListElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const [idx, setIdx] = useState(0);
+  /* survives remounts (dev hot-reload, breakpoint/motion re-inits): the
+     slider re-creates on the slide it was on instead of rewinding to 0 */
+  const idxRef = useRef(0);
 
   /* Neighbors stand "further back" (90% scale), pinned so the SCREEN edge
      cuts into them, and never overlap the centered person. Positions are
@@ -238,6 +241,7 @@ export function TeamCarousel() {
     ({ onCreated }) => ({
       selector: ".ax-slide",
       loop: true,
+      initial: idxRef.current,
       /* perView slightly over 1: keeps the active slide centered while
          giving it a positive origin, which is what makes keen place the
          previous slide to the LEFT at rest (origin 0 parks it off-right) */
@@ -256,7 +260,10 @@ export function TeamCarousel() {
         applyImageScale(s);
       },
       detailsChanged: applyImageScale,
-      slideChanged: (s) => setIdx(s.track.details.rel),
+      slideChanged: (s) => {
+        idxRef.current = s.track.details.rel;
+        setIdx(s.track.details.rel);
+      },
     }),
     { initUnderReducedMotion: true },
   );
@@ -305,7 +312,9 @@ export function TeamCarousel() {
     const item = list.querySelector<HTMLElement>(".ax-slide");
     if (!item) return;
     const i = Math.round(list.scrollLeft / (item.offsetWidth + 10));
-    setIdx(Math.min(team.length - 1, Math.max(0, i)));
+    const clamped = Math.min(team.length - 1, Math.max(0, i));
+    idxRef.current = clamped;
+    setIdx(clamped);
   }, [sliderRef]);
 
   const prev = () =>
