@@ -116,7 +116,7 @@ export function CareersCards() {
       className="ax-section ax-careers"
     >
       <div className="ax-careers-bg" aria-hidden="true">
-        <img ref={bgRef} src="/hero/suv-neon.jpg" alt="" draggable={false} />
+        <img ref={bgRef} src="/about/suv-front.jpg" alt="" draggable={false} />
       </div>
       <div className="ax-container ax-careers-inner">
         <div className="ax-grid ax-careers-top">

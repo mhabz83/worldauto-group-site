@@ -751,11 +751,12 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   align-self: stretch;
   will-change: transform;
 }
-.ax-commitment-bg img {
+.ax-commitment-field {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  filter: brightness(0.42) saturate(0.85);
+  background:
+    radial-gradient(55% 45% at 62% 40%, rgba(11, 18, 100, 0.5), transparent 70%),
+    radial-gradient(40% 35% at 30% 70%, rgba(11, 18, 100, 0.3), transparent 70%);
 }
 .ax-commitment-gridlayer {
   width: 100%;

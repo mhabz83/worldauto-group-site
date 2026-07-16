@@ -68,9 +68,9 @@ export const model = {
 export const companiesSection = {
   kicker: "The companies",
   monoLabel: "03 / OPERATING COMPANIES",
-  heading: "Four companies, one standard",
+  heading: "Five companies, one standard",
   intro:
-    "Each company runs on its own domain and its own P&L. The group sets the standard.",
+    "Operating companies, not investments. Each one built, run and held to the group standard.",
 } as const;
 
 export const proofBand = {

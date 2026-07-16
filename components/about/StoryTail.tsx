@@ -227,7 +227,9 @@ function CommitmentSection() {
       className="ax-section ax-commitment"
     >
       <div ref={bgRef} className="ax-commitment-layer ax-commitment-bg" aria-hidden="true">
-        <img src="/hero/suv-neon.jpg" alt="" draggable={false} />
+        {/* No photo here by design: the grid + pins own the section. A soft
+            radial field keeps the parallax layer alive. */}
+        <div className="ax-commitment-field" />
       </div>
       <div
         ref={gridLayerRef}
