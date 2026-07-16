@@ -148,7 +148,7 @@ export function TeamCarousel() {
     const details = s.track.details;
     if (!details) return;
     s.slides.forEach((slideEl, i) => {
-      const r = -details.slides[i].distance;
+      const r = -(details.slides[i].distance - TEAM_REST_OFFSET);
       const scale = mapLinear(Math.abs(r), 0, 1, 1, IMAGE_SCALE_MIN, true);
       const x = mapLinear(r, -1, 0, -50, 0, true);
       const inner = slideEl.querySelector<HTMLElement>(".ax-company-panel-inner");
@@ -159,7 +159,7 @@ export function TeamCarousel() {
   const { sliderRef, ready } = useKeen(listRef, ({ onCreated }) => ({
     selector: ".ax-slide",
     loop: true,
-    slides: { perView: 1.6, origin: "center", spacing: 0 },
+    slides: { perView: TEAM_PER_VIEW, origin: "center", spacing: 0 },
     defaultAnimation: { duration: CAROUSEL_DURATION, easing: easeCarousel },
     rubberband: true,
     dragSpeed: 1,
@@ -302,6 +302,10 @@ export function TeamCarousel() {
 /* ------------------------------------------------------------------ */
 
 const IMAGE_SCALE_MIN = 0.8142857143;
+/* centered-origin rest offset: with origin:"center" keen measures slide
+   distance from the LEFT edge, so the active slide rests at (1-1/perView)/2 */
+const TEAM_PER_VIEW = 1.6;
+const TEAM_REST_OFFSET = (1 - 1 / TEAM_PER_VIEW) / 2;
 
 export function CompaniesCarousel() {
   const sectionRef = useRef<HTMLElement>(null);

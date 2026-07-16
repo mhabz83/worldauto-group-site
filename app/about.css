@@ -1768,23 +1768,37 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
 
 
 /* --- Team lineup variant: the SECTION IS THE FRAME (Madar S7 look). people
-   bleed off the stage bottom; neighbors clip at the stage edges; the frosted
-   card floats over the lineup. Scoped so the companies recap is untouched. */
+   stand ON the stage's bottom edge; neighbors clip at the stage sides; the
+   frosted card sits just left of the active (centered) person. Scoped so the
+   companies recap is untouched. */
 .ax-team-people .ax-team-stage {
   position: relative;
   height: clamp(520px, 82vh, 860px);
   overflow: hidden;               /* the frame does the cutting */
 }
-.ax-team-people .ax-carousel,
-.ax-team-people .ax-team-viewport {
+.ax-team-people .ax-carousel {
   position: absolute;
   inset: 0;
+}
+.ax-team-people .ax-carousel-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;               /* frame clips in slider AND fallback */
   width: 100%;
   max-width: none;
   margin: 0;
 }
 .ax-team-people .ax-carousel-list {
   height: 100%;
+  align-items: flex-end;
+}
+.ax-team-people .ax-carousel:not(.ax-carousel--ready) .ax-carousel-list {
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+}
+.ax-team-people .ax-carousel:not(.ax-carousel--ready) .ax-slide {
+  scroll-snap-align: center;
+  flex: 0 0 62%;
 }
 .ax-team-people .ax-slide {
   height: 100%;
@@ -1797,19 +1811,27 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   justify-content: center;
   background: none;
 }
+.ax-team-people .ax-person-cut {
+  position: relative;
+}
 .ax-team-people .ax-person-cut .ax-company-panel-inner {
-  height: 100%;
+  position: absolute;
+  inset: 0;
+  height: auto;
+  width: auto;
+  padding: 0;                     /* base panel padding would lift the feet */
   display: flex;
   align-items: flex-end;
   justify-content: center;
   transform-origin: 50% 100%;
 }
 .ax-team-people .ax-person-cut img {
-  height: 94%;                    /* head near the top, feet on the frame edge */
+  height: 95%;                    /* head near the frame top, feet ON the edge */
   max-height: none;
   width: auto;
   max-width: none;
   object-fit: contain;
+  object-position: bottom;
   display: block;
 }
 .ax-team-people .ax-team-content {
@@ -1821,14 +1843,15 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
 }
 .ax-team-people .ax-testimonial-card {
   position: absolute;
-  left: max(2vw, 12px);
-  top: 34%;
-  width: min(460px, 44%);
+  right: 52%;                     /* right edge tucks against the active person */
+  left: auto;
+  top: 30%;
+  width: min(440px, 42%);
 }
 @media (max-width: 767px) {
   .ax-team-people .ax-team-stage { height: clamp(420px, 64vh, 620px); }
   .ax-team-people .ax-testimonial-card {
     left: 12px; right: 12px; width: auto; top: auto; bottom: 16px;
   }
-  .ax-team-people .ax-person-cut img { height: 88%; }
+  .ax-team-people .ax-person-cut img { height: 86%; }
 }
