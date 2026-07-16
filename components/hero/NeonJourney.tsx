@@ -163,11 +163,16 @@ const JOURNEY_ACCENT_COLORS = JOURNEY_POSES.map((pose) => new THREE.Color(pose.a
 const JOURNEY_HOLD = 0.043;
 
 // "Five-Lane Split" — between the hero and the "Five companies, one
-// standard." card the highway gathers into five parallel lanes that hold
-// beneath the card while staggered pulses travel them, then merges back.
+// standard." card the highway TRANSFORMS: five of the road's own trail
+// lines (sampled from the loaded OBJ so the gathered lanes are pixel-
+// coincident with real centerlines) peel out into five parallel lanes that
+// hold beneath the card while staggered pulses travel them, then merge
+// back. While the lanes are up, the base ROAD-family trails dim to
+// roadFloorAlpha with the inverse of the same envelope, so the crossfade
+// reads as the road reorganizing — energy conserved, nothing added on top.
 // Same tube radius, same road colors (3 blue + 2 orange mirrors the road
 // census), same pulse shader; the split exists only inside its scroll
-// window — the base road is the resting truth.
+// window — the full-brightness base road is the resting truth.
 const COMPANIES_SPLIT = {
   scene: 0.06, // camera pose the split is authored against (companies stop)
   // Scroll windows (timelineProgress, stop centre = 1/6 ≈ 0.1667; the camera
@@ -201,6 +206,23 @@ const COMPANIES_SPLIT = {
   pulseSpeedGain: 0.2, // …ramping to 0.42 at full split
   pulsePhaseStep: 0.2, // per-lane pulse stagger, in cycles (lane 1 → 5)
   segments: 72, // tubular segments per lane (~0.1 world units long)
+  // Base-road handoff: at full split the ROAD-family trails ease down to
+  // this uAlpha floor (inverse of the lanes' envelope), back to 1.0 by
+  // mergedEnd. Reduced motion never enters the window, so the static frame
+  // keeps the road at full alpha.
+  roadFloorAlpha: 0.15,
+  // Coincident gather sampling (group-local space, after the OBJ loads):
+  gatherLift: 0.00003, // lanes ride half a tube radius above the inherited
+  // trail so coplanar surfaces never z-fight while staying visually one line
+  sampleBandMin: -0.06, // lateral band that holds the visible carriageways
+  sampleBandMax: 0.02,
+  hopTolerance: 0.0035, // lane tracking: max lateral jump between stations
+  hopToleranceFar: 0.006, // looser in the foggy tail, where the asset hands
+  // trails across object boundaries (ROAD_Line_* → Road_*)
+  farStationFraction: 0.75, // stations beyond this fraction count as foggy
+  minStationCoverage: 12, // real crossings required before a tracked line
+  // may be completed by linear extrapolation (of 14 stations)
+  referenceStation: 3, // station used to order candidate lines left→right
 } as const;
 
 const FAKE_FLOOR = {
@@ -931,6 +953,207 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
     );
     scene.add(companiesSplitGroup);
 
+    // The split is built AFTER scene-16.obj resolves: the gathered-state
+    // stations are sampled from the road's real trail centerlines so at
+    // morphAmount 0 every lane is visually coincident with a trail the
+    // viewer is already looking at. Until then the group is empty and
+    // updateUniforms skips it.
+    const stationFractions = [
+      0, 0.1, 0.2, 0.3, 0.36, 0.42, 0.48, 0.54, 0.6, 0.66, 0.72, 0.8, 0.9, 1,
+    ];
+    const stationZAt = (f: number) =>
+      THREE.MathUtils.lerp(COMPANIES_SPLIT.nearZ, COMPANIES_SPLIT.farZ, f);
+    type RoadTrail = { name: string; points: THREE.Vector3[]; blue: boolean };
+    const roadTrails: RoadTrail[] = [];
+    const roadMaterials: THREE.ShaderMaterial[] = [];
+    let companiesSplit: {
+      materials: THREE.ShaderMaterial[];
+      update: (amount: number, mobile: boolean) => void;
+    } | null = null;
+
+    type LaneSample = { x: number; y: number };
+
+    /** Sample the five gathered-lane centerlines from the real ROAD-family
+     *  trails through the split stretch. Trails are transformed into the
+     *  split group's local frame, crossed against each station's z plane,
+     *  tracked near→far (sticky to their source trail, hopping across the
+     *  asset's ROAD_Line_* → Road_* object handoffs in the foggy tail), then
+     *  the best order-preserving 3-blue/2-orange arrangement is chosen.
+     *  Returns one {x, y} row per lane per station, or null so the caller
+     *  can fall back to the nominal gathered bundle. */
+    const sampleGatheredLanes = (): LaneSample[][] | null => {
+      companiesSplitGroup.updateMatrixWorld(true);
+      const stationsZ = stationFractions.map(stationZAt);
+      type Crossing = { x: number; y: number; trail: number };
+      const crossings: Crossing[][] = stationsZ.map(() => []);
+      const scratch = new THREE.Vector3();
+      roadTrails.forEach((trail, trailIndex) => {
+        const local = trail.points.map((p) =>
+          companiesSplitGroup
+            .worldToLocal(scratch.copy(p).add(LINES_OFFSET))
+            .clone(),
+        );
+        for (let s = 0; s < stationsZ.length; s++) {
+          const z = stationsZ[s];
+          for (let i = 1; i < local.length; i++) {
+            const a = local[i - 1];
+            const b = local[i];
+            if ((a.z - z) * (b.z - z) > 0 || a.z === b.z) continue;
+            const t = (z - a.z) / (b.z - a.z);
+            const x = THREE.MathUtils.lerp(a.x, b.x, t);
+            if (x < COMPANIES_SPLIT.sampleBandMin || x > COMPANIES_SPLIT.sampleBandMax) continue;
+            crossings[s].push({ x, y: THREE.MathUtils.lerp(a.y, b.y, t), trail: trailIndex });
+          }
+        }
+      });
+      if (crossings[0].length < 5) return null;
+
+      // Track each station-0 crossing forward as one continuous line.
+      type Tracked = {
+        seed: number;
+        trail: number;
+        samples: (LaneSample | null)[];
+        covered: number;
+        lastX: number;
+        lastZ: number;
+        slope: number;
+      };
+      const lines: Tracked[] = crossings[0].map((c) => ({
+        seed: c.trail,
+        trail: c.trail,
+        samples: [{ x: c.x, y: c.y }],
+        covered: 1,
+        lastX: c.x,
+        lastZ: stationsZ[0],
+        slope: 0,
+      }));
+      for (let s = 1; s < stationsZ.length; s++) {
+        const tolerance =
+          stationFractions[s] >= COMPANIES_SPLIT.farStationFraction
+            ? COMPANIES_SPLIT.hopToleranceFar
+            : COMPANIES_SPLIT.hopTolerance;
+        for (const line of lines) {
+          const predicted = line.lastX + line.slope * (stationsZ[s] - line.lastZ);
+          const nearest = (pool: Crossing[]) => {
+            let best: Crossing | null = null;
+            let bestDist = Infinity;
+            for (const c of pool) {
+              const dist = Math.abs(c.x - predicted);
+              if (dist < bestDist) {
+                best = c;
+                bestDist = dist;
+              }
+            }
+            return best && bestDist <= tolerance ? best : null;
+          };
+          // Prefer the trail this line is riding; only then hop objects.
+          const hit =
+            nearest(crossings[s].filter((c) => c.trail === line.trail)) ??
+            nearest(crossings[s]);
+          if (hit) {
+            line.samples.push({ x: hit.x, y: hit.y });
+            line.covered += 1;
+            if (stationsZ[s] !== line.lastZ) {
+              line.slope = (hit.x - line.lastX) / (stationsZ[s] - line.lastZ);
+            }
+            line.lastX = hit.x;
+            line.lastZ = stationsZ[s];
+            line.trail = hit.trail;
+          } else {
+            line.samples.push(null);
+          }
+        }
+      }
+
+      // Complete well-covered lines by linear interpolation/extrapolation.
+      const complete = (line: Tracked): LaneSample[] | null => {
+        if (line.covered < COMPANIES_SPLIT.minStationCoverage) return null;
+        const known = line.samples
+          .map((sample, i) => (sample ? i : -1))
+          .filter((i) => i >= 0);
+        return line.samples.map((sample, i) => {
+          if (sample) return sample;
+          let before = -1;
+          let after = -1;
+          for (const j of known) {
+            if (j < i) before = j;
+            else if (after < 0) after = j;
+          }
+          const a = before >= 0 && after >= 0 ? before : known[known.length - 2];
+          const b = before >= 0 && after >= 0 ? after : known[known.length - 1];
+          const first = before < 0 ? known[0] : a;
+          const second = before < 0 ? known[1] : b;
+          const sa = line.samples[first] as LaneSample;
+          const sb = line.samples[second] as LaneSample;
+          const t =
+            (stationsZ[i] - stationsZ[first]) /
+            (stationsZ[second] - stationsZ[first] || Number.EPSILON);
+          return {
+            x: THREE.MathUtils.lerp(sa.x, sb.x, t),
+            y: THREE.MathUtils.lerp(sa.y, sb.y, t),
+          };
+        });
+      };
+      const candidates = lines
+        .map((line) => ({
+          seed: line.seed,
+          blue: roadTrails[line.seed].blue,
+          samples: complete(line),
+        }))
+        .filter((c): c is { seed: number; blue: boolean; samples: LaneSample[] } => c.samples !== null)
+        .sort(
+          (a, b) =>
+            a.samples[COMPANIES_SPLIT.referenceStation].x -
+            b.samples[COMPANIES_SPLIT.referenceStation].x,
+        )
+        .slice(0, 12); // bounds the combination search; the asset yields ~7
+      if (candidates.length < 5) return null;
+
+      // Order-preserving choice of five: maximize color-matched inheritance
+      // (blue lanes onto blue trails), then span, then lane separation.
+      const wantBlue = COMPANIES_SPLIT.laneColors.map((hex) => hex === COLORS.lineBlue);
+      let best: number[] | null = null;
+      let bestScore = -Infinity;
+      const pick: number[] = [];
+      const evaluate = () => {
+        const xs = pick.map((i) => candidates[i].samples[COMPANIES_SPLIT.referenceStation].x);
+        let matches = 0;
+        for (let i = 0; i < 5; i++) if (candidates[pick[i]].blue === wantBlue[i]) matches += 1;
+        let minGap = Infinity;
+        for (let i = 1; i < 5; i++) minGap = Math.min(minGap, xs[i] - xs[i - 1]);
+        const span = xs[4] - xs[0];
+        const score =
+          40 * matches +
+          20 * Math.min(span / 0.03, 1) +
+          10 * Math.min(minGap / COMPANIES_SPLIT.laneSpacing, 1);
+        if (score > bestScore) {
+          bestScore = score;
+          best = pick.slice();
+        }
+      };
+      const choose = (start: number) => {
+        if (pick.length === 5) {
+          evaluate();
+          return;
+        }
+        for (let i = start; i <= candidates.length - (5 - pick.length); i++) {
+          pick.push(i);
+          choose(i + 1);
+          pick.pop();
+        }
+      };
+      choose(0);
+      if (!best) return null;
+      const chosen = (best as number[]).map((i) => candidates[i]);
+      if (process.env.NODE_ENV !== "production") {
+        console.info(
+          "[NeonJourney] split lanes inherit:",
+          chosen.map((c, i) => `${i + 1}:${roadTrails[c.seed].name}${c.blue === wantBlue[i] ? "" : " (color hop)"}`).join("  "),
+        );
+      }
+      return chosen.map((c) => c.samples);
+    };
+
     const buildCompaniesSplit = () => {
       // One material per color group; pulse stagger is baked per lane as a
       // uv.x offset (uSize 4 → exactly one packet cycle per lane), so the
@@ -965,40 +1188,54 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
         disposables.push(material);
       }
 
-      // Gathered state: five straight lanes clustered inside the carriageway
-      // width. Split state: the same lanes, still gathered out in the fog,
-      // easing apart across the divergence zone so they arrive dead parallel
-      // and fully separated as they sweep beneath the card and the viewer.
-      const stationFractions = [
-        0, 0.1, 0.2, 0.3, 0.36, 0.42, 0.48, 0.54, 0.6, 0.66, 0.72, 0.8, 0.9, 1,
-      ];
+      // Gathered state: the five sampled trail centerlines — at morphAmount 0
+      // each lane lies on a line the road is already drawing, so the handoff
+      // is a peel, not an apparition. Split state: near the camera the lanes
+      // sweep to the shipped parallel fan; out past the divergence zone they
+      // stay gathered ON their trails, so even at full split the lanes
+      // visibly grow out of the road in the fog.
+      const sampled = sampleGatheredLanes();
+      if (process.env.NODE_ENV !== "production" && !sampled) {
+        console.warn("[NeonJourney] split gather sampling failed; using nominal lanes");
+      }
       const morphs: {
         position: THREE.BufferAttribute;
         source: Float32Array;
-        target: Float32Array;
+        targetDesktop: Float32Array;
+        targetMobile: Float32Array;
       }[] = [];
       const laneY = 0.0001; // FastTrack lane convention: above the base road
       COMPANIES_SPLIT.laneColors.forEach((hex, index) => {
         const gatheredX = (index - 2) * COMPANIES_SPLIT.laneSpacing;
         const splitX = gatheredX * COMPANIES_SPLIT.spread;
-        const stationZ = (f: number) =>
-          THREE.MathUtils.lerp(COMPANIES_SPLIT.nearZ, COMPANIES_SPLIT.farZ, f);
-        const sourcePath = stationFractions.map(
-          (f) => new THREE.Vector3(gatheredX, laneY, stationZ(f)),
-        );
-        const targetPath = stationFractions.map((f) => {
-          // 1 = fully split near the camera, easing to 0 = gathered far out
-          const ease = 1 - THREE.MathUtils.smoothstep(
-            f,
-            COMPANIES_SPLIT.divergeStart,
-            COMPANIES_SPLIT.divergeEnd,
-          );
-          return new THREE.Vector3(
-            THREE.MathUtils.lerp(gatheredX, splitX, ease),
-            laneY,
-            stationZ(f),
-          );
+        const gatherAt = (stationIndex: number): LaneSample =>
+          sampled
+            ? {
+                x: sampled[index][stationIndex].x,
+                y: sampled[index][stationIndex].y + COMPANIES_SPLIT.gatherLift,
+              }
+            : { x: gatheredX, y: laneY };
+        const sourcePath = stationFractions.map((f, stationIndex) => {
+          const gather = gatherAt(stationIndex);
+          return new THREE.Vector3(gather.x, gather.y, stationZAt(f));
         });
+        // The fan target keeps the shipped near-camera geometry (splitX at
+        // laneY); mobile narrows only the fan, never the gathered trails.
+        const targetPath = (spreadScale: number) =>
+          stationFractions.map((f, stationIndex) => {
+            // 1 = fully split near the camera, easing to 0 = gathered far out
+            const ease = 1 - THREE.MathUtils.smoothstep(
+              f,
+              COMPANIES_SPLIT.divergeStart,
+              COMPANIES_SPLIT.divergeEnd,
+            );
+            const gather = gatherAt(stationIndex);
+            return new THREE.Vector3(
+              THREE.MathUtils.lerp(gather.x, splitX * spreadScale, ease),
+              THREE.MathUtils.lerp(gather.y, laneY, ease),
+              stationZAt(f),
+            );
+          });
         const sourceGeometry = new THREE.TubeGeometry(
           new PolylineCurve(sourcePath),
           COMPANIES_SPLIT.segments,
@@ -1006,13 +1243,20 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
           TUBES.radialSegments,
           false,
         );
-        const targetGeometry = new THREE.TubeGeometry(
-          new PolylineCurve(targetPath),
-          COMPANIES_SPLIT.segments,
-          TUBES.roadRadius,
-          TUBES.radialSegments,
-          false,
-        );
+        const bakeTarget = (spreadScale: number) => {
+          const geometry = new THREE.TubeGeometry(
+            new PolylineCurve(targetPath(spreadScale)),
+            COMPANIES_SPLIT.segments,
+            TUBES.roadRadius,
+            TUBES.radialSegments,
+            false,
+          );
+          const baked = new Float32Array(
+            (geometry.getAttribute("position") as THREE.BufferAttribute).array as Float32Array,
+          );
+          geometry.dispose();
+          return baked;
+        };
         // Stagger this lane's pulse phase: with a single packet cycle,
         // shifting uv.x by n cycles moves the packet without new uniforms.
         const uv = sourceGeometry.getAttribute("uv") as THREE.BufferAttribute;
@@ -1021,29 +1265,34 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
         }
         uv.needsUpdate = true;
         const position = sourceGeometry.getAttribute("position") as THREE.BufferAttribute;
-        const targetPosition = targetGeometry.getAttribute("position") as THREE.BufferAttribute;
         const source = new Float32Array(position.array as Float32Array);
-        const target = new Float32Array(targetPosition.array as Float32Array);
-        targetGeometry.dispose();
         const mesh = new THREE.Mesh(sourceGeometry, materialByHex.get(hex));
         mesh.frustumCulled = false; // positions morph in place
         companiesSplitGroup.add(mesh);
-        morphs.push({ position, source, target });
+        morphs.push({
+          position,
+          source,
+          targetDesktop: bakeTarget(1),
+          targetMobile: bakeTarget(COMPANIES_SPLIT.mobileSpread),
+        });
         disposables.push(sourceGeometry);
       });
 
       // Same eased-lerp vertex update as the retired FastTrack lane morph.
       let lastAmount = -1;
-      const update = (amount: number) => {
-        if (Math.abs(amount - lastAmount) < 0.0005) return;
+      let lastMobile = false;
+      const update = (amount: number, mobile: boolean) => {
+        if (Math.abs(amount - lastAmount) < 0.0005 && mobile === lastMobile) return;
         lastAmount = amount;
+        lastMobile = mobile;
         const eased = 1 - Math.pow(1 - THREE.MathUtils.clamp(amount, 0, 1), 4);
         for (const morph of morphs) {
           const output = morph.position.array as Float32Array;
+          const target = mobile ? morph.targetMobile : morph.targetDesktop;
           for (let index = 0; index < output.length; index++) {
             output[index] = THREE.MathUtils.lerp(
               morph.source[index],
-              morph.target[index],
+              target[index],
               eased,
             );
           }
@@ -1053,7 +1302,6 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
 
       return { materials, update };
     };
-    const companiesSplit = buildCompaniesSplit();
     let splitEnvelope = 0; // last computed window envelope (dev inspector)
 
     const projectedBounds = (object: THREE.Object3D, fitCamera: THREE.Camera) => {
@@ -1358,9 +1606,19 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
             mat.uniforms.uAlpha.value = 0; // fades in on scroll
             circleLines.push(mesh as THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>);
           }
+          // ROAD family only (Road_* / ROAD_Line_*): the trails the split
+          // gathers onto and dims. NOT Crossroad_/Graphic_/Integration_/
+          // Payments_ — those keep full alpha through the split window.
+          // Materials are created per object above, never shared, so dimming
+          // these can't leak into any other family.
+          if (name.includes("road") && !name.includes("crossroad")) {
+            roadMaterials.push(mat);
+            roadTrails.push({ name, points: pts, blue: name.includes("blue") });
+          }
         });
 
         scene.add(container);
+        companiesSplit = buildCompaniesSplit();
         renderStatic();
       },
       undefined,
@@ -1431,14 +1689,21 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
       );
       splitEnvelope = reduce ? 0 : splitEnter * splitLeave;
       companiesSplitGroup.visible = splitEnvelope > 0.002;
-      companiesSplitGroup.scale.x =
-        W <= SUV_FIT.mobileBreakpoint ? COMPANIES_SPLIT.mobileSpread : 1;
-      companiesSplit.update(splitEnvelope);
-      for (const material of companiesSplit.materials) {
-        material.uniforms.uAlpha.value = splitEnvelope * COMPANIES_SPLIT.laneAlpha;
-        material.uniforms.uSpeed.value =
-          COMPANIES_SPLIT.pulseSpeedBase + splitEnvelope * COMPANIES_SPLIT.pulseSpeedGain;
+      if (companiesSplit) {
+        companiesSplit.update(splitEnvelope, W <= SUV_FIT.mobileBreakpoint);
+        for (const material of companiesSplit.materials) {
+          material.uniforms.uAlpha.value = splitEnvelope * COMPANIES_SPLIT.laneAlpha;
+          material.uniforms.uSpeed.value =
+            COMPANIES_SPLIT.pulseSpeedBase + splitEnvelope * COMPANIES_SPLIT.pulseSpeedGain;
+        }
       }
+      // Base-road handoff: the ROAD-family trails give up their light with
+      // the inverse of the lanes' envelope (same smoothstep shape, so the
+      // crossfade conserves brightness), easing to roadFloorAlpha at full
+      // split and back to 1.0 by mergedEnd. Reduced motion pins the envelope
+      // at 0 above, so the static frame always shows the road at full alpha.
+      const roadAlpha = 1 - splitEnvelope * (1 - COMPANIES_SPLIT.roadFloorAlpha);
+      for (const material of roadMaterials) material.uniforms.uAlpha.value = roadAlpha;
 
       circleLines.forEach((mesh, i) => {
         const s = 0.01 * Math.floor(i / 4);
