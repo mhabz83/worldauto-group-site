@@ -1779,6 +1779,9 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   position: relative;
   height: clamp(560px, 92vh, 1080px);   /* Madar scale: people own the frame */
   overflow: hidden;               /* the frame does the cutting */
+  /* full-bleed: the BROWSER edge is the frame. Inside .ax-container the
+     stage would clip people at the padded edge, leaving a floating gap */
+  margin-inline: calc(-1 * var(--ax-pad));
 }
 .ax-team-people .ax-carousel {
   position: absolute;

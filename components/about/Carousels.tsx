@@ -350,7 +350,7 @@ export function TeamCarousel() {
 /* S7 — Five companies, one standard (recovered team carousel)          */
 /* ------------------------------------------------------------------ */
 
-const IMAGE_SCALE_MIN = 0.9; /* neighbors sit ~10% "further back" */
+const IMAGE_SCALE_MIN = 0.82; /* neighbors sit clearly "further back" */
 const TEAM_PER_VIEW = 1.05;
 const TEAM_ORIGIN = 0.5 - 1 / TEAM_PER_VIEW / 2;
 const TEAM_IMG_HEIGHT = 0.97; /* mirrors .ax-team-people .ax-person-cut img */
