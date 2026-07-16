@@ -368,7 +368,7 @@ const IMAGE_SCALE_MIN = 0.82; /* neighbors sit clearly "further back" */
 const TEAM_PER_VIEW = 1.05;
 const TEAM_ORIGIN = 0.5 - 1 / TEAM_PER_VIEW / 2;
 const TEAM_IMG_HEIGHT = 0.97; /* mirrors .ax-team-people .ax-person-cut img */
-const TEAM_EDGE_CUT = 0.3; /* fraction of a neighbor the screen edge cuts off */
+const TEAM_EDGE_CUT = 0.5; /* fraction of a neighbor the screen edge cuts off */
 /* card geometry mirror of .ax-team-people .ax-testimonial-card -- the left
    neighbor is pushed further off-screen when needed so its head never slides
    under the card at narrow desktop widths */
