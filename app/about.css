@@ -1773,7 +1773,7 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
    companies recap is untouched. */
 .ax-team-people .ax-team-stage {
   position: relative;
-  height: clamp(520px, 82vh, 860px);
+  height: clamp(560px, 92vh, 1080px);   /* Madar scale: people own the frame */
   overflow: hidden;               /* the frame does the cutting */
 }
 .ax-team-people .ax-carousel {
@@ -1789,7 +1789,9 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: min(46%, 980px);
+  /* slide width tracks the PERSON's height (≈0.74 x stage height), not the
+     screen width, so the lineup stays shoulder-to-shoulder on wide monitors */
+  width: clamp(430px, 68vh, 800px);
   max-width: none;
   margin: 0;
   overflow: visible;
@@ -1837,7 +1839,7 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   transform-origin: 50% 100%;
 }
 .ax-team-people .ax-person-cut img {
-  height: 95%;                    /* head near the frame top, feet ON the edge */
+  height: 97%;                    /* head near the frame top, feet ON the edge */
   max-height: none;
   width: auto;
   max-width: none;
