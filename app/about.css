@@ -1856,7 +1856,7 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   inset: 0;
   display: block;
   pointer-events: none;
-  z-index: 2;
+  z-index: 30;                    /* above the slide depth stack (<=20) */
 }
 .ax-team-people .ax-testimonial-card {
   /* the one spot guaranteed empty at every width: the strip above the
@@ -1866,8 +1866,10 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   position: absolute;
   right: calc(50% + 30vh);
   left: auto;
-  top: clamp(24px, 4.5vh, 56px);  /* below the fixed header, above the neighbor's head */
-  width: min(400px, calc(50% - 30vh - 20px));
+  top: clamp(24px, 4.5vh, 56px);  /* below the fixed header */
+  /* left edge stays right of the edge-pinned neighbor's head (~20vh);
+     Carousels.tsx caps the neighbor with the same numbers */
+  width: clamp(220px, calc(50% - 50vh - 16px), 400px);
   padding: 18px 22px;
 }
 .ax-team-people .ax-testimonial-card .ax-team-name {

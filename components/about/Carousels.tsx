@@ -8,11 +8,10 @@
  * next/prev, rubberband drag, arrows firing on pointerdown, edge-fade classes,
  * native scroll-snap fallback below md and under reduced motion.
  *
- * S7 reproduces the `imageScale` effect verbatim:
- *   scale = mapLinear(|r|, 0→1, 1→0.8142857143, clamped)
- *   translateX = mapLinear(r, −1→0, −50%→0, clamped)
- * and the synced testimonial card (teamDesktop ±25svh / teamMobile ±50px)
- * with char/word-flicker content swaps driven by slide changes.
+ * S7 (companies) reproduces the recovered `imageScale` effect verbatim.
+ * The team lineup uses its own depth model instead: neighbors at 90% scale,
+ * pinned so the screen edge cuts them, never overlapping the centered person
+ * (see applyImageScale in TeamCarousel), with char/word-flicker card swaps.
  */
 
 import Link from "next/link";
@@ -63,6 +62,7 @@ function useKeen(
         el.style.minWidth = "";
         el.style.maxWidth = "";
         el.style.transform = "";
+        el.style.zIndex = "";
       });
       list
         .querySelectorAll<HTMLElement>(".ax-company-panel-inner")
@@ -145,16 +145,77 @@ export function TeamCarousel() {
   const cardRef = useRef<HTMLDivElement>(null);
   const [idx, setIdx] = useState(0);
 
+  /* Neighbors stand "further back" (90% scale), pinned so the SCREEN edge
+     cuts into them, and never overlap the centered person. Positions are
+     computed in px from each cutout's own width, interpolated by r so the
+     glide between rest states stays continuous. */
   const applyImageScale = useCallback((s: KeenSliderInstance) => {
     const details = s.track.details;
     if (!details) return;
+    const stage =
+      (s.container.closest(".ax-team-stage") as HTMLElement) ?? s.container;
+    const W = stage.clientWidth;
+    const H = stage.clientHeight;
+    const cw = s.container.clientWidth;
+
+    // pass 1: r + rendered cutout width per slide; active half-width for the guard
+    const rs: number[] = [];
+    const ws: number[] = [];
+    let activeHalf = 0;
     s.slides.forEach((slideEl, i) => {
       // keen reports rest distance = the slide's origin, so subtract it
       const r = -(details.slides[i].distance - TEAM_ORIGIN);
+      rs[i] = r;
+      const img = slideEl.querySelector<HTMLImageElement>("img");
       const scale = mapLinear(Math.abs(r), 0, 1, 1, IMAGE_SCALE_MIN, true);
-      const x = mapLinear(r, -1, 0, -50, 0, true);
+      const w =
+        img && img.naturalHeight
+          ? (img.naturalWidth / img.naturalHeight) * H * TEAM_IMG_HEIGHT * scale
+          : 0;
+      ws[i] = w;
+      if (Math.abs(r) < 0.5) activeHalf = Math.max(activeHalf, w / 2);
+    });
+
+    s.slides.forEach((slideEl, i) => {
+      const r = rs[i];
+      const w = ws[i];
+      const scale = mapLinear(Math.abs(r), 0, 1, 1, IMAGE_SCALE_MIN, true);
+      const naturalCenter = W / 2 - r * cw; // where keen puts the slide center
+      let x = 0;
+      if (w > 0 && Math.abs(r) > 0.001) {
+        // rest target: person center such that TEAM_EDGE_CUT of them hangs
+        // off-screen, but never closer to the middle than the active person
+        let target =
+          r < 0
+            ? Math.max(
+                W - (0.5 - TEAM_EDGE_CUT) * w,
+                W / 2 + activeHalf + 16 + w / 2,
+              )
+            : Math.min(
+                (0.5 - TEAM_EDGE_CUT) * w,
+                W / 2 - activeHalf - 16 - w / 2,
+              );
+        if (r > 0) {
+          // keep the left neighbor's head clear of the card
+          const vhpx = window.innerHeight / 100;
+          const cardW = Math.min(
+            TEAM_CARD_MAX_W,
+            Math.max(TEAM_CARD_MIN_W, W / 2 - 50 * vhpx - 16),
+          );
+          const cardLeft = W / 2 - TEAM_CARD_RIGHT_VH * vhpx - cardW;
+          target = Math.min(target, cardLeft - 12 - 0.18 * w);
+        }
+        // slides beyond the immediate neighbors keep receding past the edge
+        // instead of stacking on it
+        if (Math.abs(r) > 1) {
+          target += Math.sign(-r) * (Math.abs(r) - 1) * w * 1.15;
+        }
+        x = Math.min(Math.abs(r), 1) * (target - naturalCenter);
+      }
       const inner = slideEl.querySelector<HTMLElement>(".ax-company-panel-inner");
-      if (inner) inner.style.transform = `scale(${scale}) translateX(${x}%)`;
+      if (inner) inner.style.transform = `translateX(${x}px) scale(${scale})`;
+      // centered person always renders in front of the receding neighbors
+      slideEl.style.zIndex = String(20 - Math.round(Math.min(Math.abs(r), 3) * 5));
     });
   }, []);
 
@@ -289,9 +350,17 @@ export function TeamCarousel() {
 /* S7 — Five companies, one standard (recovered team carousel)          */
 /* ------------------------------------------------------------------ */
 
-const IMAGE_SCALE_MIN = 0.8142857143;
+const IMAGE_SCALE_MIN = 0.9; /* neighbors sit ~10% "further back" */
 const TEAM_PER_VIEW = 1.05;
 const TEAM_ORIGIN = 0.5 - 1 / TEAM_PER_VIEW / 2;
+const TEAM_IMG_HEIGHT = 0.97; /* mirrors .ax-team-people .ax-person-cut img */
+const TEAM_EDGE_CUT = 0.3; /* fraction of a neighbor the screen edge cuts off */
+/* card geometry mirror of .ax-team-people .ax-testimonial-card -- the left
+   neighbor is pushed further off-screen when needed so its head never slides
+   under the card at narrow desktop widths */
+const TEAM_CARD_RIGHT_VH = 30;
+const TEAM_CARD_MIN_W = 220;
+const TEAM_CARD_MAX_W = 400;
 
 export function CompaniesCarousel() {
   const sectionRef = useRef<HTMLElement>(null);
