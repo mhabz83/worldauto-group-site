@@ -7,6 +7,7 @@ import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { companies, footer, nav } from "@/content/site";
+import { useCountUp } from "@/lib/useCountUp";
 import { NeonJourney } from "./NeonJourney";
 import { journeyContent, stopAccents } from "./journeyContent";
 
@@ -16,6 +17,8 @@ const MOTION = {
   stopHeight: "118svh",
   revealScrub: 1.15,
   exitScrub: 0.9,
+  firstCardRevealStart: "top 82%",
+  firstCardRevealEnd: "top 35%",
 } as const;
 
 const revealFrom = {
@@ -45,7 +48,7 @@ function Stop({ id, kind, accent, align = "start", children, label, navSection }
       data-journey-stop
       data-stop-kind={kind}
       data-nav-section={navSection}
-      className={`journey-stop journey-stop--${align}`}
+      className={`journey-stop journey-stop--${align} journey-stop--kind-${kind}`}
       style={{ minHeight: MOTION.stopHeight, "--stop-accent": accent } as React.CSSProperties}
       aria-label={label}
     >
@@ -71,6 +74,30 @@ const headerLinks = [
   { label: "Heritage", href: "#heritage", section: "heritage" },
   { label: "Partner", href: "#partner", section: "partner" },
 ] as const;
+
+const companyProofHighlights: Record<(typeof companies)[number]["slug"], string> = {
+  fasttrack: "32",
+  autodata: "Inspections",
+  axxion: "first",
+  "pag-direct": "30+",
+  vicimus: "Retention",
+};
+
+function SignalWord({ children }: { children: React.ReactNode }) {
+  return <span className="journey-signal">{children}</span>;
+}
+
+function HighlightedText({ text, highlight }: { text: string; highlight: string }) {
+  const start = text.indexOf(highlight);
+  if (start < 0) return text;
+  return (
+    <>
+      {text.slice(0, start)}
+      <SignalWord>{highlight}</SignalWord>
+      {text.slice(start + highlight.length)}
+    </>
+  );
+}
 
 function Header() {
   const [activeSection, setActiveSection] = useState<(typeof headerLinks)[number]["section"]>("group");
@@ -126,7 +153,8 @@ function Header() {
     <>
       <header className="journey-header">
         <Link href="/" className="journey-wordmark" aria-label="WORLDAUTO GROUP home">
-          <strong>{nav.wordmark.strong}</strong><span>{nav.wordmark.thin}</span>
+          <strong>WORLD<span className="journey-wordmark-auto">AUTO</span></strong>
+          <span>{nav.wordmark.thin}</span>
         </Link>
         <nav className="journey-desktop-nav" aria-label="Journey navigation">
           {headerLinks.slice(0, 4).map((link) => (
@@ -203,7 +231,9 @@ function CompanyStop({ company, index }: { company: (typeof companies)[number]; 
       <p className="journey-region">{company.region}</p>
       <h2>{company.name}</h2>
       <p className="journey-company-line">{company.oneLiner}</p>
-      <p className="journey-proof">{company.proof}</p>
+      <p className="journey-proof">
+        <HighlightedText text={company.proof} highlight={companyProofHighlights[company.slug]} />
+      </p>
       <ul className="journey-capabilities" aria-label={`${company.name} capabilities`}>
         {company.capabilities.map((capability) => <li key={capability}>{capability}</li>)}
       </ul>
@@ -212,6 +242,41 @@ function CompanyStop({ company, index }: { company: (typeof companies)[number]; 
         <a href={company.url} target="_blank" rel="noreferrer">Visit site</a>
       </div>
     </Stop>
+  );
+}
+
+type CountedStat = {
+  value: number;
+  start?: number;
+  label: string;
+  prefix?: string;
+  suffix?: string;
+  format: "year" | "compact" | "thousands";
+};
+
+const countedStats: readonly CountedStat[] = [
+  { value: 4, start: 1990, label: "Founded, Abu Dhabi", format: "year" },
+  { value: 650, label: "Annual group revenue", prefix: "~USD ", suffix: "M", format: "compact" },
+  { value: 4000, label: "People across the group", prefix: "~", format: "thousands" },
+];
+
+function formatCountedValue(value: number, format: CountedStat["format"]) {
+  if (format === "year") return String(Math.round(value));
+  if (format === "thousands") return Math.round(value).toLocaleString("en-US");
+  return value >= 1000 ? `${Math.round(value / 1000)}K` : String(Math.round(value));
+}
+
+function CountedStatItem({ stat, index }: { stat: CountedStat; index: number }) {
+  const { ref, value } = useCountUp(stat.value, 2200, 350 + index * 260);
+  return (
+    <div className="journey-stat">
+      <dt>{stat.label}</dt>
+      <dd>
+        {stat.prefix}
+        <span ref={ref}>{formatCountedValue(value + (stat.start ?? 0), stat.format)}</span>
+        {stat.suffix}
+      </dd>
+    </div>
   );
 }
 
@@ -229,6 +294,25 @@ export function LandingJourney() {
       const kind = stop.dataset.stopKind as keyof typeof revealFrom;
       if (index === 0) {
         gsap.fromTo(panel, revealFrom.hero, { yPercent: 0, opacity: 1, duration: 1.15, ease: "expo.out" });
+      } else if (index === 1) {
+        // Prototype: reveal the first incoming card in the same vertical
+        // direction as the road appears to travel. The panel remains anchored
+        // while a crisp mask uncovers it from top to bottom.
+        gsap.fromTo(
+          panel,
+          { clipPath: "inset(0 0 100% 0)", opacity: 1 },
+          {
+            clipPath: "inset(0 0 0% 0)",
+            opacity: 1,
+            ease: "quart.out",
+            scrollTrigger: {
+              trigger: panel,
+              start: MOTION.firstCardRevealStart,
+              end: MOTION.firstCardRevealEnd,
+              scrub: MOTION.revealScrub,
+            },
+          },
+        );
       } else {
         gsap.fromTo(panel, revealFrom[kind], {
           xPercent: 0,
@@ -263,6 +347,26 @@ export function LandingJourney() {
           },
         );
       }
+
+      if (kind === "numbers") {
+        const statItems = stop.querySelectorAll<HTMLElement>(".journey-stat");
+        gsap.fromTo(
+          statItems,
+          { y: 28, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            stagger: 0.16,
+            ease: "expo.out",
+            scrollTrigger: {
+              trigger: stop,
+              start: "top 72%",
+              end: "top 30%",
+              scrub: MOTION.revealScrub,
+            },
+          },
+        );
+      }
     });
   }, { scope: rootRef });
 
@@ -284,19 +388,19 @@ export function LandingJourney() {
       <div className="journey-copy-layer">
         <Stop id="group" kind="hero" accent={stopAccents.hero} label="World Automotive Group" navSection="group">
           <p className="journey-eyebrow">{journeyContent.hero.eyebrow}</p>
-          <h1>{journeyContent.hero.title}</h1>
+          <h1>We Build And Run <SignalWord>Automotive.</SignalWord></h1>
           <p className="journey-body">{journeyContent.hero.body}</p>
         </Stop>
 
         <Stop id="companies" kind="intro" accent={stopAccents.companies} align="end" label="Companies" navSection="companies">
-          <h2>{journeyContent.companiesIntro.title}</h2>
+          <h2><SignalWord>Five</SignalWord> companies, one standard.</h2>
         </Stop>
 
         {companies.map((company, index) => <CompanyStop key={company.slug} company={company} index={index} />)}
 
         <Stop id="model" kind="model" accent={stopAccents.model} align="end" label="The Model" navSection="model">
           <h2>{journeyContent.model.title}</h2>
-          <p className="journey-statement">{journeyContent.model.statement}</p>
+          <p className="journey-statement">We build and run automotive operations, then <SignalWord>productize</SignalWord> what works.</p>
           <div className="journey-pillars">
             {journeyContent.model.pillars.map((pillar) => (
               <article key={pillar.cue}>
@@ -307,17 +411,18 @@ export function LandingJourney() {
         </Stop>
 
         <Stop id="numbers" kind="numbers" accent={stopAccents.numbers} label="The Group In Numbers" navSection="model">
-          <h2>{journeyContent.numbers.title}</h2>
+          <h2>The Group In <SignalWord>Numbers</SignalWord></h2>
           <dl className="journey-stats">
-            {journeyContent.numbers.stats.map((stat) => (
-              <div key={stat.label}><dt>{stat.label}</dt><dd>{stat.value}</dd></div>
+            {countedStats.map((stat, index) => (
+              <CountedStatItem key={stat.label} stat={stat} index={index} />
             ))}
+            <div className="journey-stat"><dt>Two operating regions</dt><dd>UAE · NA</dd></div>
           </dl>
         </Stop>
 
         <Stop id="heritage" kind="heritage" accent={stopAccents.heritage} align="end" label="Heritage" navSection="heritage">
           <h2>{journeyContent.heritage.title}</h2>
-          <p className="journey-statement">{journeyContent.heritage.statement}</p>
+          <p className="journey-statement">Three <SignalWord>decades</SignalWord> of operating.</p>
           <ol className="journey-timeline">
             {journeyContent.heritage.timeline.map((item) => (
               <li key={item.year}><p>{item.year}</p><div><h3>{item.title}</h3><p>{item.detail}</p></div></li>
@@ -326,7 +431,7 @@ export function LandingJourney() {
         </Stop>
 
         <Stop id="partner" kind="partner" accent={stopAccents.partner} label="Partner With Us" navSection="partner">
-          <h2>{journeyContent.partner.title}</h2>
+          <h2><SignalWord>Build</SignalWord> With The Group.</h2>
           <p className="journey-body">{journeyContent.partner.body}</p>
           <Link href="/contact" className="journey-primary-cta">{journeyContent.partner.cta}</Link>
           <a href="#group" className="journey-back-to-top">Back to top <span aria-hidden="true">↑</span></a>
@@ -348,7 +453,8 @@ export function LandingJourney() {
         .journey-copy-layer { position: relative; z-index: 3; }
         .journey-header { position: fixed; z-index: 8; inset: 0 0 auto; height: 72px; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: clamp(1rem,3vw,3rem); padding: 0 var(--gutter); background: linear-gradient(180deg,rgba(0,8,53,.96),rgba(0,8,53,.58) 70%,transparent); }
         .journey-wordmark { display: flex; gap: .45rem; color: #fff; text-decoration: none; letter-spacing: -.025em; white-space: nowrap; }
-        .journey-wordmark strong { font-weight: 700; }.journey-wordmark span { font-weight: 300; color: var(--text-mid); }
+        .journey-wordmark strong { font-weight: 700; }.journey-wordmark > span { font-weight: 300; color: var(--text-mid); }
+        .journey-wordmark .journey-wordmark-auto,.journey-signal { color: var(--highlight); }
         .journey-desktop-nav { display: flex; justify-content: center; gap: clamp(1rem,2.4vw,2.5rem); }
         .journey-desktop-nav a,.journey-header-cta { position: relative; display: inline-flex; min-height: 44px; align-items: center; color: var(--text-mid); text-decoration: none; font-size: .78rem; white-space: nowrap; transition: color var(--dur-fast) ease; }
         .journey-desktop-nav a::after { position: absolute; right: 0; bottom: 7px; left: 0; height: 1px; background: currentColor; content: ""; transform: scaleX(0); transform-origin: right; transition: transform var(--dur-fast) var(--ease-reveal); }
@@ -382,8 +488,8 @@ export function LandingJourney() {
         .journey-pillars article>p:first-child { margin: 0 0 .4rem; color: var(--stop-accent); font-size: .72rem; }
         .journey-pillars article>p:last-child { margin: .45rem 0 0; color: rgba(255,255,255,.84); font-size: .9rem; line-height: 1.5; }
         .journey-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 2rem 0 0; }
-        .journey-stats div { display: flex; flex-direction: column-reverse; padding-top: 1rem; border-top: 1px solid color-mix(in srgb,var(--stop-accent) 38%,transparent); }
-        .journey-stats dt { color: var(--text-mid); font-size: .82rem; }.journey-stats dd { margin: 0 0 .35rem; color: #fff; font-size: clamp(1.75rem,3.5vw,3.2rem); font-weight: 300; letter-spacing: -.03em; }
+        .journey-stats div { display: flex; min-width: 0; flex-direction: column-reverse; padding-top: 1rem; border-top: 1px solid color-mix(in srgb,var(--stop-accent) 38%,transparent); }
+        .journey-stats dt { min-height: 2.5em; color: var(--text-mid); font-size: .82rem; line-height: 1.35; }.journey-stats dd { margin: 0 0 .35rem; color: #fff; font-size: clamp(1.75rem,3.5vw,3.2rem); font-weight: 300; letter-spacing: -.03em; line-height: 1; white-space: nowrap; }
         .journey-timeline { margin: 1.8rem 0 0; padding: 0; list-style: none; }
         .journey-timeline li { display: grid; grid-template-columns: 5.4rem 1fr; gap: 1rem; padding: .85rem 0; border-top: 1px solid rgba(255,255,255,.13); }
         .journey-timeline li>p { margin: 0; color: var(--stop-accent); font-size: .75rem; }.journey-timeline h3,.journey-timeline li div p { margin: 0; }.journey-timeline li div p { color: rgba(255,255,255,.82); font-size: .88rem; line-height: 1.45; }
@@ -405,13 +511,16 @@ export function LandingJourney() {
           .journey-static-image { object-position: 65% center; }.journey-stop,.journey-stop--end { align-items: flex-end; justify-content: stretch; padding: 5rem 0 0; }
           .journey-stop:first-child { min-height: 100svh !important; }
           .journey-panel,.journey-stop--end .journey-panel { width: 100%; padding: 5.5rem var(--gutter) max(1.5rem,env(safe-area-inset-bottom)); background: linear-gradient(0deg,rgba(0,5,31,.98),rgba(0,8,53,.84) 62%,transparent); }
-          .journey-panel h1,.journey-panel h2 { font-size: clamp(2.45rem,12vw,4.6rem); }.journey-pillars,.journey-stats { grid-template-columns: 1fr; gap: .85rem; }.journey-pillars article>p:last-child { font-size: .84rem; }.journey-footer { flex-direction: column; }
+          .journey-panel h1,.journey-panel h2 { font-size: clamp(2.45rem,12vw,4.6rem); }.journey-pillars { grid-template-columns: 1fr; gap: .85rem; }.journey-pillars article>p:last-child { font-size: .84rem; }.journey-footer { flex-direction: column; }
+          .journey-stats { grid-template-columns: 1fr; gap: .85rem; }
+          .journey-stats dd { font-size: clamp(1.7rem,8vw,2.7rem); }
         }
         @media (prefers-reduced-motion: reduce) {
           /* NeonJourney renders one motionless 3D frame in reduced-motion
              mode, so the licensed SUV remains visible without animation. */
           .journey-static-frame { opacity: 0 !important; transform: none !important; }
           .journey-stop { min-height: auto !important; padding-block: clamp(5rem,12vw,8rem); }.journey-panel { will-change: auto; opacity: 1 !important; transform: none !important; }
+          .journey-stat { opacity: 1 !important; transform: none !important; }
           .journey-mobile-menu,.journey-menu-toggle span,.journey-desktop-nav a::after { transition: none !important; }
         }
         html.webgl-unavailable .journey-webgl { display: none !important; }

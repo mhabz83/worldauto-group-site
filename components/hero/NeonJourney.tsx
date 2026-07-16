@@ -39,7 +39,6 @@ const WORLD_SCALE = 1 / 7.7;
 const COLORS = {
   background: 0x000835, // clear + fog + scene background
   lineBlue: 0x1367fe,
-  lineCyan: 0x42d7ff,
   lineOrange: 0xff4200,
   lineWhite: 0xffffff,
   vehicle: 0x000000,
@@ -53,7 +52,7 @@ const CAMERA = {
   fovSm: 65, // <= 640px
   near: 0.001,
   far: 0.15,
-  smoothTime: 0.26,
+  smoothTime: 0.2, // SmoothDamp on scroll progress (Madar value)
   introMs: 0, // locked opening pose; scroll is the only camera driver
   // recovered preloader sweep start pose ("Z" array, pose 0)
   introFrom: {
@@ -78,14 +77,22 @@ const RENDER = {
 const TUBES = {
   roadRadius: 585e-7,
   thinRadius: 3e-5,
-  detailRadius: 2.65e-5,
+  detailRadius: 3e-5,
   radialSegments: 8,
   roadSegments: 500,
   roadSegmentsShort: 200, // curves shorter than 0.1 world units
-  // Every element now uses the same restrained core luminance. Previously
-  // the assets were boosted far above the road, which made them look pasted
-  // into the scene instead of built from the same light.
-  roadDarken: -10,
+  roadDarken: -10, // stable core stays above bloom threshold along the full trail
+  // Non-road (truck wireframe / detail) lines only: emissive boost so they
+  // read as bright as Madar's under the page's legibility scrim (which
+  // multiplies the canvas down ~0.8). Per-channel: c' = k * c^gamma.
+  // - blue: gamma 2 keeps it SATURATED blue (a flat multiply overshoots the
+  //   green channel under ACES and reads teal; ref bright blue is 19/83/224)
+  // - orange: flat multiply so the core warms toward Madar's yellow-white
+  // - white: flat multiply, just hotter
+  // Road trails stay untouched (they'd blow out under bloom).
+  detailBoostBlue: { gamma: 2, k: 2.8 },
+  detailBoostOrange: { gamma: 1, k: 1.6 },
+  detailBoostWhite: { gamma: 1, k: 2 },
 };
 
 // SUV replaces Madar's truck. The licensed source is normalized offline by
@@ -148,43 +155,7 @@ const JOURNEY_POSES = [
   { raw: 1, scene: 1, accent: 0x1367fe },
 ] as const;
 const JOURNEY_ACCENT_COLORS = JOURNEY_POSES.map((pose) => new THREE.Color(pose.accent));
-const JOURNEY_HOLD = 0.03;
-
-// One deliberately restrained benchmark destination. It sits beyond the
-// FastTrack camera target (never around the camera), stays smaller than the
-// SUV in frame, and fades away before the AutoData stop.
-const FASTTRACK_DESTINATION = {
-  raw: 0.2,
-  scene: 0.14,
-  depthBeyondTarget: 0.023,
-  sideOffset: -0.025,
-  structureRadius: TUBES.roadRadius,
-  laneRadius: TUBES.roadRadius,
-  accentRadius: TUBES.detailRadius,
-  baseRoadOpacity: 0.085,
-  mobileScale: 1.12,
-  modelWidth: 0.032,
-  edgeThresholdDeg: 35,
-  minStructureChain: 0.5,
-} as const;
-
-const AUTODATA_DESTINATION = {
-  raw: 0.3,
-  scene: 0.23,
-  depthBeyondTarget: 0.021,
-  sideOffset: 0.009,
-  structureRadius: 0.00007,
-  sensorRadius: 0.000052,
-  laneRadius: 0.000078,
-  baseRoadOpacity: 0.03,
-  mobileScale: 1.08,
-  modelWidth: 0.0215,
-  edgeThresholdDeg: 34,
-  sensorThresholdDeg: 42,
-  minStructureChain: 0.11,
-  minSensorChain: 0.04,
-  scanDepth: 0.014,
-} as const;
+const JOURNEY_HOLD = 0.026;
 
 const FAKE_FLOOR = {
   size: 0.1,
@@ -211,8 +182,6 @@ const LOOK_POINTS: [number, number, number][] = [
 
 const ASSETS = {
   suv: "/webgl-lines/suv-licensed.glb",
-  fasttrack: "/webgl-lines/fasttrack-service.glb",
-  autodata: "/webgl-lines/autodata-scanner.glb",
   lines: "/webgl-lines/scene-16.obj",
 };
 
@@ -607,14 +576,6 @@ function darkenHex(hex: number, amt: number): number {
   return (r << 16) | (g << 8) | b;
 }
 
-/** One shared colour transform for road, vehicle and destination geometry. */
-function neonCoreColor(hex: number): THREE.Color {
-  return new THREE.Color().setHex(
-    darkenHex(hex, TUBES.roadDarken),
-    THREE.LinearSRGBColorSpace,
-  );
-}
-
 /** Unity SmoothDamp (the algorithm Madar smooths scroll progress with). */
 function smoothDamp(
   current: number,
@@ -880,467 +841,9 @@ export function NeonJourney() {
       roughTex, normalTex, blurRT, blurMat, blurQuad,
     ];
     const lineMaterials: THREE.ShaderMaterial[] = [];
-    const roadMaterials: THREE.ShaderMaterial[] = [];
     const circleLines: THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>[] = [];
     let renderStatic = () => {}; // re-render hook for reduced motion
     let fittedVehicle: THREE.Group | null = null;
-
-    /* ---------------------- FastTrack benchmark stop --------------------- */
-    const fasttrackGroup = new THREE.Group();
-    fasttrackGroup.name = "destination_fasttrack_benchmark";
-    fasttrackGroup.visible = false;
-
-    const fasttrackCamera = camCurve.getPoint(FASTTRACK_DESTINATION.scene);
-    const fasttrackTarget = lookCurve.getPoint(FASTTRACK_DESTINATION.scene);
-    const fasttrackForward = fasttrackTarget.clone().sub(fasttrackCamera).setY(0).normalize();
-    const fasttrackRight = new THREE.Vector3()
-      .crossVectors(fasttrackForward, new THREE.Vector3(0, 1, 0))
-      .normalize();
-    const fasttrackPosition = fasttrackTarget
-      .clone()
-      .addScaledVector(fasttrackForward, FASTTRACK_DESTINATION.depthBeyondTarget)
-      .addScaledVector(fasttrackRight, FASTTRACK_DESTINATION.sideOffset);
-    fasttrackPosition.y = 0.00012;
-    fasttrackGroup.position.copy(fasttrackPosition);
-    fasttrackGroup.rotation.y = Math.atan2(
-      fasttrackCamera.x - fasttrackPosition.x,
-      fasttrackCamera.z - fasttrackPosition.z,
-    );
-
-    const ftPoint = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
-    const bayEdges = [-0.012, -0.004, 0.004, 0.012];
-
-    // The original highway visibly becomes the forecourt: four blue lane
-    // boundaries fan into the three portal openings, with an orange work line
-    // down the centre of each bay.
-    const fasttrackLanePaths: THREE.Vector3[][] = [
-      ...bayEdges.map((x) => [
-        ftPoint(x * 0.08, 0.0001, 0.075),
-        ftPoint(x * 0.12, 0.0001, 0.058),
-        ftPoint(x * 0.2, 0.0001, 0.044),
-        ftPoint(x * 0.35, 0.0001, 0.031),
-        ftPoint(x * 0.62, 0.0001, 0.02),
-        ftPoint(x * 0.84, 0.0001, 0.009),
-        ftPoint(x, 0.0001, 0.001),
-        ftPoint(x * 0.98, 0.0001, -0.009),
-      ]),
-    ];
-    // The same four tubes begin as a quiet, parallel road. Their vertex
-    // positions are interpolated into the fan above during the arrival, so
-    // the road genuinely becomes the forecourt rather than cross-fading to it.
-    const fasttrackRoadPaths: THREE.Vector3[][] = bayEdges.map((x) => {
-      const roadX = x * 0.22;
-      return [0.075, 0.058, 0.044, 0.031, 0.02, 0.009, 0.001, -0.009].map((z) =>
-        ftPoint(roadX, 0.0001, z));
-    });
-    // Hand-authored architecture/accent paths retired: the pavilion's neon
-    // structure is now extracted from the licensed kit geometry itself (see
-    // the GLTF loader below), the same pipeline the AutoData scanner uses.
-    const buildFasttrackMesh = (
-      paths: THREE.Vector3[][],
-      radius: number,
-      pulse: boolean,
-      color: number,
-    ) => {
-      const parts = paths.map((path) => new THREE.TubeGeometry(
-        new PolylineCurve(path),
-        Math.max(8, (path.length - 1) * 8),
-        radius,
-        6,
-        false,
-      ));
-      const geometry = mergeGeometries(parts, false);
-      parts.forEach((part) => part.dispose());
-      if (!geometry) return null;
-
-      const colorValue = neonCoreColor(color);
-      const material = new THREE.ShaderMaterial({
-        vertexShader: LINE_VERT,
-        fragmentShader: LINE_FRAG,
-        transparent: true,
-        depthTest: true,
-        depthWrite: false,
-        fog: true,
-        lights: false,
-        uniforms: THREE.UniformsUtils.merge([
-          THREE.UniformsLib.fog,
-          {
-            uColor: { value: colorValue },
-            uTime: { value: 0 },
-            uSize: { value: pulse ? 4 : 1 },
-            uSpeed: { value: pulse ? 0.5 : 0 },
-            uHideCorners: { value: false },
-            uAlpha: { value: 0 },
-          },
-        ]),
-      });
-      const mesh = new THREE.Mesh(geometry, material);
-      lineMaterials.push(material);
-      disposables.push(geometry, material);
-      return { mesh, material };
-    };
-
-    const buildMorphingFasttrackLanes = () => {
-      const material = new THREE.ShaderMaterial({
-        vertexShader: LINE_VERT,
-        fragmentShader: LINE_FRAG,
-        transparent: true,
-        depthTest: true,
-        depthWrite: false,
-        fog: true,
-        lights: false,
-        uniforms: THREE.UniformsUtils.merge([
-          THREE.UniformsLib.fog,
-          {
-            uColor: { value: neonCoreColor(COLORS.lineBlue) },
-            uTime: { value: 0 },
-            uSize: { value: 7 },
-            uSpeed: { value: 0.42 },
-            uHideCorners: { value: false },
-            uAlpha: { value: 0 },
-          },
-        ]),
-      });
-      const group = new THREE.Group();
-      const morphs: {
-        position: THREE.BufferAttribute;
-        source: Float32Array;
-        target: Float32Array;
-      }[] = [];
-
-      fasttrackRoadPaths.forEach((sourcePath, index) => {
-        const segments = 72;
-        const sourceGeometry = new THREE.TubeGeometry(
-          new PolylineCurve(sourcePath),
-          segments,
-          FASTTRACK_DESTINATION.laneRadius,
-          6,
-          false,
-        );
-        const targetGeometry = new THREE.TubeGeometry(
-          new PolylineCurve(fasttrackLanePaths[index]),
-          segments,
-          FASTTRACK_DESTINATION.laneRadius,
-          6,
-          false,
-        );
-        const position = sourceGeometry.getAttribute("position") as THREE.BufferAttribute;
-        const targetPosition = targetGeometry.getAttribute("position") as THREE.BufferAttribute;
-        const source = new Float32Array(position.array as Float32Array);
-        const target = new Float32Array(targetPosition.array as Float32Array);
-        targetGeometry.dispose();
-        const mesh = new THREE.Mesh(sourceGeometry, material);
-        mesh.frustumCulled = false;
-        group.add(mesh);
-        morphs.push({ position, source, target });
-        disposables.push(sourceGeometry);
-      });
-
-      let lastAmount = -1;
-      const update = (amount: number) => {
-        if (Math.abs(amount - lastAmount) < 0.0005) return;
-        lastAmount = amount;
-        const eased = 1 - Math.pow(1 - THREE.MathUtils.clamp(amount, 0, 1), 4);
-        for (const morph of morphs) {
-          const output = morph.position.array as Float32Array;
-          for (let index = 0; index < output.length; index++) {
-            output[index] = THREE.MathUtils.lerp(
-              morph.source[index],
-              morph.target[index],
-              eased,
-            );
-          }
-          morph.position.needsUpdate = true;
-        }
-      };
-
-      lineMaterials.push(material);
-      disposables.push(material);
-      return { mesh: group, material, update };
-    };
-
-    let fasttrackStructure: {
-      mesh: THREE.Object3D;
-      material: THREE.ShaderMaterial;
-    } | null = null;
-    const fasttrackLanes = buildMorphingFasttrackLanes();
-    if (fasttrackLanes) {
-      fasttrackLanes.mesh.name = "fasttrack_service_lanes";
-      fasttrackGroup.add(fasttrackLanes.mesh);
-    }
-
-    // The licensed modular garage remains as a matte-black volume beneath the
-    // deliberately authored structural lines. The asset supplies real depth;
-    // the neon layer stays legible and quiet instead of exposing every edge.
-    new GLTFLoader().load(
-      ASSETS.fasttrack,
-      (gltf) => {
-        if (disposed) return;
-
-        gltf.scene.updateMatrixWorld(true);
-        const sourceBounds = new THREE.Box3().setFromObject(gltf.scene);
-        const sourceSize = sourceBounds.getSize(new THREE.Vector3());
-        const sourceCenter = sourceBounds.getCenter(new THREE.Vector3());
-        const assetScale = FASTTRACK_DESTINATION.modelWidth / sourceSize.x;
-        const offset = new THREE.Vector3(
-          -sourceCenter.x,
-          -sourceBounds.min.y,
-          -sourceBounds.max.z,
-        );
-
-        const bodyMaterial = new THREE.MeshBasicMaterial({
-          color: 0x000106,
-          depthWrite: false,
-        });
-        // Extract the pavilion's real feature edges into neon polylines: the
-        // same licensed-geometry pipeline as the AutoData scanner. Chains
-        // shorter than minStructureChain (model metres) are facet noise.
-        const structurePaths: THREE.Vector3[][] = [];
-        gltf.scene.traverse((object) => {
-          if (!(object as THREE.Mesh).isMesh) return;
-          const mesh = object as THREE.Mesh;
-          mesh.material = bodyMaterial;
-          const edges = new THREE.EdgesGeometry(
-            mesh.geometry,
-            FASTTRACK_DESTINATION.edgeThresholdDeg,
-          );
-          for (const points of chainEdgeSegments(edges)) {
-            let length = 0;
-            for (let i = 1; i < points.length; i++) {
-              length += points[i].distanceTo(points[i - 1]);
-            }
-            if (length < FASTTRACK_DESTINATION.minStructureChain) continue;
-            for (const point of points) point.applyMatrix4(mesh.matrixWorld);
-            structurePaths.push(points);
-          }
-          edges.dispose();
-        });
-
-        const garageRoot = new THREE.Group();
-        garageRoot.name = "fasttrack_licensed_service_pavilion";
-        garageRoot.scale.setScalar(assetScale);
-        gltf.scene.position.copy(offset);
-        garageRoot.add(gltf.scene);
-
-        const structure = buildFasttrackMesh(
-          structurePaths,
-          FASTTRACK_DESTINATION.structureRadius / assetScale,
-          false,
-          COLORS.lineBlue,
-        );
-        if (structure) {
-          structure.mesh.name = "fasttrack_extracted_structure";
-          structure.mesh.position.copy(offset);
-          garageRoot.add(structure.mesh);
-          fasttrackStructure = structure;
-        }
-        fasttrackGroup.add(garageRoot);
-
-        disposables.push(bodyMaterial);
-        gltf.scene.traverse((object) => {
-          if ((object as THREE.Mesh).isMesh) {
-            disposables.push((object as THREE.Mesh).geometry);
-          }
-        });
-        renderStatic();
-      },
-      undefined,
-      (error) => console.error("FastTrack garage load failed", error),
-    );
-    scene.add(fasttrackGroup);
-
-    /* ----------------------- AutoData inspection stop ------------------- */
-    const autodataGroup = new THREE.Group();
-    autodataGroup.name = "destination_autodata_inspection_lane";
-    autodataGroup.visible = false;
-
-    const autodataCamera = camCurve.getPoint(AUTODATA_DESTINATION.scene);
-    const autodataTarget = lookCurve.getPoint(AUTODATA_DESTINATION.scene);
-    const autodataForward = autodataTarget.clone().sub(autodataCamera).setY(0).normalize();
-    const autodataRight = new THREE.Vector3()
-      .crossVectors(autodataForward, new THREE.Vector3(0, 1, 0))
-      .normalize();
-    const autodataPosition = autodataTarget
-      .clone()
-      .addScaledVector(autodataForward, AUTODATA_DESTINATION.depthBeyondTarget)
-      .addScaledVector(autodataRight, AUTODATA_DESTINATION.sideOffset);
-    autodataPosition.y = 0.00012;
-    autodataGroup.position.copy(autodataPosition);
-    autodataGroup.rotation.y = Math.atan2(
-      autodataCamera.x - autodataPosition.x,
-      autodataCamera.z - autodataPosition.z,
-    );
-
-    const adPoint = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
-    const autodataApproachPaths: THREE.Vector3[][] = [-0.0072, 0.0072].map((x) => [
-      adPoint(x * 0.08, 0.00011, 0.046),
-      adPoint(x * 0.32, 0.00011, 0.032),
-      adPoint(x * 0.68, 0.00011, 0.017),
-      adPoint(x, 0.00011, 0.001),
-      adPoint(x, 0.00011, -0.015),
-    ]);
-    const autodataApproach = buildFasttrackMesh(
-      autodataApproachPaths,
-      AUTODATA_DESTINATION.laneRadius,
-      true,
-      COLORS.lineCyan,
-    );
-    if (autodataApproach) {
-      autodataApproach.mesh.name = "autodata_inspection_approach";
-      autodataGroup.add(autodataApproach.mesh);
-    }
-
-    // Three restrained translucent scan slices travel through the tunnel. The
-    // downloaded model's original opaque scan cone was intentionally removed.
-    const autodataScanPlanes: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>[] = [];
-    const autodataScanFrames: NonNullable<ReturnType<typeof buildFasttrackMesh>>[] = [];
-    for (let index = 0; index < 3; index++) {
-      const geometry = new THREE.PlaneGeometry(0.0172, 0.0076);
-      const material = new THREE.MeshBasicMaterial({
-        color: COLORS.lineCyan,
-        transparent: true,
-        opacity: 0,
-        blending: THREE.AdditiveBlending,
-        depthTest: true,
-        depthWrite: false,
-        side: THREE.DoubleSide,
-      });
-      const plane = new THREE.Mesh(geometry, material);
-      plane.name = `autodata_scan_slice_${index + 1}`;
-      plane.position.set(0, 0.0038, -0.002);
-      autodataScanPlanes.push(plane);
-      autodataGroup.add(plane);
-      disposables.push(geometry, material);
-
-      const frame = buildFasttrackMesh(
-        [[
-          adPoint(-0.00855, 0.00015, 0),
-          adPoint(-0.00855, 0.00755, 0),
-          adPoint(0.00855, 0.00755, 0),
-          adPoint(0.00855, 0.00015, 0),
-        ]],
-        AUTODATA_DESTINATION.sensorRadius,
-        true,
-        COLORS.lineCyan,
-      );
-      if (frame) {
-        frame.mesh.name = `autodata_scan_frame_${index + 1}`;
-        autodataScanFrames.push(frame);
-        autodataGroup.add(frame.mesh);
-      }
-    }
-
-    let autodataStructure: {
-      mesh: THREE.Object3D;
-      material: THREE.ShaderMaterial;
-    } | null = null;
-
-    new GLTFLoader().load(
-      ASSETS.autodata,
-      (gltf) => {
-        if (disposed) return;
-
-        gltf.scene.updateMatrixWorld(true);
-        const sourceBounds = new THREE.Box3().setFromObject(gltf.scene);
-        const sourceSize = sourceBounds.getSize(new THREE.Vector3());
-        const sourceCenter = sourceBounds.getCenter(new THREE.Vector3());
-        const assetScale = AUTODATA_DESTINATION.modelWidth / sourceSize.x;
-        const offset = new THREE.Vector3(
-          -sourceCenter.x,
-          -sourceBounds.min.y,
-          -sourceBounds.max.z,
-        );
-
-        const bodyMaterial = new THREE.MeshBasicMaterial({ color: 0x00020a });
-        // Structural destinations stay in the same blue family as the road;
-        // cyan is reserved for the moving scanner signal only.
-        const lineColor = neonCoreColor(COLORS.lineBlue);
-        const lineMaterial = new THREE.ShaderMaterial({
-          vertexShader: LINE_VERT,
-          fragmentShader: LINE_FRAG,
-          transparent: true,
-          depthTest: true,
-          depthWrite: false,
-          fog: true,
-          lights: false,
-          uniforms: THREE.UniformsUtils.merge([
-            THREE.UniformsLib.fog,
-            {
-              uColor: { value: lineColor },
-              uTime: { value: 0 },
-              uSize: { value: 1 },
-              uSpeed: { value: 0 },
-              uHideCorners: { value: false },
-              uAlpha: { value: 0 },
-            },
-          ]),
-        });
-
-        const tubeGeometries: THREE.BufferGeometry[] = [];
-        gltf.scene.traverse((object) => {
-          if (!(object as THREE.Mesh).isMesh) return;
-          const mesh = object as THREE.Mesh;
-          mesh.material = bodyMaterial;
-          const isSensor = /AD_(scanner|overhead_sensor)/i.test(mesh.name);
-          const threshold = isSensor
-            ? AUTODATA_DESTINATION.sensorThresholdDeg
-            : AUTODATA_DESTINATION.edgeThresholdDeg;
-          const minimumLength = isSensor
-            ? AUTODATA_DESTINATION.minSensorChain
-            : AUTODATA_DESTINATION.minStructureChain;
-          const worldRadius = isSensor
-            ? AUTODATA_DESTINATION.sensorRadius
-            : AUTODATA_DESTINATION.structureRadius;
-          const edges = new THREE.EdgesGeometry(mesh.geometry, threshold);
-          for (const points of chainEdgeSegments(edges)) {
-            let length = 0;
-            for (let i = 1; i < points.length; i++) {
-              length += points[i].distanceTo(points[i - 1]);
-            }
-            if (length < minimumLength) continue;
-            for (const point of points) point.applyMatrix4(mesh.matrixWorld);
-            tubeGeometries.push(new THREE.TubeGeometry(
-              new PolylineCurve(points),
-              Math.max(points.length - 1, 1),
-              worldRadius / assetScale,
-              TUBES.radialSegments,
-              false,
-            ));
-          }
-          edges.dispose();
-        });
-
-        const mergedEdges = mergeGeometries(tubeGeometries, false);
-        tubeGeometries.forEach((geometry) => geometry.dispose());
-        if (!mergedEdges) {
-          bodyMaterial.dispose();
-          lineMaterial.dispose();
-          return;
-        }
-
-        const scannerRoot = new THREE.Group();
-        scannerRoot.name = "autodata_ccby_vehicle_inspection_scanner";
-        scannerRoot.scale.setScalar(assetScale);
-        gltf.scene.position.copy(offset);
-        const lineMesh = new THREE.Mesh(mergedEdges, lineMaterial);
-        lineMesh.position.copy(offset);
-        scannerRoot.add(gltf.scene, lineMesh);
-        autodataGroup.add(scannerRoot);
-        autodataStructure = { mesh: scannerRoot, material: lineMaterial };
-
-        lineMaterials.push(lineMaterial);
-        disposables.push(bodyMaterial, lineMaterial, mergedEdges);
-        gltf.scene.traverse((object) => {
-          if ((object as THREE.Mesh).isMesh) {
-            disposables.push((object as THREE.Mesh).geometry);
-          }
-        });
-        renderStatic();
-      },
-      undefined,
-      (error) => console.error("AutoData scanner load failed", error),
-    );
-    scene.add(autodataGroup);
 
     const projectedBounds = (object: THREE.Object3D, fitCamera: THREE.Camera) => {
       const box = new THREE.Box3().setFromObject(object);
@@ -1416,8 +919,14 @@ export function NeonJourney() {
         const bodyMat = new THREE.MeshBasicMaterial({ color: COLORS.vehicle });
         disposables.push(bodyMat);
 
-        // The vehicle uses exactly the same core colour as the road.
-        const uCol = neonCoreColor(COLORS.lineBlue);
+        // neon color: same boosted-blue path as the truck's blue line-art
+        const uCol = new THREE.Color().setHex(COLORS.lineBlue, THREE.LinearSRGBColorSpace);
+        const boost = TUBES.detailBoostBlue;
+        uCol.setRGB(
+          boost.k * uCol.r ** boost.gamma,
+          boost.k * uCol.g ** boost.gamma,
+          boost.k * uCol.b ** boost.gamma,
+        );
 
         // tube radius is authored in world units; the group scales GLB units
         const tubeRadius = TUBES.detailRadius / SUV.length;
@@ -1459,9 +968,8 @@ export function NeonJourney() {
           edges.dispose();
         });
 
-        // Replace thousands of rim, tyre and brake edges with two precise
-        // circles. The dark licensed wheel meshes remain underneath, so the
-        // silhouette stays real without the visual noise.
+        // Keep the vehicle calm and legible: the body gets sparse feature
+        // edges while each axle gets one clean neon wheel circle.
         const sortedWheels = wheelBounds.sort((a, b) => a.center.z - b.center.z);
         const axleGroups = sortedWheels.length >= 4
           ? [sortedWheels.slice(0, 2), sortedWheels.slice(-2)]
@@ -1494,7 +1002,6 @@ export function NeonJourney() {
             true,
           ));
         }
-
         if (tubeGeos.length) {
           const merged = mergeGeometries(tubeGeos, false);
           tubeGeos.forEach((g) => g.dispose());
@@ -1582,6 +1089,7 @@ export function NeonJourney() {
           let tubularSegments: number;
           let pulse = false;
           let hideCorners = false;
+          let boosted = false;
           if (roadish) {
             colorHex = darkenHex(baseHex, TUBES.roadDarken);
             radius = name.includes("thin") ? TUBES.thinRadius : TUBES.roadRadius;
@@ -1591,10 +1099,23 @@ export function NeonJourney() {
           } else {
             radius = TUBES.detailRadius;
             tubularSegments = pts.length - 1;
-            colorHex = darkenHex(baseHex, TUBES.roadDarken);
+            boosted = true;
           }
 
           const uCol = new THREE.Color().setHex(colorHex, THREE.LinearSRGBColorSpace);
+          if (boosted) {
+            const spec =
+              baseHex === COLORS.lineWhite
+                ? TUBES.detailBoostWhite
+                : baseHex === COLORS.lineBlue
+                  ? TUBES.detailBoostBlue
+                  : TUBES.detailBoostOrange;
+            uCol.setRGB(
+              spec.k * uCol.r ** spec.gamma,
+              spec.k * uCol.g ** spec.gamma,
+              spec.k * uCol.b ** spec.gamma,
+            );
+          }
 
           const geo = new THREE.TubeGeometry(curve, tubularSegments, radius, TUBES.radialSegments, false);
           const mat = new THREE.ShaderMaterial({
@@ -1621,7 +1142,6 @@ export function NeonJourney() {
           mesh.name = name;
           container.add(mesh);
           lineMaterials.push(mat);
-          if (roadish) roadMaterials.push(mat);
           disposables.push(geo, mat);
           if (name.includes("crossroad_orange_circle_")) {
             mat.uniforms.uAlpha.value = 0; // fades in on scroll
@@ -1680,73 +1200,6 @@ export function NeonJourney() {
       const t = elapsedMs / 500;
       for (const m of lineMaterials) m.uniforms.uTime.value = t;
       fakeFloorMat.uniforms.uTime.value = t;
-
-      const fasttrackEnter = THREE.MathUtils.smoothstep(timelineProgress, 0.12, 0.158);
-      const fasttrackLeave = 1 - THREE.MathUtils.smoothstep(timelineProgress, 0.232, 0.278);
-      const fasttrackVisibility = fasttrackEnter * fasttrackLeave;
-      const fasttrackMorph = THREE.MathUtils.smoothstep(timelineProgress, 0.145, 0.205);
-      const fasttrackBuild = THREE.MathUtils.smoothstep(timelineProgress, 0.166, 0.202)
-        * fasttrackLeave;
-      const fasttrackArrival = fasttrackVisibility * fasttrackMorph;
-      fasttrackGroup.visible = fasttrackVisibility > 0.002;
-      const fasttrackResponsiveScale = W <= SUV_FIT.mobileBreakpoint
-        ? FASTTRACK_DESTINATION.mobileScale
-        : 1;
-      fasttrackGroup.scale.setScalar(fasttrackResponsiveScale);
-      fasttrackGroup.position.y = fasttrackPosition.y;
-      fasttrackLanes.update(fasttrackMorph);
-      if (fasttrackStructure) {
-        fasttrackStructure.material.uniforms.uAlpha.value = fasttrackBuild;
-      }
-      fasttrackLanes.material.uniforms.uAlpha.value = fasttrackVisibility * 0.74;
-      fasttrackLanes.material.uniforms.uSpeed.value = 0.22 + fasttrackVisibility * 0.2;
-
-      const autodataEnter = THREE.MathUtils.smoothstep(timelineProgress, 0.245, 0.284);
-      const autodataLeave = 1 - THREE.MathUtils.smoothstep(timelineProgress, 0.326, 0.368);
-      const autodataVisibility = autodataEnter * autodataLeave;
-      const autodataArrival = autodataVisibility * autodataVisibility;
-      autodataGroup.visible = autodataVisibility > 0.002;
-      const autodataResponsiveScale = W <= SUV_FIT.mobileBreakpoint
-        ? AUTODATA_DESTINATION.mobileScale
-        : 1;
-      autodataGroup.scale.setScalar(
-        autodataResponsiveScale * THREE.MathUtils.lerp(0.97, 1, autodataVisibility),
-      );
-      autodataGroup.position.y = autodataPosition.y - (1 - autodataVisibility) * 0.0004;
-      if (autodataStructure) {
-        autodataStructure.material.uniforms.uAlpha.value = autodataVisibility * 0.94;
-      }
-      if (autodataApproach) {
-        autodataApproach.material.uniforms.uAlpha.value = autodataVisibility * 0.86;
-        autodataApproach.material.uniforms.uSpeed.value = 0.34 + autodataVisibility * 0.28;
-      }
-      autodataScanPlanes.forEach((plane, index) => {
-        const phase = (t * 0.055 + index / autodataScanPlanes.length) % 1;
-        plane.position.z = -0.001 - phase * AUTODATA_DESTINATION.scanDepth;
-        plane.material.opacity = autodataVisibility
-          * (0.04 + Math.sin(phase * Math.PI) * 0.12);
-        const frame = autodataScanFrames[index];
-        if (frame) {
-          frame.mesh.position.z = plane.position.z;
-          frame.material.uniforms.uAlpha.value = autodataVisibility
-            * (0.28 + Math.sin(phase * Math.PI) * 0.58);
-          frame.material.uniforms.uSpeed.value = 0.24;
-        }
-      });
-
-      const activeDestinationArrival = Math.max(fasttrackArrival, autodataArrival);
-      const activeRoadOpacity = fasttrackArrival >= autodataArrival
-        ? FASTTRACK_DESTINATION.baseRoadOpacity
-        : AUTODATA_DESTINATION.baseRoadOpacity;
-      const baseRoadAlpha = THREE.MathUtils.lerp(
-        1,
-        activeRoadOpacity,
-        activeDestinationArrival,
-      );
-      for (const material of roadMaterials) {
-        material.uniforms.uAlpha.value = baseRoadAlpha;
-      }
-
       circleLines.forEach((mesh, i) => {
         const s = 0.01 * Math.floor(i / 4);
         mesh.material.uniforms.uAlpha.value = THREE.MathUtils.clamp(
@@ -1818,23 +1271,6 @@ export function NeonJourney() {
       composer.render();
     };
 
-    if (process.env.NODE_ENV !== "production") {
-      // Dev-only pose inspector: render any journey pose on demand from the
-      // console, even when rAF is throttled (background/automated tabs).
-      // Usage: window.__neonPose(0.21)
-      (window as unknown as Record<string, unknown>).__neonPose = (p: number) => {
-        if (disposed) return "disposed";
-        stopLoop();
-        const clamped = THREE.MathUtils.clamp(p, 0, 1);
-        timelineProgress = clamped;
-        rawProgress = journeyProgress(clamped);
-        updateCamera(rawProgress, startTime + 5000);
-        updateUniforms(1500, rawProgress);
-        composer.render();
-        return `pose ${clamped}`;
-      };
-    }
-
     if (reduce) {
       renderStatic();
     } else {
@@ -1847,7 +1283,6 @@ export function NeonJourney() {
     return () => {
       disposed = true;
       stopLoop();
-      delete (window as unknown as Record<string, unknown>).__neonPose;
       window.removeEventListener("resize", onResize);
       document.removeEventListener("visibilitychange", onVisibilityChange);
       journeyTrigger.kill();
