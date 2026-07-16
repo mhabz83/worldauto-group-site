@@ -1321,13 +1321,17 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
         stopLoop();
       }
     };
+    // Hidden only when definitively past the wrapper (progress 1). At creation
+    // ScrollTrigger can report inactive before its first measurement, so
+    // "not active" alone must never hide the opening frame.
+    const pastJourney = (self: ScrollTrigger) => !self.isActive && self.progress >= 1;
     const visibilityTrigger = boundsEl
       ? ScrollTrigger.create({
           trigger: boundsEl,
           start: "top top",
           end: "bottom top",
-          onToggle: (self) => applyJourneyVisibility(self.isActive),
-          onRefresh: (self) => applyJourneyVisibility(self.isActive),
+          onToggle: (self) => applyJourneyVisibility(!pastJourney(self)),
+          onRefresh: (self) => applyJourneyVisibility(!pastJourney(self)),
         })
       : null;
 

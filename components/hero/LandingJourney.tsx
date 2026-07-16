@@ -277,6 +277,31 @@ export function LandingJourney() {
   const rootRef = useRef<HTMLElement>(null);
   const journeyRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    // The /about -> /#story 308 redirect preserves the fragment, but browsers
+    // can skip (or later reset) the fragment scroll on redirected loads. If we
+    // arrive with a hash and the page is still parked at the top, perform the
+    // jump ourselves — retrying briefly in case the browser resets to 0 after
+    // load or a ScrollTrigger refresh re-measures the tall layout.
+    const id = window.location.hash.slice(1);
+    if (!id) return;
+    const attempt = () => {
+      const el = document.getElementById(id);
+      // idempotent: re-jump only while the target isn't at the top, so a
+      // native fragment scroll against a stale (still-growing) layout, or a
+      // reset to 0, gets corrected — and a correct landing is left alone.
+      if (el && Math.abs(el.getBoundingClientRect().top) > 2) el.scrollIntoView();
+    };
+    const raf = requestAnimationFrame(attempt);
+    const timers = [150, 450, 1000].map((ms) => window.setTimeout(attempt, ms));
+    window.addEventListener("load", attempt);
+    return () => {
+      cancelAnimationFrame(raf);
+      timers.forEach((t) => window.clearTimeout(t));
+      window.removeEventListener("load", attempt);
+    };
+  }, []);
+
   useGSAP(() => {
     const root = rootRef.current;
     if (!root || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;

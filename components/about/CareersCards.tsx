@@ -12,13 +12,14 @@ import { useEffect, useRef } from "react";
 import { gsap, waypointTrigger } from "./engine";
 import { FlickerTitle } from "./reveal";
 
-const cards = [
+/* Support copy is deliberately sparse on the merged page: the heritage beats
+   and the story opener already carry the group narrative, and no sentence may
+   appear twice. Only the revenue card keeps its (unique) credit line. */
+const cards: { stat: string; short: boolean; label: string; support?: string }[] = [
   {
     stat: "1994",
     short: true,
     label: "Founded, Abu Dhabi",
-    support:
-      "Skelmore is founded in Abu Dhabi. The parent group that World Automotive Group grew from.",
   },
   {
     stat: "~USD 650M",
@@ -30,14 +31,11 @@ const cards = [
     stat: "~4,000",
     short: false,
     label: "People across the group",
-    support:
-      "Quick service, vehicle data, claims administration and retail, run as one group.",
   },
   {
     stat: "UAE · NA",
     short: false,
     label: "Two operating regions",
-    support: "Operations in the UAE and North America.",
   },
 ];
 
@@ -132,9 +130,7 @@ export function CareersCards() {
               { text: "in Numbers", className: "ax-accent-b" },
             ]}
           />
-          <p className="ax-lead" data-about-reveal="fade-in">
-            Group figures include all Skelmore operations.
-          </p>
+          {/* the credit line lives on the revenue card — once on the page */}
         </div>
 
         <div ref={stickyGridRef} className="ax-careers-sticky">
@@ -162,7 +158,7 @@ export function CareersCards() {
                       </p>
                     </div>
                     <h3 className="ax-h3 ax-cc-title">{c.label}</h3>
-                    <p className="ax-t1 ax-cc-body">{c.support}</p>
+                    {c.support && <p className="ax-t1 ax-cc-body">{c.support}</p>}
                   </div>
                 </div>
               </div>
