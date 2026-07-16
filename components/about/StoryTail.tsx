@@ -155,6 +155,16 @@ function ForesightSection() {
 /* commitment collage                                                  */
 /* ------------------------------------------------------------------ */
 
+/* world map pins: centroids measured from the plate's actual country fills
+   (percent of the image box) -- see public/about/world-map.webp */
+const worldMapPins = [
+  { x: "21.28%", y: "27.43%", label: "Canada" },
+  { x: "20.57%", y: "37.83%", label: "USA" },
+  { x: "59.19%", y: "46.12%", label: "Saudi Arabia", mod: "ax-pin--label-left" },
+  { x: "62.09%", y: "46.12%", label: "UAE", mod: "ax-pin--label-top" },
+  { x: "62.87%", y: "47.89%", label: "Oman" },
+];
+
 const commitmentPins = [
   { x: "8.4%", y: "29.23%", mx: "13.2%", my: "16.7%", label: "Est. 1994" },
   { x: "33.35%", y: "35.45%", mx: "81.9%", my: "16.6%", label: "32 centres" },
@@ -272,13 +282,43 @@ function CommitmentSection() {
       </div>
       <div className="ax-commitment-layer ax-container ax-commitment-content">
         <div className="ax-grid">
-          <div ref={stmtRef} className="ax-commitment-statement">
-            {/* companiesSection.intro — the journey hero already states the
-                "five companies, one standard" line, so this collage carries a
-                different verified group statement instead of repeating it. */}
+          <div
+            ref={stmtRef}
+            className="ax-commitment-statement ax-commitment-statement--map"
+          >
+            <div className="ax-world-map">
+              <img
+                src="/about/world-map.webp"
+                alt="World map highlighting the United States, Canada, Saudi Arabia, the United Arab Emirates and Oman"
+                width={2688}
+                height={1520}
+                loading="lazy"
+                draggable={false}
+              />
+              {worldMapPins.map((pin) => (
+                <div
+                  key={pin.label}
+                  className={
+                    "ax-pin ax-pin--target ax-pin--visible" +
+                    (pin.mod ? ` ${pin.mod}` : "")
+                  }
+                  style={
+                    { "--pin-x": pin.x, "--pin-y": pin.y } as React.CSSProperties
+                  }
+                >
+                  <PinBorder />
+                  <div className="ax-pin__line-x" />
+                  <div className="ax-pin__line-y" />
+                  <div className="ax-pin__background" />
+                  <div className="ax-pin__dot" />
+                  <span className="ax-pin__label">{pin.label}</span>
+                </div>
+              ))}
+            </div>
+            {/* companiesSection.intro survives as the map's caption */}
             <FlickerText
-              as="h2"
-              className="ax-h3"
+              as="p"
+              className="ax-t2 ax-map-caption"
               reveal="text"
               segments={[companiesSection.intro]}
             />
