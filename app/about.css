@@ -1825,7 +1825,9 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
 .ax-team-people .ax-testimonial-card .ax-team-name {
   font-size: clamp(20px, 2.6vh, 30px);
   line-height: 1.1;
-  min-height: 1.1em;              /* names are single-line */
+  min-height: 2.2em;              /* reserve 2 lines: the longest name wraps
+                                     at narrow widths, and a card that grows
+                                     only for one person moves the arrows */
 }
 .ax-team-people .ax-testimonial-card .ax-team-role {
   margin-top: 6px;

@@ -189,7 +189,7 @@ export const team: TeamMember[] = [
   {
     name: "Frederik Bisbjerg",
     role: "Managing Director & Co-founder, Axxion",
-    desc: "Co-founded Axxion and leads it as Managing Director.",
+    desc: "Co-founded and leads Axxion.",
     image: "/team/frederik.webp",
     placeholder: true,
   },
