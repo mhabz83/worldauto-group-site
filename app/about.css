@@ -939,7 +939,7 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   position: relative;
 }
 .ax-team-viewport {
-  width: min(680px, 47.2vw);
+  width: min(880px, 58vw);
   margin-inline: auto;
 }
 .ax-company-panel {
@@ -1017,8 +1017,9 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   grid-column: 1 / span 5;
   pointer-events: auto;
   border-radius: 5px;
-  background: rgba(4, 6, 26, 0.82);
-  backdrop-filter: blur(15px);
+  background: rgba(13, 27, 66, 0.5);
+  backdrop-filter: blur(26px);
+  -webkit-backdrop-filter: blur(26px);
   color: #fff;
   padding: clamp(20px, 2.8vw, 40px);
   will-change: transform;

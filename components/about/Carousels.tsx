@@ -159,7 +159,7 @@ export function TeamCarousel() {
   const { sliderRef, ready } = useKeen(listRef, ({ onCreated }) => ({
     selector: ".ax-slide",
     loop: true,
-    slides: { perView: 1.7, origin: "center", spacing: 24 },
+    slides: { perView: 1.35, origin: "center", spacing: 20 },
     defaultAnimation: { duration: CAROUSEL_DURATION, easing: easeCarousel },
     rubberband: true,
     dragSpeed: 1,
