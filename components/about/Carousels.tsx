@@ -159,12 +159,20 @@ export function TeamCarousel() {
     const cw = s.container.clientWidth;
 
     // pass 1: r + rendered cutout width per slide; active half-width for the guard
+    // r comes from the continuous track position (shortest signed path around
+    // the loop), NOT from keen's per-slide distance: that value side-flips at
+    // the loop seam the moment a transition starts, which made the outgoing
+    // neighbor vanish instead of sliding off.
+    const N = s.slides.length;
+    const size = 1 / TEAM_PER_VIEW;
+    const tau = details.position / size;
     const rs: number[] = [];
     const ws: number[] = [];
     let activeHalf = 0;
     s.slides.forEach((slideEl, i) => {
-      // keen reports rest distance = the slide's origin, so subtract it
-      const r = -(details.slides[i].distance - TEAM_ORIGIN);
+      let d = (((i - tau) % N) + N) % N;
+      if (d > N / 2) d -= N;
+      const r = -d * size;
       rs[i] = r;
       const img = slideEl.querySelector<HTMLImageElement>("img");
       const scale = mapLinear(Math.abs(r), 0, 1, 1, IMAGE_SCALE_MIN, true);
@@ -180,8 +188,13 @@ export function TeamCarousel() {
       const r = rs[i];
       const w = ws[i];
       const scale = mapLinear(Math.abs(r), 0, 1, 1, IMAGE_SCALE_MIN, true);
-      const naturalCenter = W / 2 - r * cw; // where keen puts the slide center
-      let x = 0;
+      // keen may park this slide on the OTHER side of the loop seam; the
+      // translate bridges from where keen actually put it to where the
+      // continuous model wants it
+      const rKeen = -(details.slides[i].distance - TEAM_ORIGIN);
+      const actualCenter = W / 2 - rKeen * cw;
+      const idealCenter = W / 2 - r * cw;
+      let desired = idealCenter;
       if (w > 0 && Math.abs(r) > 0.001) {
         // rest target: person center such that TEAM_EDGE_CUT of them hangs
         // off-screen, but never closer to the middle than the active person
@@ -210,8 +223,9 @@ export function TeamCarousel() {
         if (Math.abs(r) > 1) {
           target += Math.sign(-r) * (Math.abs(r) - 1) * w * 1.15;
         }
-        x = Math.min(Math.abs(r), 1) * (target - naturalCenter);
+        desired = idealCenter + Math.min(Math.abs(r), 1) * (target - idealCenter);
       }
+      const x = desired - actualCenter;
       const inner = slideEl.querySelector<HTMLElement>(".ax-company-panel-inner");
       if (inner) inner.style.transform = `translateX(${x}px) scale(${scale})`;
       // centered person always renders in front of the receding neighbors
