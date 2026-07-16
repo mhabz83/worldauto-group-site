@@ -159,7 +159,7 @@ export function TeamCarousel() {
   const { sliderRef, ready } = useKeen(listRef, ({ onCreated }) => ({
     selector: ".ax-slide",
     loop: true,
-    slides: { perView: 1.35, origin: "center", spacing: 20 },
+    slides: { perView: 1.6, origin: "center", spacing: 0 },
     defaultAnimation: { duration: CAROUSEL_DURATION, easing: easeCarousel },
     rubberband: true,
     dragSpeed: 1,
@@ -222,7 +222,7 @@ export function TeamCarousel() {
       id="leadership"
       ref={sectionRef}
       data-ax-theme="light"
-      className="ax-section ax-light ax-team"
+      className="ax-section ax-light ax-team ax-team-people"
     >
       <div className="ax-container ax-team-inner">
         <FlickerTitle

@@ -1765,3 +1765,70 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
     transform: none !important;
   }
 }
+
+
+/* --- Team lineup variant: the SECTION IS THE FRAME (Madar S7 look). people
+   bleed off the stage bottom; neighbors clip at the stage edges; the frosted
+   card floats over the lineup. Scoped so the companies recap is untouched. */
+.ax-team-people .ax-team-stage {
+  position: relative;
+  height: clamp(520px, 82vh, 860px);
+  overflow: hidden;               /* the frame does the cutting */
+}
+.ax-team-people .ax-carousel,
+.ax-team-people .ax-team-viewport {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+.ax-team-people .ax-carousel-list {
+  height: 100%;
+}
+.ax-team-people .ax-slide {
+  height: 100%;
+}
+.ax-team-people .ax-person-cut {
+  aspect-ratio: auto;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: none;
+}
+.ax-team-people .ax-person-cut .ax-company-panel-inner {
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  transform-origin: 50% 100%;
+}
+.ax-team-people .ax-person-cut img {
+  height: 94%;                    /* head near the top, feet on the frame edge */
+  max-height: none;
+  width: auto;
+  max-width: none;
+  object-fit: contain;
+  display: block;
+}
+.ax-team-people .ax-team-content {
+  position: absolute;
+  inset: 0;
+  display: block;
+  pointer-events: none;
+  z-index: 2;
+}
+.ax-team-people .ax-testimonial-card {
+  position: absolute;
+  left: max(2vw, 12px);
+  top: 34%;
+  width: min(460px, 44%);
+}
+@media (max-width: 767px) {
+  .ax-team-people .ax-team-stage { height: clamp(420px, 64vh, 620px); }
+  .ax-team-people .ax-testimonial-card {
+    left: 12px; right: 12px; width: auto; top: auto; bottom: 16px;
+  }
+  .ax-team-people .ax-person-cut img { height: 88%; }
+}
