@@ -43,6 +43,7 @@ import { ArrowLeft, ArrowRight } from "./svgs";
 function useKeen(
   listRef: React.RefObject<HTMLUListElement | null>,
   options: (helpers: { onCreated: () => void }) => KeenSliderOptions,
+  opts?: { initUnderReducedMotion?: boolean },
 ) {
   const sliderRef = useRef<KeenSliderInstance | null>(null);
   const [ready, setReady] = useState(false);
@@ -70,7 +71,7 @@ function useKeen(
         });
     };
     const sync = () => {
-      if (mq.matches && !reduce.matches) {
+      if (mq.matches && (!reduce.matches || opts?.initUnderReducedMotion)) {
         if (!sliderRef.current) {
           sliderRef.current = new KeenSlider(
             list,
@@ -148,7 +149,8 @@ export function TeamCarousel() {
     const details = s.track.details;
     if (!details) return;
     s.slides.forEach((slideEl, i) => {
-      const r = -(details.slides[i].distance - TEAM_REST_OFFSET);
+      // keen reports rest distance = the slide's origin, so subtract it
+      const r = -(details.slides[i].distance - TEAM_ORIGIN);
       const scale = mapLinear(Math.abs(r), 0, 1, 1, IMAGE_SCALE_MIN, true);
       const x = mapLinear(r, -1, 0, -50, 0, true);
       const inner = slideEl.querySelector<HTMLElement>(".ax-company-panel-inner");
@@ -156,20 +158,33 @@ export function TeamCarousel() {
     });
   }, []);
 
-  const { sliderRef, ready } = useKeen(listRef, ({ onCreated }) => ({
-    selector: ".ax-slide",
-    loop: true,
-    slides: { perView: TEAM_PER_VIEW, origin: "center", spacing: 0 },
-    defaultAnimation: { duration: CAROUSEL_DURATION, easing: easeCarousel },
-    rubberband: true,
-    dragSpeed: 1,
-    created: (s) => {
-      onCreated();
-      applyImageScale(s);
-    },
-    detailsChanged: applyImageScale,
-    slideChanged: (s) => setIdx(s.track.details.rel),
-  }));
+  const { sliderRef, ready } = useKeen(
+    listRef,
+    ({ onCreated }) => ({
+      selector: ".ax-slide",
+      loop: true,
+      /* perView slightly over 1: keeps the active slide centered while
+         giving it a positive origin, which is what makes keen place the
+         previous slide to the LEFT at rest (origin 0 parks it off-right) */
+      slides: { perView: TEAM_PER_VIEW, origin: "center", spacing: 0 },
+      defaultAnimation: {
+        // instant snaps for reduced-motion users; the glide for everyone else
+        duration: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? 0
+          : CAROUSEL_DURATION,
+        easing: easeCarousel,
+      },
+      rubberband: true,
+      dragSpeed: 1,
+      created: (s) => {
+        onCreated();
+        applyImageScale(s);
+      },
+      detailsChanged: applyImageScale,
+      slideChanged: (s) => setIdx(s.track.details.rel),
+    }),
+    { initUnderReducedMotion: true },
+  );
 
   /* card drift: teamDesktop ±25svh / teamMobile ±50px across the section */
   useEffect(() => {
@@ -244,7 +259,6 @@ export function TeamCarousel() {
                           src={t.image}
                           alt={`${t.name}, ${t.role}`}
                           draggable={false}
-                          loading="lazy"
                         />
                       </div>
                     </div>
@@ -302,10 +316,8 @@ export function TeamCarousel() {
 /* ------------------------------------------------------------------ */
 
 const IMAGE_SCALE_MIN = 0.8142857143;
-/* centered-origin rest offset: with origin:"center" keen measures slide
-   distance from the LEFT edge, so the active slide rests at (1-1/perView)/2 */
-const TEAM_PER_VIEW = 1.6;
-const TEAM_REST_OFFSET = (1 - 1 / TEAM_PER_VIEW) / 2;
+const TEAM_PER_VIEW = 1.05;
+const TEAM_ORIGIN = 0.5 - 1 / TEAM_PER_VIEW / 2;
 
 export function CompaniesCarousel() {
   const sectionRef = useRef<HTMLElement>(null);

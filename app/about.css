@@ -1781,12 +1781,21 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   inset: 0;
 }
 .ax-team-people .ax-carousel-viewport {
+  /* Madar architecture: a NARROW CENTERED column is the slider viewport
+     (perView 1 = active always exactly centered); neighbors overflow it
+     naturally and the stage's own edges clip them. */
   position: absolute;
-  inset: 0;
-  overflow: hidden;               /* frame clips in slider AND fallback */
-  width: 100%;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(46%, 980px);
   max-width: none;
   margin: 0;
+  overflow: visible;
+}
+.ax-team-people .ax-carousel--ready .ax-carousel-viewport {
+  overflow: visible;              /* beat the base --ready overflow:hidden */
 }
 .ax-team-people .ax-carousel-list {
   height: 100%;
@@ -1798,7 +1807,7 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
 }
 .ax-team-people .ax-carousel:not(.ax-carousel--ready) .ax-slide {
   scroll-snap-align: center;
-  flex: 0 0 62%;
+  flex: 0 0 100%;
 }
 .ax-team-people .ax-slide {
   height: 100%;
@@ -1821,6 +1830,8 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   width: auto;
   padding: 0;                     /* base panel padding would lift the feet */
   display: flex;
+  flex-direction: row;            /* base is column: without this, flex-end
+                                     means RIGHT and center means MIDDLE */
   align-items: flex-end;
   justify-content: center;
   transform-origin: 50% 100%;
