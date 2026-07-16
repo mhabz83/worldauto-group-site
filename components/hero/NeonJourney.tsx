@@ -4,7 +4,6 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { Reflector } from "three/examples/jsm/objects/Reflector.js";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
@@ -12,7 +11,7 @@ import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
 import { FullScreenQuad } from "three/examples/jsm/postprocessing/Pass.js";
-import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -186,7 +185,10 @@ const LOOK_POINTS: [number, number, number][] = [
 ];
 
 const ASSETS = {
-  suv: "/webgl-lines/suv-licensed.glb",
+  // The canonical brand car (the hero artwork, background-removed) rendered as
+  // a billboard plate — the one vehicle used everywhere on the site. Replaces
+  // the licensed GLB wireframe ("blue G-class") per owner direction.
+  suv: "/webgl-lines/suv-canonical.png",
   lines: "/webgl-lines/scene-16.obj",
 };
 
@@ -528,49 +530,6 @@ class PolylineCurve extends THREE.Curve<THREE.Vector3> {
   }
 }
 
-/** Chain EdgesGeometry's unordered segment soup into ordered polylines so
- *  feature edges can grow into the same tubes the truck's line-art used.
- *  Vertices are matched by quantized position (1e-4 on a car of length 1). */
-function chainEdgeSegments(edges: THREE.BufferGeometry): THREE.Vector3[][] {
-  const attr = edges.attributes.position;
-  if (!attr) return [];
-  const pos = attr.array as Float32Array;
-  const nSeg = Math.floor(pos.length / 6);
-  const keyAt = (i: number) =>
-    `${Math.round(pos[i * 3] * 1e4)},${Math.round(pos[i * 3 + 1] * 1e4)},${Math.round(pos[i * 3 + 2] * 1e4)}`;
-  const keyOf = (v: THREE.Vector3) =>
-    `${Math.round(v.x * 1e4)},${Math.round(v.y * 1e4)},${Math.round(v.z * 1e4)}`;
-  const adj = new Map<string, { seg: number; end: 0 | 1 }[]>();
-  for (let s = 0; s < nSeg; s++) {
-    for (const end of [0, 1] as const) {
-      const k = keyAt(s * 2 + end);
-      let list = adj.get(k);
-      if (!list) adj.set(k, (list = []));
-      list.push({ seg: s, end });
-    }
-  }
-  const vecAt = (i: number) => new THREE.Vector3(pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2]);
-  const used = new Uint8Array(nSeg);
-  const chains: THREE.Vector3[][] = [];
-  for (let s = 0; s < nSeg; s++) {
-    if (used[s]) continue;
-    used[s] = 1;
-    const chain = [vecAt(s * 2), vecAt(s * 2 + 1)];
-    for (const forward of [true, false]) {
-      for (;;) {
-        const tip = forward ? chain[chain.length - 1] : chain[0];
-        const cand = (adj.get(keyOf(tip)) ?? []).find((c) => !used[c.seg]);
-        if (!cand) break;
-        used[cand.seg] = 1;
-        const p = vecAt(cand.seg * 2 + (1 - cand.end));
-        if (forward) chain.push(p);
-        else chain.unshift(p);
-      }
-    }
-    chains.push(chain);
-  }
-  return chains;
-}
 
 /** Per-channel 0-255 darken, exactly like the recovered bundle. */
 function darkenHex(hex: number, amt: number): number {
@@ -916,139 +875,43 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
       fittedVehicle.updateMatrixWorld(true);
     };
 
-    new GLTFLoader().load(
+    new THREE.TextureLoader().load(
       ASSETS.suv,
-      (gltf) => {
+      (texture) => {
         if (disposed) return;
-        // normalized GLB (car length 1, front +Z, on y=0) → world placement
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+
+        // Canonical car plate: authored like the GLB was normalized — car
+        // length 1.0 along +X (nose right in the artwork), tyres on y=0.
+        // Image 2362x945 → plate height = 945/2362 of the car length.
+        const plateAspect = 945 / 2362;
+        const plateGeo = new THREE.PlaneGeometry(1, plateAspect);
+        plateGeo.translate(0, plateAspect / 2, 0); // tyres on y=0
+        const plateMat = new THREE.MeshBasicMaterial({
+          map: texture,
+          transparent: true,
+          alphaTest: 0.05, // opaque body writes depth and occludes the road
+          depthWrite: true,
+          toneMapped: false, // the artwork is already final-graded
+          fog: false, // ...and must not be re-fogged into the void
+        });
+        // The surrounding trails carry an emissive boost + bloom; lift the
+        // baked plate so the car's edges hold their own against them.
+        plateMat.color.setScalar(1.45);
+        const plate = new THREE.Mesh(plateGeo, plateMat);
+        plate.name = "suv_canonical_plate";
+
         const vehicle = new THREE.Group();
         fittedVehicle = vehicle;
         vehicle.position.copy(SUV.position);
-        vehicle.rotation.y = SUV.rotationY;
+        // The plate's face (+Z) holds toward the opening camera; keep the GLB
+        // pose's slight angle hint relative to side-on.
+        vehicle.rotation.y = SUV.rotationY - Math.PI / 2;
         vehicle.scale.setScalar(SUV.length);
-
-        // solid-black silhouette, exactly like the truck body
-        const bodyMat = new THREE.MeshBasicMaterial({ color: COLORS.vehicle });
-        disposables.push(bodyMat);
-
-        // neon color: same boosted-blue path as the truck's blue line-art
-        const uCol = new THREE.Color().setHex(COLORS.lineBlue, THREE.LinearSRGBColorSpace);
-        const boost = TUBES.detailBoostBlue;
-        uCol.setRGB(
-          boost.k * uCol.r ** boost.gamma,
-          boost.k * uCol.g ** boost.gamma,
-          boost.k * uCol.b ** boost.gamma,
-        );
-
-        // tube radius is authored in world units; the group scales GLB units
-        const tubeRadius = TUBES.detailRadius / SUV.length;
-        const tubeGeos: THREE.BufferGeometry[] = [];
-        const wheelBounds: { center: THREE.Vector3; size: THREE.Vector3 }[] = [];
-        gltf.scene.updateMatrixWorld(true);
-        gltf.scene.traverse((o) => {
-          if (!(o as THREE.Mesh).isMesh) return;
-          const m = o as THREE.Mesh;
-          m.material = bodyMat;
-          disposables.push(m.geometry);
-          if (/wheel/i.test(m.name)) {
-            const bounds = new THREE.Box3().setFromObject(m);
-            wheelBounds.push({
-              center: bounds.getCenter(new THREE.Vector3()),
-              size: bounds.getSize(new THREE.Vector3()),
-            });
-            return;
-          }
-          if (!/body/i.test(m.name)) return;
-          // FEATURE edges only (creases sharper than the threshold) — never
-          // the full triangulation. This is what keeps it sparse and clean.
-          const edges = new THREE.EdgesGeometry(m.geometry, SUV.edgeThresholdDeg);
-          for (const pts of chainEdgeSegments(edges)) {
-            let len = 0;
-            for (let i = 1; i < pts.length; i++) len += pts[i].distanceTo(pts[i - 1]);
-            if (len < SUV.minChainLength) continue; // drop specks, stay sparse
-            for (const p of pts) p.applyMatrix4(m.matrixWorld);
-            tubeGeos.push(
-              new THREE.TubeGeometry(
-                new PolylineCurve(pts),
-                Math.max(pts.length - 1, 1),
-                tubeRadius,
-                TUBES.radialSegments,
-                false,
-              ),
-            );
-          }
-          edges.dispose();
-        });
-
-        // Keep the vehicle calm and legible: the body gets sparse feature
-        // edges while each axle gets one clean neon wheel circle.
-        const sortedWheels = wheelBounds.sort((a, b) => a.center.z - b.center.z);
-        const axleGroups = sortedWheels.length >= 4
-          ? [sortedWheels.slice(0, 2), sortedWheels.slice(-2)]
-          : sortedWheels.map((wheel) => [wheel]);
-        for (const axle of axleGroups) {
-          if (!axle.length) continue;
-          const center = axle.reduce(
-            (sum, wheel) => sum.add(wheel.center),
-            new THREE.Vector3(),
-          ).multiplyScalar(1 / axle.length);
-          center.x = 0;
-          const radius = axle.reduce(
-            (sum, wheel) => sum + Math.max(wheel.size.y, wheel.size.z) * 0.48,
-            0,
-          ) / axle.length;
-          const circle: THREE.Vector3[] = [];
-          for (let index = 0; index < 64; index++) {
-            const angle = (index / 64) * Math.PI * 2;
-            circle.push(new THREE.Vector3(
-              center.x,
-              center.y + Math.cos(angle) * radius,
-              center.z + Math.sin(angle) * radius,
-            ));
-          }
-          tubeGeos.push(new THREE.TubeGeometry(
-            new PolylineCurve(circle),
-            64,
-            tubeRadius * 1.18,
-            TUBES.radialSegments,
-            true,
-          ));
-        }
-        if (tubeGeos.length) {
-          const merged = mergeGeometries(tubeGeos, false);
-          tubeGeos.forEach((g) => g.dispose());
-          if (merged) {
-            // same shader/uniform shape as the truck's non-road detail lines
-            const mat = new THREE.ShaderMaterial({
-              vertexShader: LINE_VERT,
-              fragmentShader: LINE_FRAG,
-              transparent: true,
-              depthTest: true,
-              depthWrite: true,
-              fog: true,
-              lights: false,
-              uniforms: THREE.UniformsUtils.merge([
-                THREE.UniformsLib.fog,
-                {
-                  uColor: { value: uCol },
-                  uTime: { value: 0 },
-                  uSize: { value: 1 },
-                  uSpeed: { value: 0 },
-                  uHideCorners: { value: false },
-                  uAlpha: { value: 1 },
-                },
-              ]),
-            });
-            const wire = new THREE.Mesh(merged, mat);
-            wire.name = "suv_feature_edges";
-            vehicle.add(wire);
-            lineMaterials.push(mat);
-            disposables.push(merged, mat);
-          }
-        }
-
-        vehicle.add(gltf.scene);
+        vehicle.add(plate);
         scene.add(vehicle);
+        disposables.push(plateGeo, plateMat, texture);
         fitVehicleToOpeningFrame();
         renderStatic();
       },
@@ -1299,6 +1162,24 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
       else startLoop();
     };
 
+    if (process.env.NODE_ENV !== "production") {
+      // Dev-only on-demand renderer: paints one frame at any journey progress
+      // even when rAF is suspended (hidden/automated tabs). Complements the
+      // passive __neonPose data object the loop publishes.
+      (window as unknown as Record<string, unknown>).__neonRender = (p: number) => {
+        if (disposed) return "disposed";
+        const clamped = THREE.MathUtils.clamp(p, 0, 1);
+        timelineProgress = clamped;
+        rawProgress = journeyProgress(clamped);
+        smoothed = rawProgress;
+        updateCamera(smoothed, startTime + 5000);
+        updateUniforms(5000, smoothed);
+        composer.render();
+        publishPose();
+        return `rendered ${clamped}`;
+      };
+    }
+
     renderStatic = () => {
       if (!reduce || disposed) return;
       updateCamera(REDUCED_MOTION_PROGRESS, startTime + CAMERA.introMs);
@@ -1353,6 +1234,7 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
       visibilityTrigger?.kill();
       if (process.env.NODE_ENV !== "production") {
         delete (window as unknown as Record<string, unknown>).__neonPose;
+        delete (window as unknown as Record<string, unknown>).__neonRender;
       }
       reflector.dispose();
       disposables.forEach((d) => d.dispose());
