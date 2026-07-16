@@ -21,9 +21,9 @@ import { group, footer as footerContent } from "@/content/site";
 import { model } from "@/content/home";
 import { companies } from "@/content/site";
 import { journeyContent } from "@/components/hero/journeyContent";
-import { gsap, ScrollTrigger, SCRUB_SMOOTH, waypointTrigger } from "./engine";
+import { gsap, ScrollTrigger, waypointTrigger } from "./engine";
 import { FlickerText, FlickerTitle, GlitchLabel, useRevealManager } from "./reveal";
-import { GlowSvg, OrbitalSvg, PinBorder } from "./svgs";
+import { GlowSvg, OrbitalSvg } from "./svgs";
 import { TeamCarousel, CompaniesCarousel } from "./Carousels";
 import { ValuesTimeline } from "./ValuesTimeline";
 import { CareersCards } from "./CareersCards";
@@ -155,140 +155,24 @@ function ForesightSection() {
 /* commitment collage                                                  */
 /* ------------------------------------------------------------------ */
 
-const commitmentPins = [
-  { x: "8.4%", y: "29.23%", mx: "13.2%", my: "16.7%", label: "Est. 1994" },
-  { x: "33.35%", y: "35.45%", mx: "81.9%", my: "16.6%", label: "32 centres" },
-  { x: "25.05%", y: "60.45%", label: "~4,000 people", hideMobile: true },
-  { x: "58.3%", y: "60.45%", label: "UAE · NA", hideMobile: true },
-];
-
 function CommitmentSection() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const bgRef = useRef<HTMLDivElement>(null);
-  const gridLayerRef = useRef<HTMLDivElement>(null);
-  const gridImgRef = useRef<HTMLImageElement>(null);
-  const stmtRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const mm = gsap.matchMedia();
-    mm.add(
-      {
-        motion: "(prefers-reduced-motion: no-preference)",
-        md: "(min-width: 768px)",
-      },
-      (ctx) => {
-        const { motion, md } = ctx.conditions as { motion: boolean; md: boolean };
-        if (!motion) return;
-        const measure = sectionRef.current;
-        /* layer 1 + 2: −20vw → +20vw deep parallax (all widths, mobileSmooth) */
-        for (const el of [bgRef.current, gridLayerRef.current]) {
-          waypointTrigger({
-            el,
-            measure,
-            scrub: SCRUB_SMOOTH,
-            waypoints: [
-              { a: 100, b: 0, transform: "translateY(-20vw)" },
-              { a: 0, b: 100, transform: "translateY(20vw)" },
-            ],
-          });
-        }
-        /* inner grid picture: +20svh → −20svh counter-drift */
-        waypointTrigger({
-          el: gridImgRef.current,
-          measure,
-          scrub: SCRUB_SMOOTH,
-          waypoints: [
-            { a: 100, b: 0, transform: "translateY(20svh)" },
-            { a: 0, b: 100, transform: "translateY(-20svh)" },
-          ],
-        });
-        /* statement drift (md-up) */
-        if (md) {
-          waypointTrigger({
-            el: stmtRef.current,
-            measure,
-            waypoints: [
-              { a: 100, b: 0, transform: "translateY(20svh)" },
-              { a: 0, b: 100, transform: "translateY(-20svh)" },
-            ],
-          });
-        }
-      },
-    );
-    return () => mm.revert();
-  }, []);
-
   return (
     <section
       id="commitment"
-      ref={sectionRef}
       data-ax-theme="dark"
       data-nav-section="group"
       className="ax-section ax-commitment"
     >
-      <div ref={bgRef} className="ax-commitment-layer ax-commitment-bg" aria-hidden="true">
-        {/* No photo here by design: the grid + pins own the section. A soft
-            radial field keeps the parallax layer alive. */}
-        <div className="ax-commitment-field" />
-      </div>
-      <div
-        ref={gridLayerRef}
-        className="ax-commitment-layer ax-commitment-gridlayer ax-container"
-      >
-        <div className="ax-commitment-grid">
-          <img
-            ref={gridImgRef}
-            src="/about/grid.svg"
-            alt=""
-            width={1652}
-            height={1895}
-            draggable={false}
-          />
-          {commitmentPins.map((pin) => (
-            <div
-              key={pin.label}
-              className={
-                "ax-pin ax-pin--target ax-pin--visible ax-pin--black" +
-                (pin.hideMobile ? " ax-hide-sm" : "")
-              }
-              style={
-                {
-                  "--pin-x": pin.x,
-                  "--pin-y": pin.y,
-                  "--pin-mx": pin.mx,
-                  "--pin-my": pin.my,
-                } as React.CSSProperties
-              }
-            >
-              <PinBorder />
-              <div className="ax-pin__line-x" />
-              <div className="ax-pin__line-y" />
-              <div className="ax-pin__background" />
-              <div className="ax-pin__dot" />
-              <span className="ax-pin__label">{pin.label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div className="ax-commitment-layer ax-container ax-commitment-content">
-        <div className="ax-grid">
-          <div
-            ref={stmtRef}
-            className="ax-commitment-statement ax-commitment-statement--map"
-          >
-            {/* full-bleed world map plate: pins are baked into the artwork */}
-            <div className="ax-world-map">
-              <img
-                src="/about/world-map.webp"
-                alt="World map highlighting the United States, Canada, Saudi Arabia, the United Arab Emirates and Oman"
-                width={2688}
-                height={1520}
-                loading="lazy"
-                draggable={false}
-              />
-            </div>
-          </div>
-        </div>
+      {/* full-bleed world map plate: pins are baked into the artwork */}
+      <div className="ax-world-map">
+        <img
+          src="/about/world-map.webp"
+          alt="World map highlighting the United States, Canada, Saudi Arabia, the United Arab Emirates and Oman"
+          width={2688}
+          height={1520}
+          loading="lazy"
+          draggable={false}
+        />
       </div>
     </section>
   );
