@@ -24,7 +24,7 @@ import { journeyContent } from "@/components/hero/journeyContent";
 import { gsap, ScrollTrigger, SCRUB_SMOOTH, waypointTrigger } from "./engine";
 import { FlickerText, FlickerTitle, GlitchLabel, useRevealManager } from "./reveal";
 import { GlowSvg, OrbitalSvg, PinBorder } from "./svgs";
-import { LeadershipCarousel, CompaniesCarousel } from "./Carousels";
+import { TeamCarousel, CompaniesCarousel } from "./Carousels";
 import { ValuesTimeline } from "./ValuesTimeline";
 import { CareersCards } from "./CareersCards";
 
@@ -410,7 +410,7 @@ export function StoryTail() {
       <ForesightSection />
       <CommitmentSection />
       <ValuesTimeline />
-      <LeadershipCarousel />
+      <TeamCarousel />
       <CareersCards />
       <CompaniesCarousel />
       <PartnerClose />

@@ -134,9 +134,31 @@ export type Leader = {
    supplied; short public bios can be added later. Owner (Mounir) may be added. */
 export const leaders: Leader[] = [
   { name: "Amin Kadrie", title: "Chairman" },
-  { name: "Khalid Kadrie", title: "Chief Executive Officer" },
+  { name: "Khalid Kadrie", title: "CEO, AutoData & Axxion" },
   { name: "Alexander Maas", title: "Chief Financial Officer" },
   { name: "Raymond Zhu", title: "Chief Technology Officer" },
+];
+
+/* The team carousel roster — owner-supplied names, titles and portrait
+   status (2026-07-16). `placeholder: true` marks interim AI portraits awaiting
+   the final photography (Dreambox originals or approved regenerations). */
+export type TeamMember = {
+  name: string;
+  role: string;
+  image: string;
+  placeholder?: boolean;
+};
+
+export const team: TeamMember[] = [
+  { name: "Amin Kadrie", role: "Chairman", image: "/team/amin.jpg", placeholder: true },
+  { name: "Khalid Kadrie", role: "CEO, AutoData & Axxion", image: "/team/khalid.jpg" },
+  { name: "Alexander Maas", role: "CFO, World Automotive Group", image: "/team/alex.jpg", placeholder: true },
+  { name: "Raymond Zhu", role: "CTO, World Automotive Group", image: "/team/raymond.jpg", placeholder: true },
+  { name: "Mounir Habib", role: "Group SVP", image: "/team/mounir.jpg" },
+  { name: "Frederik Bisbjerg", role: "Managing Director & Co-founder, Axxion", image: "/team/frederik.jpg", placeholder: true },
+  { name: "Rita Estephane", role: "Executive Director, Strategic Growth, Axxion", image: "/team/rita.jpg" },
+  { name: "Stijn Venrooij", role: "Director, AI & Business Development, Axxion", image: "/team/stijn.jpg", placeholder: true },
+  { name: "Dalia Kanaan", role: "Group HR Business Partner", image: "/team/dalia.jpg", placeholder: true },
 ];
 
 export const nav = {

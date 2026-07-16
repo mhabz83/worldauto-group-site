@@ -948,6 +948,12 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   position: relative;
   border-radius: 2px;
 }
+.ax-person-panel .ax-company-panel-inner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
 .ax-company-panel-inner {
   position: absolute;
   inset: 0;
