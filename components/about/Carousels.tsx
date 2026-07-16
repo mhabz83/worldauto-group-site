@@ -306,9 +306,10 @@ export function CompaniesCarousel() {
 
   return (
     <section
-      id="companies"
+      id="companies-recap"
       ref={sectionRef}
       data-ax-theme="light"
+      data-nav-section="companies"
       className="ax-section ax-light ax-team"
     >
       <div className="ax-container ax-team-inner">

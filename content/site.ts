@@ -142,7 +142,7 @@ export const leaders: Leader[] = [
 export const nav = {
   wordmark: { strong: "WORLDAUTO", thin: "GROUP" },
   links: [
-    { label: "The Group", href: "/about" },
+    { label: "The Group", href: "/#story" },
     { label: "Companies", href: "/companies" },
     { label: "The Model", href: "/#model" },
     { label: "Heritage", href: "/#heritage" },

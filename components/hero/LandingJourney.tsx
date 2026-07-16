@@ -6,8 +6,8 @@ import { Children, useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { companies, footer, nav } from "@/content/site";
-import { useCountUp } from "@/lib/useCountUp";
+import { companies, nav } from "@/content/site";
+import { StoryTail } from "@/components/about/StoryTail";
 import { NeonJourney } from "./NeonJourney";
 import { journeyContent, stopAccents } from "./journeyContent";
 
@@ -25,10 +25,6 @@ const revealFrom = {
   hero: { yPercent: 8, opacity: 0 },
   intro: { xPercent: -12, opacity: 0 },
   company: { yPercent: 16, scale: 0.96, opacity: 0 },
-  model: { xPercent: 10, opacity: 0 },
-  numbers: { scale: 0.9, opacity: 0 },
-  heritage: { xPercent: -10, opacity: 0 },
-  partner: { yPercent: 18, opacity: 0 },
 } as const;
 
 type StopProps = {
@@ -38,7 +34,7 @@ type StopProps = {
   align?: "start" | "end";
   children: React.ReactNode;
   label: string;
-  navSection: "group" | "companies" | "model" | "heritage" | "partner";
+  navSection: "group" | "companies";
 };
 
 function Stop({ id, kind, accent, align = "start", children, label, navSection }: StopProps) {
@@ -57,23 +53,29 @@ function Stop({ id, kind, accent, align = "start", children, label, navSection }
   );
 }
 
+/* Progress-rail markers for the merged page: the seven journey stops plus the
+   Madar-machine story tail sections. */
 const journeyStops = [
   { id: "group", label: "The Group" },
   { id: "companies", label: "Companies" },
   ...companies.map((company) => ({ id: `company-${company.slug}`, label: company.name })),
+  { id: "story", label: "One Operator, Many Engines" },
   { id: "model", label: "The Model" },
-  { id: "numbers", label: "Group Numbers" },
   { id: "heritage", label: "Heritage" },
+  { id: "numbers", label: "Group Numbers" },
+  { id: "companies-recap", label: "Companies Recap" },
   { id: "partner", label: "Partner With Us" },
 ] as const;
 
 const headerLinks = [
-  { label: "The Group", href: "#group", section: "group" },
+  { label: "The Group", href: "#story", section: "group" },
   { label: "Companies", href: "#companies", section: "companies" },
   { label: "The Model", href: "#model", section: "model" },
   { label: "Heritage", href: "#heritage", section: "heritage" },
   { label: "Partner", href: "#partner", section: "partner" },
 ] as const;
+
+type NavSection = (typeof headerLinks)[number]["section"];
 
 const companyProofHighlights: Record<(typeof companies)[number]["slug"], string> = {
   fasttrack: "32",
@@ -100,27 +102,49 @@ function HighlightedText({ text, highlight }: { text: string; highlight: string 
 }
 
 function Header() {
-  const [activeSection, setActiveSection] = useState<(typeof headerLinks)[number]["section"]>("group");
+  const [activeSection, setActiveSection] = useState<NavSection>("group");
+  const [onLight, setOnLight] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const progressRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const stops = Array.from(document.querySelectorAll<HTMLElement>("[data-journey-stop]"));
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-        const section = (visible?.target as HTMLElement | undefined)?.dataset.navSection;
-        if (section) setActiveSection(section as (typeof headerLinks)[number]["section"]);
-      },
-      { rootMargin: "-44% 0px -44% 0px", threshold: [0, 0.01, 0.1] },
-    );
-    stops.forEach((stop) => observer.observe(stop));
+    // One rAF-throttled probe serves both scroll engines (journey stops +
+    // Madar-machine tail): the [data-nav-section] element under the viewport
+    // centre owns the active nav state (last match wins, so the heritage
+    // marker nested in the centerpiece overrides its parent), and the
+    // [data-ax-theme] section under the header line owns the dark/light flip.
+    let raf = 0;
+    const check = () => {
+      let light = false;
+      for (const el of document.querySelectorAll<HTMLElement>("[data-ax-theme]")) {
+        const r = el.getBoundingClientRect();
+        if (r.top <= 40 && r.bottom >= 40) {
+          light = el.dataset.axTheme === "light";
+          break;
+        }
+      }
+      setOnLight(light);
+
+      const probe = window.innerHeight / 2;
+      let active: string | undefined;
+      for (const el of document.querySelectorAll<HTMLElement>("[data-nav-section]")) {
+        const r = el.getBoundingClientRect();
+        if (r.top <= probe && r.bottom >= probe) active = el.dataset.navSection;
+      }
+      if (active) setActiveSection(active as NavSection);
+    };
+    const schedule = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(check);
+    };
+    check();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
 
     // Progress rail: ScrollTrigger already owns scroll on this page, so it
     // drives the fill too — no parallel window scroll listener. It also
-    // re-measures on resize/refresh for free.
+    // re-measures on resize/refresh for free. It spans the WHOLE merged page
+    // (journey + tail), unlike the camera trigger which caps at the wrapper.
     const setFill = (progress: number) => {
       if (progressRef.current) progressRef.current.style.transform = `scaleX(${progress})`;
     };
@@ -132,7 +156,9 @@ function Header() {
     });
     setFill(progressTrigger.progress);
     return () => {
-      observer.disconnect();
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      cancelAnimationFrame(raf);
       progressTrigger.kill();
     };
   }, []);
@@ -149,9 +175,11 @@ function Header() {
     };
   }, [menuOpen]);
 
+  const light = onLight && !menuOpen;
+
   return (
     <>
-      <header className="journey-header">
+      <header className={`journey-header${light ? " journey-header--light" : ""}`}>
         <Link href="/" className="journey-wordmark" aria-label="WORLDAUTO GROUP home">
           <strong>WORLD<span className="journey-wordmark-auto">AUTO</span></strong>
           <span>{nav.wordmark.thin}</span>
@@ -187,7 +215,7 @@ function Header() {
         </button>
       </header>
 
-      <div className="journey-progress" aria-hidden="true">
+      <div className={`journey-progress${light ? " journey-progress--light" : ""}`} aria-hidden="true">
         <div ref={progressRef} className="journey-progress-fill" />
         <div className="journey-progress-stops">
           {journeyStops.map((stop) => <span key={stop.id} title={stop.label} />)}
@@ -245,43 +273,9 @@ function CompanyStop({ company, index }: { company: (typeof companies)[number]; 
   );
 }
 
-type CountedStat = {
-  value: number;
-  start?: number;
-  label: string;
-  prefix?: string;
-  suffix?: string;
-  format: "year" | "compact" | "thousands";
-};
-
-const countedStats: readonly CountedStat[] = [
-  { value: 4, start: 1990, label: "Founded, Abu Dhabi", format: "year" },
-  { value: 650, label: "Annual group revenue", prefix: "~USD ", suffix: "M", format: "compact" },
-  { value: 4000, label: "People across the group", prefix: "~", format: "thousands" },
-];
-
-function formatCountedValue(value: number, format: CountedStat["format"]) {
-  if (format === "year") return String(Math.round(value));
-  if (format === "thousands") return Math.round(value).toLocaleString("en-US");
-  return value >= 1000 ? `${Math.round(value / 1000)}K` : String(Math.round(value));
-}
-
-function CountedStatItem({ stat, index }: { stat: CountedStat; index: number }) {
-  const { ref, value } = useCountUp(stat.value, 2200, 350 + index * 260);
-  return (
-    <div className="journey-stat">
-      <dt>{stat.label}</dt>
-      <dd>
-        {stat.prefix}
-        <span ref={ref}>{formatCountedValue(value + (stat.start ?? 0), stat.format)}</span>
-        {stat.suffix}
-      </dd>
-    </div>
-  );
-}
-
 export function LandingJourney() {
   const rootRef = useRef<HTMLElement>(null);
+  const journeyRef = useRef<HTMLDivElement>(null);
 
   useGSAP(() => {
     const root = rootRef.current;
@@ -329,44 +323,24 @@ export function LandingJourney() {
         });
       }
 
-      if (index < stops.length - 1) {
-        gsap.fromTo(
-          panel,
-          { yPercent: 0, opacity: 1 },
-          {
-            yPercent: kind === "numbers" ? -4 : -10,
-            opacity: 0,
-            ease: "quart.in",
-            immediateRender: false,
-            scrollTrigger: {
-              trigger: stop,
-              start: "bottom 48%",
-              end: "bottom 12%",
-              scrub: MOTION.exitScrub,
-            },
+      // Every stop exits — including the last one, which fades before the
+      // story tail's opaque sections slide over the fixed canvas.
+      gsap.fromTo(
+        panel,
+        { yPercent: 0, opacity: 1 },
+        {
+          yPercent: -10,
+          opacity: 0,
+          ease: "quart.in",
+          immediateRender: false,
+          scrollTrigger: {
+            trigger: stop,
+            start: "bottom 48%",
+            end: "bottom 12%",
+            scrub: MOTION.exitScrub,
           },
-        );
-      }
-
-      if (kind === "numbers") {
-        const statItems = stop.querySelectorAll<HTMLElement>(".journey-stat");
-        gsap.fromTo(
-          statItems,
-          { y: 28, opacity: 0 },
-          {
-            y: 0,
-            opacity: 1,
-            stagger: 0.16,
-            ease: "expo.out",
-            scrollTrigger: {
-              trigger: stop,
-              start: "top 72%",
-              end: "top 30%",
-              scrub: MOTION.revealScrub,
-            },
-          },
-        );
-      }
+        },
+      );
     });
   }, { scope: rootRef });
 
@@ -382,10 +356,10 @@ export function LandingJourney() {
           sizes="100vw"
         />
       </div>
-      <NeonJourney />
+      <NeonJourney boundsRef={journeyRef} />
       <Header />
 
-      <div className="journey-copy-layer">
+      <div ref={journeyRef} className="journey-copy-layer">
         <Stop id="group" kind="hero" accent={stopAccents.hero} label="World Automotive Group" navSection="group">
           <p className="journey-eyebrow">{journeyContent.hero.eyebrow}</p>
           <h1>We Build And Run <SignalWord>Automotive.</SignalWord></h1>
@@ -397,50 +371,12 @@ export function LandingJourney() {
         </Stop>
 
         {companies.map((company, index) => <CompanyStop key={company.slug} company={company} index={index} />)}
-
-        <Stop id="model" kind="model" accent={stopAccents.model} align="end" label="The Model" navSection="model">
-          <h2>{journeyContent.model.title}</h2>
-          <p className="journey-statement">We build and run automotive operations, then <SignalWord>productize</SignalWord> what works.</p>
-          <div className="journey-pillars">
-            {journeyContent.model.pillars.map((pillar) => (
-              <article key={pillar.cue}>
-                <p>{pillar.cue}</p><h3>{pillar.title}</h3><p>{pillar.body}</p>
-              </article>
-            ))}
-          </div>
-        </Stop>
-
-        <Stop id="numbers" kind="numbers" accent={stopAccents.numbers} label="The Group In Numbers" navSection="model">
-          <h2>The Group In <SignalWord>Numbers</SignalWord></h2>
-          <dl className="journey-stats">
-            {countedStats.map((stat, index) => (
-              <CountedStatItem key={stat.label} stat={stat} index={index} />
-            ))}
-            <div className="journey-stat"><dt>Two operating regions</dt><dd>UAE · NA</dd></div>
-          </dl>
-        </Stop>
-
-        <Stop id="heritage" kind="heritage" accent={stopAccents.heritage} align="end" label="Heritage" navSection="heritage">
-          <h2>{journeyContent.heritage.title}</h2>
-          <p className="journey-statement">Three <SignalWord>decades</SignalWord> of operating.</p>
-          <ol className="journey-timeline">
-            {journeyContent.heritage.timeline.map((item) => (
-              <li key={item.year}><p>{item.year}</p><div><h3>{item.title}</h3><p>{item.detail}</p></div></li>
-            ))}
-          </ol>
-        </Stop>
-
-        <Stop id="partner" kind="partner" accent={stopAccents.partner} label="Partner With Us" navSection="partner">
-          <h2><SignalWord>Build</SignalWord> With The Group.</h2>
-          <p className="journey-body">{journeyContent.partner.body}</p>
-          <Link href="/contact" className="journey-primary-cta">{journeyContent.partner.cta}</Link>
-          <a href="#group" className="journey-back-to-top">Back to top <span aria-hidden="true">↑</span></a>
-          <footer className="journey-footer">
-            <p>{companies.map((company) => company.name).join(" · ")}</p>
-            <p>{footer.parentLine} · © 2026</p>
-          </footer>
-        </Stop>
       </div>
+
+      {/* The journey ends here; the Madar-machine story tail takes over in
+          normal flow. Its opaque sections cover the fixed canvas, which also
+          stops rendering once the journey wrapper has scrolled past. */}
+      <StoryTail />
 
       <style jsx global>{`
         html { scroll-behavior: auto; }
@@ -460,10 +396,23 @@ export function LandingJourney() {
         .journey-desktop-nav a::after { position: absolute; right: 0; bottom: 7px; left: 0; height: 1px; background: currentColor; content: ""; transform: scaleX(0); transform-origin: right; transition: transform var(--dur-fast) var(--ease-reveal); }
         .journey-desktop-nav a:hover,.journey-desktop-nav a:focus-visible,.journey-desktop-nav a.is-active { color: #fff; }
         .journey-desktop-nav a:hover::after,.journey-desktop-nav a:focus-visible::after,.journey-desktop-nav a.is-active::after { transform: scaleX(1); transform-origin: left; }
-        .journey-header-cta,.journey-primary-cta { display: inline-flex; width: fit-content; align-items: center; justify-content: center; min-height: 44px; padding: .72rem 1.05rem; background: var(--highlight); color: #fff; text-decoration: none; font-weight: 600; border-radius: 4px; transition: background var(--dur-fast) ease, outline-color var(--dur-fast) ease; }
+        .journey-header-cta { display: inline-flex; width: fit-content; align-items: center; justify-content: center; min-height: 44px; padding: .72rem 1.05rem; background: var(--highlight); color: #fff; text-decoration: none; font-weight: 600; border-radius: 4px; transition: background var(--dur-fast) ease, outline-color var(--dur-fast) ease; }
         .journey-header-cta.is-active { outline: 1px solid rgba(255,255,255,.82); outline-offset: 3px; }
-        .journey-header-cta:hover,.journey-primary-cta:hover { background: var(--highlight-hover); }
+        .journey-header-cta:hover { background: var(--highlight-hover); }
         .journey-menu-toggle,.journey-mobile-menu { display: none; }
+        /* Theme flip: the story tail has ui-light sections; the header and the
+           progress rail re-skin so the nav stays legible over paper. */
+        .journey-header { transition: background .45s ease; }
+        .journey-header--light { background: linear-gradient(180deg,rgba(255,255,255,.97),rgba(255,255,255,.66) 70%,transparent); }
+        .journey-header--light .journey-wordmark { color: var(--wag-ink); }
+        .journey-header--light .journey-wordmark > span { color: rgba(7,9,14,.62); }
+        .journey-header--light .journey-desktop-nav a { color: rgba(7,9,14,.66); }
+        .journey-header--light .journey-desktop-nav a:hover,.journey-header--light .journey-desktop-nav a:focus-visible,.journey-header--light .journey-desktop-nav a.is-active { color: var(--wag-ink); }
+        .journey-header--light .journey-header-cta.is-active { outline-color: rgba(7,9,14,.7); }
+        .journey-header--light .journey-menu-toggle { color: var(--wag-ink); }
+        .journey-progress--light { background: rgba(7,9,14,.16); }
+        .journey-progress--light .journey-progress-fill { background: var(--wag-ink); }
+        .journey-progress--light .journey-progress-stops span { background: rgba(7,9,14,.45); box-shadow: 0 0 0 2px rgba(255,255,255,.8); }
         .journey-progress { position: fixed; z-index: 9; top: 71px; right: 0; left: 0; height: 1px; background: rgba(255,255,255,.12); pointer-events: none; }
         .journey-progress-fill { position: absolute; inset: 0; background: #fff; transform: scaleX(0); transform-origin: left; will-change: transform; }
         .journey-progress-stops { position: absolute; inset: 0 var(--gutter); display: flex; justify-content: space-between; align-items: center; }
@@ -483,18 +432,6 @@ export function LandingJourney() {
         .journey-links { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem 1.4rem; margin-top: 1.25rem; }
         .journey-links a { display: inline-flex; min-height: 48px; align-items: center; color: #fff; text-underline-offset: .35em; text-decoration-color: var(--stop-accent); font-weight: 600; }
         .journey-links a:last-child { color: var(--text-mid); font-size: .82rem; font-weight: 400; }
-        .journey-pillars { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem 1.7rem; margin-top: 2rem; }
-        .journey-pillars article { padding-top: 1rem; border-top: 1px solid color-mix(in srgb,var(--stop-accent) 38%,transparent); }
-        .journey-pillars article>p:first-child { margin: 0 0 .4rem; color: var(--stop-accent); font-size: .72rem; }
-        .journey-pillars article>p:last-child { margin: .45rem 0 0; color: rgba(255,255,255,.84); font-size: .9rem; line-height: 1.5; }
-        .journey-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 2rem 0 0; }
-        .journey-stats div { display: flex; min-width: 0; flex-direction: column-reverse; padding-top: 1rem; border-top: 1px solid color-mix(in srgb,var(--stop-accent) 38%,transparent); }
-        .journey-stats dt { min-height: 2.5em; color: var(--text-mid); font-size: .82rem; line-height: 1.35; }.journey-stats dd { margin: 0 0 .35rem; color: #fff; font-size: clamp(1.75rem,3.5vw,3.2rem); font-weight: 300; letter-spacing: -.03em; line-height: 1; white-space: nowrap; }
-        .journey-timeline { margin: 1.8rem 0 0; padding: 0; list-style: none; }
-        .journey-timeline li { display: grid; grid-template-columns: 5.4rem 1fr; gap: 1rem; padding: .85rem 0; border-top: 1px solid rgba(255,255,255,.13); }
-        .journey-timeline li>p { margin: 0; color: var(--stop-accent); font-size: .75rem; }.journey-timeline h3,.journey-timeline li div p { margin: 0; }.journey-timeline li div p { color: rgba(255,255,255,.82); font-size: .88rem; line-height: 1.45; }
-        .journey-primary-cta { margin-top: 1.7rem; }.journey-back-to-top { display: flex; width: fit-content; min-height: 44px; align-items: center; gap: .55rem; margin-top: 1rem; color: rgba(255,255,255,.82); font-size: .82rem; text-underline-offset: .35em; }.journey-footer { display: flex; justify-content: space-between; gap: 1.5rem; margin-top: 4rem; padding-top: 1.2rem; border-top: 1px solid rgba(255,255,255,.13); color: var(--text-mid); font-size: .7rem; }
-        .journey-footer p { margin: 0; }
         @media (max-width: 900px) {
           .journey-header { height: 64px; grid-template-columns: 1fr auto auto; }.journey-desktop-nav { display: none; }.journey-wordmark { font-size: .82rem; }
           /* Keep the one primary action visible on phones; the menu still lists Partner. */
@@ -511,17 +448,14 @@ export function LandingJourney() {
           .journey-static-image { object-position: 65% center; }.journey-stop,.journey-stop--end { align-items: flex-end; justify-content: stretch; padding: 5rem 0 0; }
           .journey-stop:first-child { min-height: 100svh !important; }
           .journey-panel,.journey-stop--end .journey-panel { width: 100%; padding: 5.5rem var(--gutter) max(1.5rem,env(safe-area-inset-bottom)); background: linear-gradient(0deg,rgba(0,5,31,.98),rgba(0,8,53,.84) 62%,transparent); }
-          .journey-panel h1,.journey-panel h2 { font-size: clamp(2.45rem,12vw,4.6rem); }.journey-pillars { grid-template-columns: 1fr; gap: .85rem; }.journey-pillars article>p:last-child { font-size: .84rem; }.journey-footer { flex-direction: column; }
-          .journey-stats { grid-template-columns: 1fr; gap: .85rem; }
-          .journey-stats dd { font-size: clamp(1.7rem,8vw,2.7rem); }
+          .journey-panel h1,.journey-panel h2 { font-size: clamp(2.45rem,12vw,4.6rem); }
         }
         @media (prefers-reduced-motion: reduce) {
           /* NeonJourney renders one motionless 3D frame in reduced-motion
              mode, so the licensed SUV remains visible without animation. */
           .journey-static-frame { opacity: 0 !important; transform: none !important; }
           .journey-stop { min-height: auto !important; padding-block: clamp(5rem,12vw,8rem); }.journey-panel { will-change: auto; opacity: 1 !important; transform: none !important; }
-          .journey-stat { opacity: 1 !important; transform: none !important; }
-          .journey-mobile-menu,.journey-menu-toggle span,.journey-desktop-nav a::after { transition: none !important; }
+          .journey-header,.journey-mobile-menu,.journey-menu-toggle span,.journey-desktop-nav a::after { transition: none !important; }
         }
         html.webgl-unavailable .journey-webgl { display: none !important; }
         html.webgl-unavailable .journey-static-frame { opacity: 1 !important; transform: none !important; }

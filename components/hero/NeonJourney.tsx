@@ -141,21 +141,26 @@ const FLOOR = {
   fadeEnd: 0.11, //   tracks fog .02 → .15 so far reflections dissolve)
 };
 
+// Seven stops (hero, companies intro, five companies). The scroll mapping is
+// capped to the journey wrapper (LandingJourney's copy layer), so raw 0→1
+// spans exactly the seven 118svh stops — the Madar-machine story tail below
+// never stretches the camera choreography. Scene values are unchanged from
+// the 11-stop build (the Vicimus pose still parks at scene 0.54; the camera
+// path beyond it is simply never driven).
 const JOURNEY_POSES = [
   { raw: 0, scene: 0, accent: 0x1367fe },
-  { raw: 0.1, scene: 0.06, accent: 0x1367fe },
-  { raw: 0.2, scene: 0.14, accent: 0x1367fe },
-  { raw: 0.3, scene: 0.23, accent: 0x42d7ff },
-  { raw: 0.4, scene: 0.33, accent: 0xff4200 },
-  { raw: 0.5, scene: 0.43, accent: 0x8a6cff },
-  { raw: 0.6, scene: 0.54, accent: 0x34e39b },
-  { raw: 0.7, scene: 0.65, accent: 0x1367fe },
-  { raw: 0.8, scene: 0.77, accent: 0xff4200 },
-  { raw: 0.9, scene: 0.89, accent: 0x42d7ff },
-  { raw: 1, scene: 1, accent: 0x1367fe },
+  { raw: 1 / 6, scene: 0.06, accent: 0x1367fe },
+  { raw: 2 / 6, scene: 0.14, accent: 0x1367fe },
+  { raw: 3 / 6, scene: 0.23, accent: 0x42d7ff },
+  { raw: 4 / 6, scene: 0.33, accent: 0xff4200 },
+  { raw: 5 / 6, scene: 0.43, accent: 0x8a6cff },
+  { raw: 1, scene: 0.54, accent: 0x34e39b },
 ] as const;
 const JOURNEY_ACCENT_COLORS = JOURNEY_POSES.map((pose) => new THREE.Color(pose.accent));
-const JOURNEY_HOLD = 0.026;
+// Dwell per stop, re-tuned to the 7-stop 0–1 range. The 11-stop build held
+// 0.026 of ~11.98 viewport-heights of scroll (~0.31vh); over the wrapper's
+// ~7.26 viewport-heights the same physical dwell is 0.31 / 7.26 ≈ 0.043.
+const JOURNEY_HOLD = 0.043;
 
 const FAKE_FLOOR = {
   size: 0.1,
@@ -631,7 +636,14 @@ const sineInOut = (t: number) => -0.5 * (Math.cos(Math.PI * t) - 1);
 
 /* ------------------------------- component ------------------------------- */
 
-export function NeonJourney() {
+type NeonJourneyProps = {
+  /** The journey copy layer. When given, the camera's scroll mapping is capped
+      to this element's own height (progress 1 when its bottom meets the
+      viewport bottom) and rendering pauses once it has scrolled fully past. */
+  boundsRef?: React.RefObject<HTMLElement | null>;
+};
+
+export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
   const mountRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -1162,9 +1174,14 @@ export function NeonJourney() {
     /* ------------------------------- scroll ------------------------------- */
     let timelineProgress = 0;
     let rawProgress = 0;
+    const boundsEl = boundsRef?.current ?? null;
     const journeyTrigger = ScrollTrigger.create({
-      start: 0,
-      end: "max",
+      // Capped to the journey wrapper when provided: progress hits 1 as the
+      // wrapper's bottom edge reaches the viewport bottom, so the 7-stop
+      // camera choreography keeps its feel however long the tail below grows.
+      ...(boundsEl
+        ? { trigger: boundsEl, start: "top top", end: "bottom bottom" }
+        : { start: 0, end: "max" }),
       onUpdate: (self) => {
         timelineProgress = self.progress;
         rawProgress = journeyProgress(timelineProgress);
@@ -1233,9 +1250,26 @@ export function NeonJourney() {
       if (reduce) renderStatic();
     };
 
+    /* Dev-only pose inspector: window.__neonPose exposes the raw wrapper
+       progress, the eased scene progress and the live camera pose so the
+       journey mapping can be verified programmatically. */
+    const publishPose =
+      process.env.NODE_ENV === "production"
+        ? () => {}
+        : () => {
+            (window as unknown as Record<string, unknown>).__neonPose = {
+              raw: timelineProgress,
+              scene: rawProgress,
+              smoothed,
+              position: camera.position.toArray(),
+              target: tgtV.toArray(),
+            };
+          };
+
     /* -------------------------------- loop -------------------------------- */
     let raf = 0;
     let running = false;
+    let journeyOnScreen = true; // false once the wrapper scrolls fully past
     let last = performance.now();
     const frame = () => {
       const now = performance.now();
@@ -1245,11 +1279,12 @@ export function NeonJourney() {
       updateCamera(smoothed, now);
       updateUniforms(now - startTime, smoothed);
       composer.render();
+      publishPose();
       raf = requestAnimationFrame(frame);
     };
 
     const startLoop = () => {
-      if (running || reduce || document.hidden) return;
+      if (running || reduce || document.hidden || !journeyOnScreen) return;
       running = true;
       last = performance.now();
       raf = requestAnimationFrame(frame);
@@ -1269,7 +1304,32 @@ export function NeonJourney() {
       updateCamera(REDUCED_MOTION_PROGRESS, startTime + CAMERA.introMs);
       updateUniforms(1200, REDUCED_MOTION_PROGRESS);
       composer.render();
+      publishPose();
     };
+
+    /* Past the journey wrapper the tail's opaque sections own the screen:
+       stop rendering (no wasted GPU) and hide the fixed canvas so it can
+       never peek through light sections. Resumes when scrolled back. */
+    const applyJourneyVisibility = (active: boolean) => {
+      if (disposed) return;
+      journeyOnScreen = active;
+      mount.style.visibility = active ? "" : "hidden";
+      if (active) {
+        if (reduce) renderStatic();
+        else startLoop();
+      } else {
+        stopLoop();
+      }
+    };
+    const visibilityTrigger = boundsEl
+      ? ScrollTrigger.create({
+          trigger: boundsEl,
+          start: "top top",
+          end: "bottom top",
+          onToggle: (self) => applyJourneyVisibility(self.isActive),
+          onRefresh: (self) => applyJourneyVisibility(self.isActive),
+        })
+      : null;
 
     if (reduce) {
       renderStatic();
@@ -1286,6 +1346,10 @@ export function NeonJourney() {
       window.removeEventListener("resize", onResize);
       document.removeEventListener("visibilitychange", onVisibilityChange);
       journeyTrigger.kill();
+      visibilityTrigger?.kill();
+      if (process.env.NODE_ENV !== "production") {
+        delete (window as unknown as Record<string, unknown>).__neonPose;
+      }
       reflector.dispose();
       disposables.forEach((d) => d.dispose());
       composer.dispose();
@@ -1294,7 +1358,7 @@ export function NeonJourney() {
       document.documentElement.classList.remove("webgl-unavailable");
       if (renderer.domElement.parentNode === mount) mount.removeChild(renderer.domElement);
     };
-  }, []);
+  }, [boundsRef]);
 
   return <div ref={mountRef} className="journey-webgl fixed inset-0 z-0" aria-hidden />;
 }

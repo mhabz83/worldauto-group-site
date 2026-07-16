@@ -208,8 +208,18 @@ export function ValuesTimeline() {
   const counterLabel = String(counter).padStart(2, "0");
 
   return (
-    <section id="values" data-ax-theme="dark" className="ax-section ax-values">
+    <section
+      id="model"
+      data-ax-theme="dark"
+      data-nav-section="model"
+      className="ax-section ax-values"
+    >
       <div ref={stickyRef} className="ax-values-sticky">
+        {/* Heritage lives in the second half of the pin: an anchor for the
+            header's #heritage link plus a nav marker so the active-section
+            probe flips from The Model to Heritage at the timeline phase. */}
+        <span id="heritage" className="ax-heritage-anchor" aria-hidden="true" />
+        <div className="ax-heritage-zone" data-nav-section="heritage" aria-hidden="true" />
         {/* layer 1 — pinned background */}
         <div className="ax-values-layer-bg">
           <div className="ax-values-bg" aria-hidden="true">

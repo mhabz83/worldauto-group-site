@@ -8,11 +8,9 @@
  * (initial states [1,0,0,0]; N = i > active ? 1 : active − i + 1).
  */
 
-import Link from "next/link";
 import { useEffect, useRef } from "react";
-import { journeyContent } from "@/components/hero/journeyContent";
 import { gsap, waypointTrigger } from "./engine";
-import { FlickerTitle, GlitchLabel } from "./reveal";
+import { FlickerTitle } from "./reveal";
 
 const cards = [
   {
@@ -172,28 +170,9 @@ export function CareersCards() {
           ))}
         </div>
 
-        <div className="ax-grid ax-careers-bottom">
-          <FlickerTitle
-            as="h3"
-            className="ax-h2 ax-cta-title"
-            reveal="title"
-            segments={["Build With", "\n", "The Group."]}
-          />
-          <span className="ax-hairline ax-cta-rule" />
-          <p className="ax-t1 ax-cta-body" data-about-reveal="fade-in">
-            {journeyContent.partner.body}
-          </p>
-          <div className="ax-cta-action" data-about-reveal="fade-in">
-            <Link
-              href="/contact"
-              className="ax-btn-primary"
-              data-ax-glitch
-              aria-label="Partner With Us"
-            >
-              <GlitchLabel text="Partner With Us" /> →
-            </Link>
-          </div>
-        </div>
+        {/* The "Build With The Group." CTA that used to close this section
+            now lives in StoryTail's PartnerClose, after the companies recap —
+            one partner CTA on the whole merged page. */}
       </div>
     </section>
   );
