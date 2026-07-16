@@ -162,6 +162,47 @@ const JOURNEY_ACCENT_COLORS = JOURNEY_POSES.map((pose) => new THREE.Color(pose.a
 // ~7.26 viewport-heights the same physical dwell is 0.31 / 7.26 ≈ 0.043.
 const JOURNEY_HOLD = 0.043;
 
+// "Five-Lane Split" — between the hero and the "Five companies, one
+// standard." card the highway gathers into five parallel lanes that hold
+// beneath the card while staggered pulses travel them, then merges back.
+// Same tube radius, same road colors (3 blue + 2 orange mirrors the road
+// census), same pulse shader; the split exists only inside its scroll
+// window — the base road is the resting truth.
+const COMPANIES_SPLIT = {
+  scene: 0.06, // camera pose the split is authored against (companies stop)
+  // Scroll windows (timelineProgress, stop centre = 1/6 ≈ 0.1667; the camera
+  // dwells at the companies stop from 0.1237 to 0.2097; the next authored
+  // stop arrives at 0.290 so 0.235 leaves clear air after the merge).
+  enterStart: 0.105, // lanes begin fading in over the carriageway
+  fullStart: 0.145, // fully split, pulses at full strength
+  holdEnd: 0.195, // split starts folding back
+  mergedEnd: 0.235, // fully merged and invisible again
+  depthBeyondTarget: 0.02, // group anchor, forward of the stop's look target
+  sideBias: 0, // lateral shift (camera-right +) so the card never hides it
+  nearZ: 0.055, // local z toward the camera — starts below the frame edge
+  // even at the mobile fov so no tube start-caps are ever visible
+  farZ: -0.048, // local z into the fog
+  laneSpacing: 0.00132, // gathered spacing — matches the carriageway
+  // bundle convention (fasttrackRoadPaths authored lanes at x * 0.22 with
+  // x in ±0.012 → ±0.00264 across the road)
+  spread: 2.65, // split width multiplier vs gathered (≈2.5–3x)
+  mobileSpread: 0.8, // narrower fan below SUV_FIT.mobileBreakpoint
+  // The fan opens toward the viewer: gathered where the road melts into the
+  // fog, fully split by the time the lanes sweep under the card. Perspective
+  // then amplifies the divergence instead of flattening it.
+  divergeStart: 0.3, // fraction along the stretch (near → far) where the
+  // lanes are last fully split
+  divergeEnd: 0.7, // gathered back into the carriageway bundle from here out
+  laneColors: [0x1367fe, 0xff4200, 0x1367fe, 0xff4200, 0x1367fe], // 3B + 2O,
+  // orange at positions 2 and 4 — never adjacent, never on the edges
+  laneAlpha: 0.74, // working alpha of the visible split
+  pulseSize: 4, // uSize for a single traveling packet per lane
+  pulseSpeedBase: 0.22, // uSpeed at rest…
+  pulseSpeedGain: 0.2, // …ramping to 0.42 at full split
+  pulsePhaseStep: 0.2, // per-lane pulse stagger, in cycles (lane 1 → 5)
+  segments: 72, // tubular segments per lane (~0.1 world units long)
+} as const;
+
 const FAKE_FLOOR = {
   size: 0.1,
   position: new THREE.Vector3(-0.135, 0, 0.64),
@@ -581,6 +622,15 @@ function darkenHex(hex: number, amt: number): number {
   return (r << 16) | (g << 8) | b;
 }
 
+/** The road tubes' exact color transform (darken then raw LinearSRGB hex) so
+ *  the split lanes match the highway's brightness precisely. */
+function neonCoreColor(hex: number): THREE.Color {
+  return new THREE.Color().setHex(
+    darkenHex(hex, TUBES.roadDarken),
+    THREE.LinearSRGBColorSpace,
+  );
+}
+
 /** Unity SmoothDamp (the algorithm Madar smooths scroll progress with). */
 function smoothDamp(
   current: number,
@@ -856,6 +906,155 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
     const circleLines: THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>[] = [];
     let renderStatic = () => {}; // re-render hook for reduced motion
     let fittedVehicle: THREE.Group | null = null;
+
+    /* --------------------- Five-Lane Split (companies stop) --------------- */
+    // Anchored to the companies-stop camera pose: the group's local -z runs
+    // away from the camera into the fog, local x is lateral across the road.
+    const splitCamera = camCurve.getPoint(COMPANIES_SPLIT.scene);
+    const splitLook = lookCurve.getPoint(COMPANIES_SPLIT.scene);
+    const splitForward = splitLook.clone().sub(splitCamera).setY(0).normalize();
+    const splitRight = new THREE.Vector3()
+      .crossVectors(splitForward, new THREE.Vector3(0, 1, 0))
+      .normalize();
+    const splitPosition = splitLook
+      .clone()
+      .addScaledVector(splitForward, COMPANIES_SPLIT.depthBeyondTarget)
+      .addScaledVector(splitRight, COMPANIES_SPLIT.sideBias);
+    splitPosition.y = 0;
+    const companiesSplitGroup = new THREE.Group();
+    companiesSplitGroup.name = "companies_five_lane_split";
+    companiesSplitGroup.visible = false;
+    companiesSplitGroup.position.copy(splitPosition);
+    companiesSplitGroup.rotation.y = Math.atan2(
+      splitCamera.x - splitPosition.x,
+      splitCamera.z - splitPosition.z,
+    );
+    scene.add(companiesSplitGroup);
+
+    const buildCompaniesSplit = () => {
+      // One material per color group; pulse stagger is baked per lane as a
+      // uv.x offset (uSize 4 → exactly one packet cycle per lane), so the
+      // road's pulse shader needs no changes and draw calls stay low.
+      const materialByHex = new Map<number, THREE.ShaderMaterial>();
+      const materials: THREE.ShaderMaterial[] = [];
+      for (const hex of COMPANIES_SPLIT.laneColors) {
+        if (materialByHex.has(hex)) continue;
+        const material = new THREE.ShaderMaterial({
+          vertexShader: LINE_VERT,
+          fragmentShader: LINE_FRAG,
+          transparent: true,
+          depthTest: true,
+          depthWrite: false,
+          fog: true,
+          lights: false,
+          uniforms: THREE.UniformsUtils.merge([
+            THREE.UniformsLib.fog,
+            {
+              uColor: { value: neonCoreColor(hex) },
+              uTime: { value: 0 },
+              uSize: { value: COMPANIES_SPLIT.pulseSize },
+              uSpeed: { value: 0 },
+              uHideCorners: { value: false },
+              uAlpha: { value: 0 },
+            },
+          ]),
+        });
+        materialByHex.set(hex, material);
+        materials.push(material);
+        lineMaterials.push(material);
+        disposables.push(material);
+      }
+
+      // Gathered state: five straight lanes clustered inside the carriageway
+      // width. Split state: the same lanes, still gathered out in the fog,
+      // easing apart across the divergence zone so they arrive dead parallel
+      // and fully separated as they sweep beneath the card and the viewer.
+      const stationFractions = [
+        0, 0.1, 0.2, 0.3, 0.36, 0.42, 0.48, 0.54, 0.6, 0.66, 0.72, 0.8, 0.9, 1,
+      ];
+      const morphs: {
+        position: THREE.BufferAttribute;
+        source: Float32Array;
+        target: Float32Array;
+      }[] = [];
+      const laneY = 0.0001; // FastTrack lane convention: above the base road
+      COMPANIES_SPLIT.laneColors.forEach((hex, index) => {
+        const gatheredX = (index - 2) * COMPANIES_SPLIT.laneSpacing;
+        const splitX = gatheredX * COMPANIES_SPLIT.spread;
+        const stationZ = (f: number) =>
+          THREE.MathUtils.lerp(COMPANIES_SPLIT.nearZ, COMPANIES_SPLIT.farZ, f);
+        const sourcePath = stationFractions.map(
+          (f) => new THREE.Vector3(gatheredX, laneY, stationZ(f)),
+        );
+        const targetPath = stationFractions.map((f) => {
+          // 1 = fully split near the camera, easing to 0 = gathered far out
+          const ease = 1 - THREE.MathUtils.smoothstep(
+            f,
+            COMPANIES_SPLIT.divergeStart,
+            COMPANIES_SPLIT.divergeEnd,
+          );
+          return new THREE.Vector3(
+            THREE.MathUtils.lerp(gatheredX, splitX, ease),
+            laneY,
+            stationZ(f),
+          );
+        });
+        const sourceGeometry = new THREE.TubeGeometry(
+          new PolylineCurve(sourcePath),
+          COMPANIES_SPLIT.segments,
+          TUBES.roadRadius,
+          TUBES.radialSegments,
+          false,
+        );
+        const targetGeometry = new THREE.TubeGeometry(
+          new PolylineCurve(targetPath),
+          COMPANIES_SPLIT.segments,
+          TUBES.roadRadius,
+          TUBES.radialSegments,
+          false,
+        );
+        // Stagger this lane's pulse phase: with a single packet cycle,
+        // shifting uv.x by n cycles moves the packet without new uniforms.
+        const uv = sourceGeometry.getAttribute("uv") as THREE.BufferAttribute;
+        for (let v = 0; v < uv.count; v++) {
+          uv.setX(v, uv.getX(v) + index * COMPANIES_SPLIT.pulsePhaseStep);
+        }
+        uv.needsUpdate = true;
+        const position = sourceGeometry.getAttribute("position") as THREE.BufferAttribute;
+        const targetPosition = targetGeometry.getAttribute("position") as THREE.BufferAttribute;
+        const source = new Float32Array(position.array as Float32Array);
+        const target = new Float32Array(targetPosition.array as Float32Array);
+        targetGeometry.dispose();
+        const mesh = new THREE.Mesh(sourceGeometry, materialByHex.get(hex));
+        mesh.frustumCulled = false; // positions morph in place
+        companiesSplitGroup.add(mesh);
+        morphs.push({ position, source, target });
+        disposables.push(sourceGeometry);
+      });
+
+      // Same eased-lerp vertex update as the retired FastTrack lane morph.
+      let lastAmount = -1;
+      const update = (amount: number) => {
+        if (Math.abs(amount - lastAmount) < 0.0005) return;
+        lastAmount = amount;
+        const eased = 1 - Math.pow(1 - THREE.MathUtils.clamp(amount, 0, 1), 4);
+        for (const morph of morphs) {
+          const output = morph.position.array as Float32Array;
+          for (let index = 0; index < output.length; index++) {
+            output[index] = THREE.MathUtils.lerp(
+              morph.source[index],
+              morph.target[index],
+              eased,
+            );
+          }
+          morph.position.needsUpdate = true;
+        }
+      };
+
+      return { materials, update };
+    };
+    const companiesSplit = buildCompaniesSplit();
+    let splitEnvelope = 0; // last computed window envelope (dev inspector)
 
     const projectedBounds = (object: THREE.Object3D, fitCamera: THREE.Camera) => {
       const box = new THREE.Box3().setFromObject(object);
@@ -1217,6 +1416,30 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
       const t = elapsedMs / 500;
       for (const m of lineMaterials) m.uniforms.uTime.value = t;
       fakeFloorMat.uniforms.uTime.value = t;
+
+      // Five-lane split: gathers in, holds under the companies card, merges
+      // back out. Absent at rest and under reduced motion (amount 0, alpha 0).
+      const splitEnter = THREE.MathUtils.smoothstep(
+        timelineProgress,
+        COMPANIES_SPLIT.enterStart,
+        COMPANIES_SPLIT.fullStart,
+      );
+      const splitLeave = 1 - THREE.MathUtils.smoothstep(
+        timelineProgress,
+        COMPANIES_SPLIT.holdEnd,
+        COMPANIES_SPLIT.mergedEnd,
+      );
+      splitEnvelope = reduce ? 0 : splitEnter * splitLeave;
+      companiesSplitGroup.visible = splitEnvelope > 0.002;
+      companiesSplitGroup.scale.x =
+        W <= SUV_FIT.mobileBreakpoint ? COMPANIES_SPLIT.mobileSpread : 1;
+      companiesSplit.update(splitEnvelope);
+      for (const material of companiesSplit.materials) {
+        material.uniforms.uAlpha.value = splitEnvelope * COMPANIES_SPLIT.laneAlpha;
+        material.uniforms.uSpeed.value =
+          COMPANIES_SPLIT.pulseSpeedBase + splitEnvelope * COMPANIES_SPLIT.pulseSpeedGain;
+      }
+
       circleLines.forEach((mesh, i) => {
         const s = 0.01 * Math.floor(i / 4);
         mesh.material.uniforms.uAlpha.value = THREE.MathUtils.clamp(
@@ -1261,6 +1484,7 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
               raw: timelineProgress,
               scene: rawProgress,
               smoothed,
+              split: splitEnvelope,
               position: camera.position.toArray(),
               target: tgtV.toArray(),
             };
