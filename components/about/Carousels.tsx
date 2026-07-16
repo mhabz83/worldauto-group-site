@@ -186,35 +186,9 @@ export function TeamCarousel() {
     { initUnderReducedMotion: true },
   );
 
-  /* card drift: teamDesktop ±25svh / teamMobile ±50px across the section */
-  useEffect(() => {
-    const mm = gsap.matchMedia();
-    mm.add(
-      {
-        motion: "(prefers-reduced-motion: no-preference)",
-        md: "(min-width: 768px)",
-        sm: "(max-width: 767px)",
-      },
-      (ctx) => {
-        const { motion, md } = ctx.conditions as { motion: boolean; md: boolean };
-        if (!motion) return;
-        waypointTrigger({
-          el: cardRef.current,
-          measure: sectionRef.current,
-          waypoints: md
-            ? [
-                { a: 100, b: 0, transform: "translateY(25svh)" },
-                { a: 0, b: 100, transform: "translateY(-25svh)" },
-              ]
-            : [
-                { a: 100, b: 0, transform: "translateY(50px)" },
-                { a: 0, b: 100, transform: "translateY(-50px)" },
-              ],
-        });
-      },
-    );
-    return () => mm.revert();
-  }, []);
+  /* No scroll drift on the card here (unlike the Madar S7 original): it is
+     parked in the one pocket that clears every silhouette, and any translateY
+     would push it onto someone. */
 
   const onScroll = useCallback(() => {
     const list = listRef.current;

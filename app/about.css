@@ -1771,6 +1771,10 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
    stand ON the stage's bottom edge; neighbors clip at the stage sides; the
    frosted card sits just left of the active (centered) person. Scoped so the
    companies recap is untouched. */
+.ax-team-people .ax-team-inner {
+  padding-bottom: 0;              /* people stand ON the dark section edge --
+                                     any gap below reads as floating torsos */
+}
 .ax-team-people .ax-team-stage {
   position: relative;
   height: clamp(560px, 92vh, 1080px);   /* Madar scale: people own the frame */
@@ -1855,11 +1859,32 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   z-index: 2;
 }
 .ax-team-people .ax-testimonial-card {
+  /* the one spot guaranteed empty at every width: the strip above the
+     scaled left neighbor's head (top 21% of stage), ending before the
+     active person's silhouette (~30vh left of center). vh units keep it
+     aligned with the people, whose size is also vh-driven. */
   position: absolute;
-  right: 52%;                     /* right edge tucks against the active person */
+  right: calc(50% + 30vh);
   left: auto;
-  top: 30%;
-  width: min(440px, 42%);
+  top: clamp(24px, 4.5vh, 56px);  /* below the fixed header, above the neighbor's head */
+  width: min(400px, calc(50% - 30vh - 20px));
+  padding: 18px 22px;
+}
+.ax-team-people .ax-testimonial-card .ax-team-name {
+  font-size: clamp(20px, 2.6vh, 30px);
+  line-height: 1.1;
+}
+.ax-team-people .ax-testimonial-card .ax-team-role {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.35;
+}
+.ax-team-people .ax-team-card-nav {
+  margin-top: 10px;
+}
+.ax-team-people .ax-team-card-nav .ax-btn-square {
+  width: 34px;
+  height: 34px;
 }
 @media (max-width: 767px) {
   .ax-team-people .ax-team-stage { height: clamp(420px, 64vh, 620px); }
@@ -1867,4 +1892,28 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
     left: 12px; right: 12px; width: auto; top: auto; bottom: 16px;
   }
   .ax-team-people .ax-person-cut img { height: 86%; }
+}
+
+/* The team lineup RUNS its slider under reduced motion (instant snaps), so
+   the global reduce fallback above must not re-flow its overlay or add gaps
+   that would desync keen's slide positions. */
+@media (prefers-reduced-motion: reduce) {
+  .ax-team-people .ax-team-content {
+    position: absolute !important;
+    inset: 0;
+    margin-top: 0;
+    pointer-events: none;
+  }
+  .ax-team-people .ax-carousel--ready .ax-carousel-list {
+    overflow: visible;
+    gap: 0;
+  }
+  .ax-team-people .ax-carousel--ready .ax-slide {
+    flex: 0 0 auto;
+  }
+  /* the global reduce rule above reveals every swap item (static fallback);
+     this card still cycles, so inactive names stay hidden */
+  html.gsap .ax .ax-team-people [data-ax-swap-item][data-inactive] {
+    display: none;
+  }
 }
