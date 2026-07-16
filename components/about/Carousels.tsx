@@ -159,7 +159,7 @@ export function TeamCarousel() {
   const { sliderRef, ready } = useKeen(listRef, ({ onCreated }) => ({
     selector: ".ax-slide",
     loop: true,
-    slides: { perView: 1 },
+    slides: { perView: 1.7, origin: "center", spacing: 24 },
     defaultAnimation: { duration: CAROUSEL_DURATION, easing: easeCarousel },
     rubberband: true,
     dragSpeed: 1,
@@ -237,7 +237,7 @@ export function TeamCarousel() {
               <ul ref={listRef} className="ax-carousel-list" onScroll={onScroll}>
                 {team.map((t) => (
                   <li key={t.name} className="ax-slide">
-                    <div className="ax-company-panel ax-person-panel">
+                    <div className="ax-person-cut">
                       <div className="ax-company-panel-inner">
                         {/* eslint-disable-next-line @next/next/no-img-element -- keen measures raw imgs */}
                         <img
