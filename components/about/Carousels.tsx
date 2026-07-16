@@ -265,6 +265,40 @@ export function TeamCarousel() {
      parked in the one pocket that clears every silhouette, and any translateY
      would push it onto someone. */
 
+  /* keyboard: left/right arrows cycle the lineup while the section is on
+     screen */
+  useEffect(() => {
+    const sec = sectionRef.current;
+    if (!sec) return;
+    let inView = false;
+    const io = new IntersectionObserver(
+      ([e]) => {
+        inView = e.intersectionRatio >= 0.4;
+      },
+      { threshold: [0, 0.4, 1] },
+    );
+    io.observe(sec);
+    const onKey = (e: KeyboardEvent) => {
+      if (!inView || e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+      e.preventDefault();
+      const dir = e.key === "ArrowRight" ? 1 : -1;
+      if (sliderRef.current) {
+        if (dir > 0) sliderRef.current.next();
+        else sliderRef.current.prev();
+      } else {
+        scrollByItem(listRef.current, dir as 1 | -1);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      io.disconnect();
+      window.removeEventListener("keydown", onKey);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const onScroll = useCallback(() => {
     const list = listRef.current;
     if (!list || sliderRef.current) return;
@@ -336,6 +370,12 @@ export function TeamCarousel() {
                     className="ax-t2 ax-team-role"
                     runKey={`tr-${idx}`}
                     segments={[t.role]}
+                  />
+                  <FlickerText
+                    as="p"
+                    className="ax-t2 ax-team-desc"
+                    runKey={`td-${idx}`}
+                    segments={[t.desc]}
                   />
                 </div>
               ))}

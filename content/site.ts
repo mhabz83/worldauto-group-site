@@ -145,20 +145,74 @@ export const leaders: Leader[] = [
 export type TeamMember = {
   name: string;
   role: string;
+  /* one-line duty statement derived strictly from the role -- replace with
+     an approved bio per person when provided */
+  desc: string;
   image: string;
   placeholder?: boolean;
 };
 
 export const team: TeamMember[] = [
-  { name: "Amin Kadrie", role: "Chairman", image: "/team/amin.webp", placeholder: true },
-  { name: "Khalid Kadrie", role: "CEO, AutoData & Axxion", image: "/team/khalid.webp" },
-  { name: "Alexander Maas", role: "CFO, World Automotive Group", image: "/team/alex.webp", placeholder: true },
-  { name: "Raymond Zhu", role: "CTO, World Automotive Group", image: "/team/raymond.webp", placeholder: true },
-  { name: "Mounir Habib", role: "Group SVP", image: "/team/mounir.webp" },
-  { name: "Frederik Bisbjerg", role: "Managing Director & Co-founder, Axxion", image: "/team/frederik.webp", placeholder: true },
-  { name: "Rita Estephane", role: "Executive Director, Strategic Growth, Axxion", image: "/team/rita.webp" },
-  { name: "Stijn Venrooij", role: "Director, AI & Business Development, Axxion", image: "/team/stijn.webp", placeholder: true },
-  { name: "Dalia Kanaan", role: "Group HR Business Partner", image: "/team/dalia.webp", placeholder: true },
+  {
+    name: "Amin Kadrie",
+    role: "Chairman",
+    desc: "Chairs the group and sets its long-term direction.",
+    image: "/team/amin.webp",
+    placeholder: true,
+  },
+  {
+    name: "Khalid Kadrie",
+    role: "CEO, AutoData & Axxion",
+    desc: "Leads AutoData and Axxion day to day.",
+    image: "/team/khalid.webp",
+  },
+  {
+    name: "Alexander Maas",
+    role: "CFO, World Automotive Group",
+    desc: "Oversees the group's finances.",
+    image: "/team/alex.webp",
+    placeholder: true,
+  },
+  {
+    name: "Raymond Zhu",
+    role: "CTO, World Automotive Group",
+    desc: "Leads technology across the group.",
+    image: "/team/raymond.webp",
+    placeholder: true,
+  },
+  {
+    name: "Mounir Habib",
+    role: "Group SVP",
+    desc: "Senior leadership across the group's companies.",
+    image: "/team/mounir.webp",
+  },
+  {
+    name: "Frederik Bisbjerg",
+    role: "Managing Director & Co-founder, Axxion",
+    desc: "Co-founded Axxion and leads it as Managing Director.",
+    image: "/team/frederik.webp",
+    placeholder: true,
+  },
+  {
+    name: "Rita Estephane",
+    role: "Executive Director, Strategic Growth, Axxion",
+    desc: "Leads strategic growth at Axxion.",
+    image: "/team/rita.webp",
+  },
+  {
+    name: "Stijn Venrooij",
+    role: "Director, AI & Business Development, Axxion",
+    desc: "Leads AI and business development at Axxion.",
+    image: "/team/stijn.webp",
+    placeholder: true,
+  },
+  {
+    name: "Dalia Kanaan",
+    role: "Group HR Business Partner",
+    desc: "Partners with the companies on people and HR.",
+    image: "/team/dalia.webp",
+    placeholder: true,
+  },
 ];
 
 export const nav = {
