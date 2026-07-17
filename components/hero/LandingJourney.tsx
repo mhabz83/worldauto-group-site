@@ -371,7 +371,11 @@ export function LandingJourney() {
 
   return (
     <main ref={rootRef} id="main" className="landing-journey">
-      <div className="journey-static-frame" aria-hidden="true">
+      {/* Inline opacity:0 hides this before hydration too, so the poster never
+          flashes while the styled-jsx sheet is still loading. The
+          `html.webgl-unavailable` / reduced-motion rules use `!important`, which
+          beats this inline style, so the fallback still appears when needed. */}
+      <div className="journey-static-frame" aria-hidden="true" style={{ opacity: 0 }}>
         <Image
           className="journey-static-image"
           src="/hero/suv-neon.jpg"
