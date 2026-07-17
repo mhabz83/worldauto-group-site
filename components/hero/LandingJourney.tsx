@@ -72,6 +72,7 @@ const headerLinks = [
   { label: "Companies", href: "#companies", section: "companies" },
   { label: "The Model", href: "#model", section: "model" },
   { label: "Heritage", href: "#heritage", section: "heritage" },
+  { label: "Team", href: "#team", section: "team" },
   { label: "Partner", href: "#partner", section: "partner" },
 ] as const;
 
@@ -185,7 +186,7 @@ function Header() {
           <span>{nav.wordmark.thin}</span>
         </Link>
         <nav className="journey-desktop-nav" aria-label="Journey navigation">
-          {headerLinks.slice(0, 4).map((link) => (
+          {headerLinks.slice(0, 5).map((link) => (
             <a
               key={link.section}
               href={link.href}

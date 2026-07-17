@@ -326,9 +326,10 @@ export function TeamCarousel() {
 
   return (
     <section
-      id="leadership"
+      id="team"
       ref={sectionRef}
       data-ax-theme="light"
+      data-nav-section="team"
       className="ax-section ax-light ax-team ax-team-people"
     >
       <div className="ax-container ax-team-inner">

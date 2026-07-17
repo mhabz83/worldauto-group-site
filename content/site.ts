@@ -222,6 +222,7 @@ export const nav = {
     { label: "Companies", href: "/companies" },
     { label: "The Model", href: "/#model" },
     { label: "Heritage", href: "/#heritage" },
+    { label: "Team", href: "/#team" },
     { label: "Contact", href: "/contact" },
   ],
   cta: { label: "Partner With Us", href: "/contact" },
