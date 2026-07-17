@@ -123,6 +123,83 @@ export function OrbitalSvg({
   );
 }
 
+/* The Model streamlines — 1420x940 wind-tunnel flow over an implied body.
+   4 blue lines above, 3 orange below in a tight band that pinches over the
+   body. Paths are stroke-drawn on scroll; a current rides each on assembly.
+   Geometry generated once (deterministic) so SSR and client match. */
+export function StreamlinesSvg({
+  className,
+  svgRef,
+}: {
+  className?: string;
+  svgRef?: Ref<SVGSVGElement>;
+}) {
+  const W = 1420;
+  const CX = 710;
+  const centerY = 470;
+  const sig = 265;
+  const lift = (x: number, amp: number) => {
+    const u = (x - CX) / sig;
+    const bump = Math.exp(-u * u);
+    const tail = 0.16 * Math.exp(-Math.pow((x - CX - 300) / (sig * 2.1), 2));
+    return amp * (bump + tail);
+  };
+  const band = [
+    { y: centerY - 132, amp: 44, warm: false },
+    { y: centerY - 88, amp: 62, warm: false },
+    { y: centerY - 44, amp: 82, warm: false },
+    { y: centerY, amp: 104, warm: false },
+    { y: centerY + 46, amp: 128, warm: true },
+    { y: centerY + 96, amp: 150, warm: true },
+    { y: centerY + 150, amp: 172, warm: true },
+  ];
+  const paths = band.map((b) => {
+    let d = "";
+    for (let x = 40; x <= 1380; x += 12) {
+      const px = x;
+      const py = Math.round((b.y - lift(x, b.amp)) * 100) / 100;
+      d += (x === 40 ? "M" : "L") + px + " " + py + " ";
+    }
+    return { d: d.trim(), warm: b.warm };
+  });
+  return (
+    <svg
+      ref={svgRef}
+      className={className}
+      width={W}
+      height="940"
+      viewBox={`0 0 ${W} 940`}
+      fill="none"
+      aria-hidden="true"
+    >
+      {paths.map((p, i) => (
+        <path
+          key={i}
+          className={p.warm ? "ax-stream-warm" : "ax-stream-cool"}
+          d={p.d}
+          stroke={p.warm ? "url(#ax-stream-w)" : "url(#ax-stream-b)"}
+          strokeWidth="2"
+          opacity={p.warm ? 0.95 : 0.55 + i * 0.05}
+        />
+      ))}
+      <defs>
+        <linearGradient id="ax-stream-b" x1="40" y1="0" x2="1380" y2="0" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#42D7FF" stopOpacity="0" />
+          <stop offset="0.0867578" stopColor="#42D7FF" />
+          <stop offset="0.668106" stopColor="#1367FE" />
+          <stop offset="0.81291" stopColor="#42D7FF" />
+          <stop offset="1" stopColor="#89AEFF" />
+        </linearGradient>
+        <linearGradient id="ax-stream-w" x1="40" y1="0" x2="1380" y2="0" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#FF6340" />
+          <stop offset="0.6" stopColor="#FB441A" />
+          <stop offset="1" stopColor="#FF9E7A" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
 /* S6 values rings — 1080x1080, two scroll-rotated dashed-arc groups */
 export function RingsSvg({
   className,
