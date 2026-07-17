@@ -21,7 +21,7 @@ import { group, footer as footerContent } from "@/content/site";
 import { model } from "@/content/home";
 import { companies } from "@/content/site";
 import { journeyContent } from "@/components/hero/journeyContent";
-import { gsap, ScrollTrigger, waypointTrigger } from "./engine";
+import { gsap, ScrollTrigger, waypointTrigger, SCRUB_SMOOTH } from "./engine";
 import { FlickerText, FlickerTitle, GlitchLabel, useRevealManager } from "./reveal";
 import { GlowSvg, OrbitalSvg } from "./svgs";
 import { TeamCarousel, CompaniesCarousel } from "./Carousels";
@@ -84,6 +84,7 @@ function StoryOpener() {
 function ForesightSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const svgWrapRef = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
     const mm = gsap.matchMedia();
@@ -104,6 +105,128 @@ function ForesightSection() {
             { a: 0, b: 100, transform: "translateY(5vw)" },
           ],
         });
+
+        /* scroll assembly: the system draws itself in stages as the section
+           scrolls through — rings, then orbit arcs, then the feed lines into
+           the hub, then the 12 nodes dock in sequence around the orbit.
+           `?modelfx=quiet` disables the post-assembly energy pulses. */
+        const svg = svgRef.current;
+        if (!svg) return;
+
+        const rings = Array.from(svg.querySelectorAll<SVGGeometryElement>(".ax-orb-ring"));
+        const arcs = Array.from(svg.querySelectorAll<SVGGeometryElement>(".ax-orb-arc"));
+        const flows = Array.from(svg.querySelectorAll<SVGGeometryElement>(".ax-orb-flow"));
+        const dots = Array.from(svg.querySelectorAll<SVGCircleElement>(".ax-orb-dot"));
+
+        const strokes = [...rings, ...arcs, ...flows].map((el) => {
+          const len = el.getTotalLength();
+          el.style.strokeDasharray = String(len);
+          el.style.strokeDashoffset = String(len);
+          return { el, len };
+        });
+        const ringS = strokes.slice(0, rings.length);
+        const arcS = strokes.slice(rings.length, rings.length + arcs.length);
+        const flowS = strokes.slice(rings.length + arcs.length);
+
+        /* nodes dock in orbit order (sorted by angle around the hub) */
+        const dotSeq = dots
+          .map((el) => ({
+            el,
+            ang: Math.atan2(
+              Number(el.getAttribute("cy")) - 470,
+              Number(el.getAttribute("cx")) - 710,
+            ),
+          }))
+          .sort((m, n) => m.ang - n.ang)
+          .map((d) => d.el);
+        dotSeq.forEach((el) => {
+          el.style.transformBox = "fill-box";
+          el.style.transformOrigin = "center";
+          el.style.transform = "scale(0)";
+          el.style.opacity = "0";
+        });
+
+        /* post-assembly energy pulses: cloned paths carrying a moving dash */
+        const quiet =
+          new URLSearchParams(window.location.search).get("modelfx") === "quiet";
+        const pulses: SVGGeometryElement[] = [];
+        if (!quiet) {
+          const sources: Array<[SVGGeometryElement | undefined, string, number]> = [
+            [rings[2], "#42D7FF", 14], // outer ring, blue current
+            [arcs[5], "#FF9E7A", 9], // large perspective orbit
+            [arcs[4], "#FF9E7A", 7], // small perspective orbit
+            [flows[1], "#FF9E7A", 5], // mid feed line into the hub
+          ];
+          for (const [src, color, dur] of sources) {
+            if (!src) continue;
+            const clone = src.cloneNode(false) as SVGGeometryElement;
+            clone.removeAttribute("class");
+            clone.setAttribute("stroke", color);
+            clone.setAttribute("opacity", "1");
+            clone.style.opacity = "0";
+            src.parentNode?.insertBefore(clone, src.nextSibling);
+            const len = clone.getTotalLength();
+            const head = Math.min(60, len * 0.08);
+            clone.style.strokeDasharray = `${head} ${len - head}`;
+            clone.style.strokeDashoffset = "0";
+            gsap.to(clone, {
+              strokeDashoffset: -len,
+              duration: dur,
+              ease: "none",
+              repeat: -1,
+            });
+            pulses.push(clone);
+          }
+        }
+
+        const seg = (p: number, a: number, b: number) =>
+          Math.min(1, Math.max(0, (p - a) / (b - a)));
+        const drawTo = (s: { el: SVGGeometryElement; len: number }, t: number) => {
+          s.el.style.strokeDashoffset = String(s.len * (1 - t));
+        };
+
+        /* windows sized so the system is fully assembled by p≈0.5 — the point
+           where the (taller-than-viewport) section fills the screen */
+        const draw = (p: number) => {
+          ringS.forEach((s, i) => drawTo(s, seg(p, 0.02 + i * 0.04, 0.2 + i * 0.04)));
+          arcS.forEach((s, i) => drawTo(s, seg(p, 0.12 + i * 0.025, 0.32 + i * 0.025)));
+          flowS.forEach((s, i) => drawTo(s, seg(p, 0.22 + i * 0.025, 0.4 + i * 0.025)));
+          dotSeq.forEach((el, i) => {
+            const t = seg(p, 0.3 + i * 0.012, 0.35 + i * 0.012);
+            const e = t * t * (3 - 2 * t); // smoothstep pop
+            el.style.transform = `scale(${e})`;
+            el.style.opacity = String(e);
+          });
+          const glow = seg(p, 0.4, 0.5) * 0.85;
+          pulses.forEach((el) => {
+            el.style.opacity = String(glow);
+          });
+        };
+
+        waypointTrigger({
+          el: null,
+          measure: sectionRef.current,
+          waypoints: [
+            { a: 100, b: 0 },
+            { a: 0, b: 100 },
+          ],
+          scrub: SCRUB_SMOOTH,
+          onProgress: draw,
+        });
+
+        return () => {
+          pulses.forEach((el) => el.remove());
+          strokes.forEach(({ el }) => {
+            el.style.strokeDasharray = "";
+            el.style.strokeDashoffset = "";
+          });
+          dotSeq.forEach((el) => {
+            el.style.transform = "";
+            el.style.opacity = "";
+            el.style.transformBox = "";
+            el.style.transformOrigin = "";
+          });
+        };
       },
     );
     return () => mm.revert();
@@ -137,7 +260,7 @@ function ForesightSection() {
           </div>
           <div className="ax-foresight-svg-col">
             <div ref={svgWrapRef} className="ax-foresight-svg">
-              <OrbitalSvg />
+              <OrbitalSvg svgRef={svgRef} />
             </div>
           </div>
           <div className="ax-foresight-card-col">

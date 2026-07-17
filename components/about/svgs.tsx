@@ -79,31 +79,31 @@ export function OrbitalSvg({
       fill="none"
       aria-hidden="true"
     >
-      <circle opacity="0.4" cx="710" cy="470" r="229" stroke="url(#ax-o0)" strokeWidth="2" />
-      <circle opacity="0.3" cx="710" cy="470" r="349" stroke="url(#ax-o1)" strokeWidth="2" />
-      <circle opacity="0.2" cx="710" cy="470" r="469" stroke="url(#ax-o2)" strokeWidth="2" />
-      <path d="M597.5 103C597.5 103 657 376.5 718.5 376.5C780 376.5 836.5 107 836.5 107" stroke="url(#ax-o3)" strokeWidth="2" />
-      <path d="M936.845 160C894.941 239.884 809.865 377 719.588 377C626.417 377 536.016 230.951 494.178 152.5" stroke="url(#ax-o4)" strokeWidth="2" />
-      <path d="M598 837C598 837 657 564.5 718.5 564.5C775.591 564.5 828.374 799.333 835.648 833" stroke="url(#ax-o5)" strokeWidth="2" />
-      <path d="M494.713 787.5C536.783 708.815 626.813 564 719.59 564C809.491 564 894.234 699.978 936.321 780" stroke="url(#ax-o6)" strokeWidth="2" />
-      <path d="M1075.5 586.857C1027.35 575.745 812.5 523.108 812.5 468.5C812.5 413.892 1027.35 363.226 1075.5 352.556" stroke="url(#ax-o7)" strokeWidth="2" />
-      <circle cx="1072" cy="353" r="4" fill="#FF6340" />
-      <circle cx="1076" cy="587" r="4" fill="#FF6340" />
-      <circle cx="1025" cy="687" r="4" fill="#FF6340" />
-      <circle cx="936" cy="779" r="4" fill="#FF6340" />
-      <circle cx="835" cy="832" r="4" fill="#FF6340" />
-      <circle cx="598" cy="836" r="4" fill="#FF6340" />
-      <circle cx="495" cy="787" r="4" fill="#FF6340" />
-      <circle cx="1024" cy="253" r="4" fill="#FF6340" />
-      <circle cx="936" cy="161" r="4" fill="#FF6340" />
-      <circle cx="836" cy="109" r="4" fill="#FF6340" />
-      <circle cx="598" cy="106" r="4" fill="#FF6340" />
-      <circle cx="496" cy="154" r="4" fill="#FF6340" />
-      <path d="M1026.5 687.42C946.291 643.548 812 556.753 812 467.411C812 378.254 945.734 294.171 1026 251.734" stroke="url(#ax-o8)" strokeWidth="2" />
-      <path d="M225 450H646.81C658.884 450 670.463 445.204 679 436.667V436.667C687.537 428.13 699.253 423.333 711.327 423.333V423.333C737.1 423.333 758.333 444.227 758.333 470V470C758.333 495.773 737.1 516.667 711.327 516.667V516.667C699.253 516.667 687.537 511.871 679 503.333V503.333C670.463 494.796 658.884 490 646.81 490H431.667" stroke="url(#ax-o9)" strokeWidth="2" />
-      <path d="M225 443.333H644.144C656.217 443.333 667.796 438.537 676.333 430V430C684.87 421.463 696.449 416.667 708.523 416.667H711.731C741.151 416.667 765 440.581 765 470V470C765 499.42 741.151 523.333 711.731 523.333H708.523C696.449 523.333 684.87 518.537 676.333 510V510C667.796 501.463 656.217 496.667 644.144 496.667H445" stroke="url(#ax-o10)" strokeWidth="2" />
-      <path d="M225 436.667H641.477C653.551 436.667 665.129 431.871 673.667 423.333V423.333C682.204 414.796 693.783 410 705.856 410H711.798C744.863 410 771.667 436.936 771.667 470V470C771.667 503.064 744.863 530 711.798 530H705.856C693.783 530 682.204 525.204 673.667 516.667V516.667C665.129 508.129 653.551 503.333 641.477 503.333H458.333" stroke="url(#ax-o11)" strokeWidth="2" />
-      <path d="M711.669 470H318.336M698.336 476.667H318.336M685.003 463.333H318.336" stroke="url(#ax-o12)" strokeWidth="2" />
+      <circle className="ax-orb-ring" opacity="0.4" cx="710" cy="470" r="229" stroke="url(#ax-o0)" strokeWidth="2" />
+      <circle className="ax-orb-ring" opacity="0.3" cx="710" cy="470" r="349" stroke="url(#ax-o1)" strokeWidth="2" />
+      <circle className="ax-orb-ring" opacity="0.2" cx="710" cy="470" r="469" stroke="url(#ax-o2)" strokeWidth="2" />
+      <path className="ax-orb-arc" d="M597.5 103C597.5 103 657 376.5 718.5 376.5C780 376.5 836.5 107 836.5 107" stroke="url(#ax-o3)" strokeWidth="2" />
+      <path className="ax-orb-arc" d="M936.845 160C894.941 239.884 809.865 377 719.588 377C626.417 377 536.016 230.951 494.178 152.5" stroke="url(#ax-o4)" strokeWidth="2" />
+      <path className="ax-orb-arc" d="M598 837C598 837 657 564.5 718.5 564.5C775.591 564.5 828.374 799.333 835.648 833" stroke="url(#ax-o5)" strokeWidth="2" />
+      <path className="ax-orb-arc" d="M494.713 787.5C536.783 708.815 626.813 564 719.59 564C809.491 564 894.234 699.978 936.321 780" stroke="url(#ax-o6)" strokeWidth="2" />
+      <path className="ax-orb-arc" d="M1075.5 586.857C1027.35 575.745 812.5 523.108 812.5 468.5C812.5 413.892 1027.35 363.226 1075.5 352.556" stroke="url(#ax-o7)" strokeWidth="2" />
+      <circle className="ax-orb-dot" cx="1072" cy="353" r="4" fill="#FF6340" />
+      <circle className="ax-orb-dot" cx="1076" cy="587" r="4" fill="#FF6340" />
+      <circle className="ax-orb-dot" cx="1025" cy="687" r="4" fill="#FF6340" />
+      <circle className="ax-orb-dot" cx="936" cy="779" r="4" fill="#FF6340" />
+      <circle className="ax-orb-dot" cx="835" cy="832" r="4" fill="#FF6340" />
+      <circle className="ax-orb-dot" cx="598" cy="836" r="4" fill="#FF6340" />
+      <circle className="ax-orb-dot" cx="495" cy="787" r="4" fill="#FF6340" />
+      <circle className="ax-orb-dot" cx="1024" cy="253" r="4" fill="#FF6340" />
+      <circle className="ax-orb-dot" cx="936" cy="161" r="4" fill="#FF6340" />
+      <circle className="ax-orb-dot" cx="836" cy="109" r="4" fill="#FF6340" />
+      <circle className="ax-orb-dot" cx="598" cy="106" r="4" fill="#FF6340" />
+      <circle className="ax-orb-dot" cx="496" cy="154" r="4" fill="#FF6340" />
+      <path className="ax-orb-arc" d="M1026.5 687.42C946.291 643.548 812 556.753 812 467.411C812 378.254 945.734 294.171 1026 251.734" stroke="url(#ax-o8)" strokeWidth="2" />
+      <path className="ax-orb-flow" d="M225 450H646.81C658.884 450 670.463 445.204 679 436.667V436.667C687.537 428.13 699.253 423.333 711.327 423.333V423.333C737.1 423.333 758.333 444.227 758.333 470V470C758.333 495.773 737.1 516.667 711.327 516.667V516.667C699.253 516.667 687.537 511.871 679 503.333V503.333C670.463 494.796 658.884 490 646.81 490H431.667" stroke="url(#ax-o9)" strokeWidth="2" />
+      <path className="ax-orb-flow" d="M225 443.333H644.144C656.217 443.333 667.796 438.537 676.333 430V430C684.87 421.463 696.449 416.667 708.523 416.667H711.731C741.151 416.667 765 440.581 765 470V470C765 499.42 741.151 523.333 711.731 523.333H708.523C696.449 523.333 684.87 518.537 676.333 510V510C667.796 501.463 656.217 496.667 644.144 496.667H445" stroke="url(#ax-o10)" strokeWidth="2" />
+      <path className="ax-orb-flow" d="M225 436.667H641.477C653.551 436.667 665.129 431.871 673.667 423.333V423.333C682.204 414.796 693.783 410 705.856 410H711.798C744.863 410 771.667 436.936 771.667 470V470C771.667 503.064 744.863 530 711.798 530H705.856C693.783 530 682.204 525.204 673.667 516.667V516.667C665.129 508.129 653.551 503.333 641.477 503.333H458.333" stroke="url(#ax-o11)" strokeWidth="2" />
+      <path className="ax-orb-flow" d="M711.669 470H318.336M698.336 476.667H318.336M685.003 463.333H318.336" stroke="url(#ax-o12)" strokeWidth="2" />
       <defs>
         <linearGradient id="ax-o0" x1="563.07" y1="319.471" x2="946.414" y2="417.36" gradientUnits="userSpaceOnUse">{blue}</linearGradient>
         <linearGradient id="ax-o1" x1="486.411" y1="240.935" x2="1069.76" y2="389.895" gradientUnits="userSpaceOnUse">{blue}</linearGradient>
