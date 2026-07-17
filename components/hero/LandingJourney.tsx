@@ -180,8 +180,8 @@ function Header() {
   return (
     <>
       <header className={`journey-header${light ? " journey-header--light" : ""}`}>
-        <Link href="/" className="journey-wordmark" aria-label="WORLDAUTO GROUP home">
-          <strong>WORLD<span className="journey-wordmark-auto">AUTO</span></strong>
+        <Link href="/" className="wag-wordmark journey-wordmark" aria-label="WORLDAUTO GROUP home">
+          <strong>WORLD<span>AUTO</span></strong>
           <span>{nav.wordmark.thin}</span>
         </Link>
         <nav className="journey-desktop-nav" aria-label="Journey navigation">
@@ -413,15 +413,13 @@ export function LandingJourney() {
         .journey-webgl { z-index: 1; }
         .journey-copy-layer { position: relative; z-index: 3; }
         .journey-header { position: fixed; z-index: 8; inset: 0 0 auto; height: 72px; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: clamp(1rem,3vw,3rem); padding: 0 var(--gutter); background: linear-gradient(180deg,rgba(0,8,53,.96),rgba(0,8,53,.58) 70%,transparent); }
-        .journey-wordmark { display: flex; gap: .45rem; color: #fff; text-decoration: none; letter-spacing: -.025em; white-space: nowrap; }
-        .journey-wordmark strong { font-weight: 700; }.journey-wordmark > span { font-weight: 300; color: var(--text-mid); }
-        .journey-wordmark .journey-wordmark-auto,.journey-signal { color: var(--highlight); }
+        .journey-signal { color: var(--highlight); }
         .journey-desktop-nav { display: flex; justify-content: center; gap: clamp(1rem,2.4vw,2.5rem); }
-        .journey-desktop-nav a,.journey-header-cta { position: relative; display: inline-flex; min-height: 44px; align-items: center; color: var(--text-mid); text-decoration: none; font-size: .78rem; white-space: nowrap; transition: color var(--dur-fast) ease; }
+        .journey-desktop-nav a,.journey-header-cta { position: relative; display: inline-flex; min-height: 44px; align-items: center; color: var(--text-mid); text-decoration: none; font-size: .6875rem; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; white-space: nowrap; transition: color var(--dur-fast) ease; }
         .journey-desktop-nav a::after { position: absolute; right: 0; bottom: 7px; left: 0; height: 1px; background: currentColor; content: ""; transform: scaleX(0); transform-origin: right; transition: transform var(--dur-fast) var(--ease-reveal); }
         .journey-desktop-nav a:hover,.journey-desktop-nav a:focus-visible,.journey-desktop-nav a.is-active { color: #fff; }
         .journey-desktop-nav a:hover::after,.journey-desktop-nav a:focus-visible::after,.journey-desktop-nav a.is-active::after { transform: scaleX(1); transform-origin: left; }
-        .journey-header-cta { display: inline-flex; width: fit-content; align-items: center; justify-content: center; min-height: 44px; padding: .72rem 1.05rem; background: var(--highlight); color: #fff; text-decoration: none; font-weight: 600; border-radius: 4px; transition: background var(--dur-fast) ease, outline-color var(--dur-fast) ease; }
+        .journey-header-cta { display: inline-flex; width: fit-content; align-items: center; justify-content: center; min-height: 44px; padding: .72rem 1.05rem; background: var(--highlight); color: #fff; text-decoration: none; border-radius: 4px; transition: background var(--dur-fast) ease, outline-color var(--dur-fast) ease; }
         .journey-header-cta.is-active { outline: 1px solid rgba(255,255,255,.82); outline-offset: 3px; }
         .journey-header-cta:hover { background: var(--highlight-hover); }
         .journey-menu-toggle,.journey-mobile-menu { display: none; }
@@ -444,8 +442,8 @@ export function LandingJourney() {
         .journey-progress-stops span { width: 3px; height: 3px; border-radius: 50%; background: rgba(255,255,255,.56); box-shadow: 0 0 0 2px rgba(0,8,53,.82); }
         .journey-stop { --stop-accent: #1367fe; position: relative; display: flex; align-items: center; padding: 6rem var(--gutter); }
         .journey-stop--end { justify-content: flex-end; }
-        .journey-panel { width: min(43rem,48vw); padding: clamp(1.4rem,3vw,2.8rem); background: linear-gradient(105deg,rgba(0,5,31,.96),rgba(0,8,53,.78) 72%,transparent); will-change: transform,opacity; }
-        .journey-stop--end .journey-panel { background: linear-gradient(255deg,rgba(0,5,31,.96),rgba(0,8,53,.78) 72%,transparent); }
+        .journey-panel { width: min(43rem,48vw); padding: clamp(1.4rem,3vw,2.8rem); background: linear-gradient(105deg,rgba(0,5,31,.96) 0%,rgba(0,8,53,.82) 52%,rgba(0,6,42,.42) 78%,transparent 100%); -webkit-mask-image: linear-gradient(180deg,transparent 0%,#000 9%,#000 91%,transparent 100%); mask-image: linear-gradient(180deg,transparent 0%,#000 9%,#000 91%,transparent 100%); will-change: transform,opacity; }
+        .journey-stop--end .journey-panel { background: linear-gradient(255deg,rgba(0,5,31,.96) 0%,rgba(0,8,53,.82) 52%,rgba(0,6,42,.42) 78%,transparent 100%); }
         .journey-panel h1,.journey-panel h2 { max-width: 12ch; margin: 0; color: #fff; font-size: clamp(2.65rem,6.4vw,6rem); font-weight: 300; letter-spacing: -.04em; line-height: .94; text-wrap: balance; overflow-wrap: anywhere; }
         .journey-panel h2 { font-size: clamp(2.35rem,5vw,4.5rem); }
         .journey-panel h3 { color: #fff; font-size: clamp(1.05rem,1.5vw,1.28rem); font-weight: 500; line-height: 1.2; }
@@ -460,7 +458,7 @@ export function LandingJourney() {
         @media (max-width: 900px) {
           .journey-header { height: 64px; grid-template-columns: 1fr auto auto; }.journey-desktop-nav { display: none; }.journey-wordmark { font-size: .82rem; }
           /* Keep the one primary action visible on phones; the menu still lists Partner. */
-          .journey-header-cta { min-height: 40px; padding: .5rem .75rem; font-size: .72rem; }
+          .journey-header-cta { min-height: 40px; padding: .5rem .75rem; font-size: .62rem; letter-spacing: .14em; }
           .journey-menu-toggle { display: grid; width: 44px; height: 44px; place-content: center; gap: 6px; padding: 0; border: 0; background: transparent; color: #fff; cursor: pointer; }
           .journey-menu-toggle span { display: block; width: 22px; height: 1px; background: currentColor; transition: transform var(--dur-fast) var(--ease-reveal); }
           .journey-menu-toggle[aria-expanded="true"] span:first-child { transform: translateY(3.5px) rotate(45deg); }.journey-menu-toggle[aria-expanded="true"] span:last-child { transform: translateY(-3.5px) rotate(-45deg); }
@@ -472,7 +470,7 @@ export function LandingJourney() {
           .journey-mobile-menu a.is-active { color: #fff; }.journey-mobile-menu a span:last-child { color: var(--highlight); font-size: .9em; }
           .journey-static-image { object-position: 65% center; }.journey-stop,.journey-stop--end { align-items: flex-end; justify-content: stretch; padding: 5rem 0 0; }
           .journey-stop:first-child { min-height: 100svh !important; }
-          .journey-panel,.journey-stop--end .journey-panel { width: 100%; padding: 5.5rem var(--gutter) max(1.5rem,env(safe-area-inset-bottom)); background: linear-gradient(0deg,rgba(0,5,31,.98),rgba(0,8,53,.84) 62%,transparent); }
+          .journey-panel,.journey-stop--end .journey-panel { width: 100%; padding: 5.5rem var(--gutter) max(1.5rem,env(safe-area-inset-bottom)); background: linear-gradient(0deg,rgba(0,5,31,.98),rgba(0,8,53,.84) 62%,transparent); -webkit-mask-image: none; mask-image: none; }
           .journey-panel h1,.journey-panel h2 { font-size: clamp(2.45rem,12vw,4.6rem); }
         }
         @media (prefers-reduced-motion: reduce) {

@@ -1197,7 +1197,17 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
     justify-content: flex-start;
     padding-top: clamp(170px, 26svh, 260px);
   }
+  /* legibility scrim behind the value text column, so the ring arcs stop
+     crossing the copy (same trick as the desktop title corner scrim) */
+  .ax-values-text::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(6, 10, 61, 0) 12%, rgba(6, 10, 61, 0.62) 38%, rgba(6, 10, 61, 0.62) 72%, rgba(6, 10, 61, 0) 96%);
+    pointer-events: none;
+  }
   .ax-values-text-inner {
+    position: relative;
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
   .ax-values-text-col {

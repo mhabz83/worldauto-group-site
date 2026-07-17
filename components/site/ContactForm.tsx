@@ -6,14 +6,14 @@ import { submitContact, type ContactState } from "@/app/contact/actions";
 const initial: ContactState = { ok: false, message: "" };
 
 const fieldClass =
-  "mt-2 w-full rounded-[4px] border border-hairline bg-[rgba(2,4,15,0.4)] px-4 py-3 text-hi placeholder:text-faint focus:border-[var(--highlight)] focus:outline-none";
+  "mt-2 w-full rounded-[4px] border border-hairline bg-[rgba(2,4,15,0.72)] px-4 py-3 text-hi placeholder:text-faint focus:border-[var(--highlight)] focus:outline-none";
 
 export function ContactForm() {
   const [state, formAction, pending] = useActionState(submitContact, initial);
 
   if (state.ok) {
     return (
-      <div className="rounded-[4px] border border-hairline bg-[rgba(2,4,15,0.4)] p-8">
+      <div className="rounded-[4px] border border-hairline bg-[rgba(2,4,15,0.72)] p-8">
         <p className="type-kicker text-highlight">Message received</p>
         <p className="mt-4 text-lg leading-relaxed text-hi">{state.message}</p>
       </div>

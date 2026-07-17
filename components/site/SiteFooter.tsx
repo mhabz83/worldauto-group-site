@@ -4,12 +4,16 @@ import { companies, footer, group } from "@/content/site";
 /* Shared footer for inner pages. Company list + group line + legal. */
 export function SiteFooter() {
   return (
-    <footer className="relative z-10 border-t border-hairline px-[var(--gutter)] py-16">
+    <footer className="relative z-10 border-t border-hairline bg-[linear-gradient(180deg,rgba(2,4,15,0)_0%,rgba(2,4,15,0.9)_14%,rgba(2,4,15,0.97)_100%)] px-[var(--gutter)] pb-16 pt-20">
       <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr]">
         <div className="max-w-sm">
-          <p className="text-lg uppercase tracking-[0.28em] text-hi">
-            <span className="font-medium">WorldAuto</span>{" "}
-            <span className="text-mid">Group</span>
+          <p>
+            <Link href="/" className="wag-wordmark text-lg" aria-label="WORLDAUTO GROUP home">
+              <strong>
+                WORLD<span>AUTO</span>
+              </strong>
+              <span>GROUP</span>
+            </Link>
           </p>
           <p className="mt-5 text-mid">{footer.blurb}</p>
         </div>

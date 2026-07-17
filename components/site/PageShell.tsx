@@ -3,19 +3,10 @@ import { HeroBackdrop } from "@/components/hero/HeroBackdrop";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 
-/* Legibility scrim: keeps text readable over the moving neon field.
-   Same treatment as the homepage sections. */
+/* Legibility scrim: keeps text readable over the neon field.
+   Layered treatment defined in globals.css (.page-scrim). */
 export function Scrim() {
-  return (
-    <div
-      aria-hidden
-      className="pointer-events-none absolute inset-0 -z-[1]"
-      style={{
-        background:
-          "linear-gradient(90deg, rgba(2,4,15,0.94) 0%, rgba(2,4,15,0.7) 46%, rgba(2,4,15,0.4) 78%, rgba(2,4,15,0.5) 100%)",
-      }}
-    />
-  );
+  return <div aria-hidden className="page-scrim" />;
 }
 
 /* Shared page frame for inner pages: neon background + header + footer.

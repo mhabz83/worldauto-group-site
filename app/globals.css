@@ -340,3 +340,168 @@ html.gsap [data-reveal] {
     rgba(2, 4, 15, 0) 100%
   );
 }
+
+/* ------------------------------------------------------------------ */
+/*  Inner-page legibility scrim — layered so the text column stays     */
+/*  readable over the fixed neon artwork at every viewport. Follows    */
+/*  the reading column; the artwork still breathes at the edges.       */
+/* ------------------------------------------------------------------ */
+.page-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    /* extra depth beneath the fixed header */
+    linear-gradient(180deg, rgba(2, 4, 15, 0.55) 0%, rgba(2, 4, 15, 0) 20%),
+    /* settles the field before the footer */
+    linear-gradient(0deg, rgba(2, 4, 15, 0.78) 0%, rgba(2, 4, 15, 0) 32%),
+    /* the reading column — strong where the text sits, easing across */
+    linear-gradient(90deg, rgba(2, 4, 15, 0.95) 0%, rgba(2, 4, 15, 0.84) 44%, rgba(2, 4, 15, 0.62) 74%, rgba(2, 4, 15, 0.7) 100%);
+}
+@media (max-width: 768px) {
+  .page-scrim {
+    background:
+      linear-gradient(180deg, rgba(2, 4, 15, 0.5) 0%, rgba(2, 4, 15, 0) 16%),
+      linear-gradient(0deg, rgba(2, 4, 15, 0.75) 0%, rgba(2, 4, 15, 0) 24%),
+      linear-gradient(180deg, rgba(2, 4, 15, 0.88) 0%, rgba(2, 4, 15, 0.84) 100%);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Shared wordmark — one lockup for the home journey header and the   */
+/*  inner-page header. WORLD+AUTO strong (AUTO in the signal colour),  */
+/*  GROUP light. Never wraps.                                          */
+/* ------------------------------------------------------------------ */
+.wag-wordmark {
+  display: inline-flex;
+  gap: 0.45rem;
+  align-items: baseline;
+  color: #fff;
+  text-decoration: none;
+  letter-spacing: -0.025em;
+  white-space: nowrap;
+  line-height: 1;
+}
+.wag-wordmark strong {
+  font-weight: 700;
+}
+.wag-wordmark strong span {
+  color: var(--highlight);
+}
+.wag-wordmark > span {
+  font-weight: 300;
+  color: var(--text-mid);
+}
+.wag-wordmark--on-light {
+  color: var(--wag-ink);
+}
+.wag-wordmark--on-light > span {
+  color: rgba(7, 9, 14, 0.62);
+}
+
+/* Small screens: shrink the wordmark and inner-page CTA so wordmark + CTA
+   + menu toggle all fit within a 320px viewport. (Unlayered so these rules
+   beat the .type-kicker base.) */
+@media (max-width: 767px) {
+  .wag-wordmark {
+    font-size: 0.85rem;
+  }
+  .site-header-cta {
+    padding: 0.55rem 0.8rem;
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Inner-page mobile menu — same language as the homepage journey     */
+/*  menu: full-screen navy overlay, large light links, hairline rules, */
+/*  orange arrows. Toggle collapses to an X while open.                */
+/* ------------------------------------------------------------------ */
+.site-menu-toggle {
+  display: none;
+}
+@media (max-width: 767px) {
+  .site-menu-toggle {
+    display: grid;
+    width: 44px;
+    height: 44px;
+    place-content: center;
+    gap: 6px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #fff;
+    cursor: pointer;
+  }
+  .site-menu-toggle span {
+    display: block;
+    width: 22px;
+    height: 1px;
+    background: currentColor;
+    transition: transform var(--dur-fast) var(--ease-reveal);
+  }
+  .site-menu-toggle[aria-expanded="true"] span:first-child {
+    transform: translateY(3.5px) rotate(45deg);
+  }
+  .site-menu-toggle[aria-expanded="true"] span:last-child {
+    transform: translateY(-3.5px) rotate(-45deg);
+  }
+}
+.site-mobile-menu {
+  position: fixed;
+  z-index: 19;
+  inset: 76px 0 0;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(2rem, 8vh, 4rem) var(--gutter);
+  background: rgba(0, 5, 31, 0.985);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-12px);
+  transition:
+    opacity var(--dur-med) var(--ease-reveal),
+    transform var(--dur-med) var(--ease-reveal);
+}
+.site-mobile-menu.is-open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+.site-mobile-menu a {
+  display: flex;
+  min-height: 58px;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.13);
+  color: rgba(255, 255, 255, 0.72);
+  font-size: clamp(1.35rem, 7vw, 2rem);
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+.site-mobile-menu a:hover,
+.site-mobile-menu a:focus-visible {
+  color: #fff;
+}
+.site-mobile-menu a span:last-child {
+  color: var(--highlight);
+  font-size: 0.9em;
+}
+.site-mobile-menu a.site-mobile-menu-cta {
+  margin-top: 1.5rem;
+  border-bottom: 0;
+  color: var(--highlight);
+}
+@media (min-width: 768px) {
+  .site-mobile-menu {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-mobile-menu,
+  .site-menu-toggle span {
+    transition: none;
+  }
+}
