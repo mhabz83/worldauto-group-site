@@ -4,7 +4,7 @@
  */
 
 export const hero = {
-  microLabel: "WORLD AUTOMOTIVE GROUP · ABU DHABI · EST. 1994",
+  microLabel: "WORLD AUTOMOTIVE GROUP · ABU DHABI, EST. 1994",
   /* Option 1 from content/copy-options.md */
   headlineLines: ["automotive, run like", "infrastructure."],
   italicWord: "infrastructure.",

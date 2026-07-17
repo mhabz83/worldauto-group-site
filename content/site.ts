@@ -61,7 +61,7 @@ export const companies: Company[] = [
       "Bank-grade vehicle valuations, inspections and vehicle history intelligence.",
     chipHint: "vehicle intelligence",
     // pending owner-verified figure
-    proof: "Valuations · Inspections · History",
+    proof: "Valuations, Inspections, History",
     region: "United Arab Emirates",
     capabilities: [
       "Vehicle valuations",
@@ -110,7 +110,7 @@ export const companies: Company[] = [
       "The group's automotive software engine. It mines a dealership's own customer and service data to surface who is due and who is ready to upgrade, turning one-off visits into lasting relationships.",
     chipHint: "dealer data · retention software",
     // pending owner-verified figure
-    proof: "Retention · Intent mining · Lifecycle CRM",
+    proof: "Retention, Intent mining, Lifecycle CRM",
     region: "North America",
     capabilities: [
       "Retention campaigns",

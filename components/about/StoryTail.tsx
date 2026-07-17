@@ -256,7 +256,7 @@ function ForesightSection() {
               as="h2"
               className="ax-t2 ax-orange"
               reveal="title"
-              segments={["The Model"]}
+              segments={["The Approach"]}
             />
             <span className="ax-hairline" style={{ margin: "0.9rem 0 1.5rem" }} />
             <FlickerText

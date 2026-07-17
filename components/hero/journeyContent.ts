@@ -1,6 +1,6 @@
 export const journeyContent = {
   hero: {
-    eyebrow: "World Automotive Group · Abu Dhabi · Est. 1994",
+    eyebrow: "World Automotive Group · Abu Dhabi, Est. 1994",
     title: "We Build And Run Automotive.",
     body:
       "Five operating companies across the UAE and North America. One group standard for service, data and retail. Part of Skelmore since 1994.",

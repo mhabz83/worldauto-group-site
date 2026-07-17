@@ -31,7 +31,7 @@ type StopProps = {
   id?: string;
   kind: keyof typeof revealFrom;
   accent: string;
-  align?: "start" | "end";
+  align?: "start" | "end" | "center";
   children: React.ReactNode;
   label: string;
   navSection: "group" | "companies";
@@ -252,7 +252,15 @@ function CompanyStop({ company, index }: { company: (typeof companies)[number]; 
       id={`company-${company.slug}`}
       kind="company"
       accent={accent}
-      align={index % 2 === 0 ? "end" : "start"}
+      /* middle company gets a centered interlude beat so the run of stops is
+         not a strict left/right ping-pong (audit finding: stop rhythm) */
+      align={
+        index === Math.floor(companies.length / 2)
+          ? "center"
+          : index % 2 === 0
+            ? "end"
+            : "start"
+      }
       label={company.name}
       navSection="companies"
     >
@@ -448,6 +456,11 @@ export function LandingJourney() {
         .journey-stop--end { justify-content: flex-end; }
         .journey-panel { width: min(43rem,48vw); padding: clamp(1.4rem,3vw,2.8rem); background: linear-gradient(105deg,rgba(0,5,31,.96) 0%,rgba(0,8,53,.82) 52%,rgba(0,6,42,.42) 78%,transparent 100%); -webkit-mask-image: linear-gradient(180deg,transparent 0%,#000 9%,#000 91%,transparent 100%); mask-image: linear-gradient(180deg,transparent 0%,#000 9%,#000 91%,transparent 100%); will-change: transform,opacity; }
         .journey-stop--end .journey-panel { background: linear-gradient(255deg,rgba(0,5,31,.96) 0%,rgba(0,8,53,.82) 52%,rgba(0,6,42,.42) 78%,transparent 100%); }
+        .journey-stop--center { justify-content: center; }
+        .journey-stop--center .journey-panel { width: min(40rem,64vw); text-align: center; background: linear-gradient(180deg,rgba(0,6,42,.32) 0%,rgba(0,8,53,.9) 26%,rgba(0,8,53,.9) 74%,rgba(0,6,42,.32) 100%); }
+        .journey-stop--center .journey-panel h2 { max-width: none; }
+        .journey-stop--center .journey-body,.journey-stop--center .journey-company-line,.journey-stop--center .journey-proof { margin-left: auto; margin-right: auto; }
+        .journey-stop--center .journey-capabilities,.journey-stop--center .journey-links { justify-content: center; }
         .journey-panel h1,.journey-panel h2 { max-width: 12ch; margin: 0; color: #fff; font-size: clamp(2.65rem,6.4vw,6rem); font-weight: 300; letter-spacing: -.04em; line-height: .94; text-wrap: balance; overflow-wrap: anywhere; }
         .journey-panel h2 { font-size: clamp(2.35rem,5vw,4.5rem); }
         .journey-panel h3 { color: #fff; font-size: clamp(1.05rem,1.5vw,1.28rem); font-weight: 500; line-height: 1.2; }

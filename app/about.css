@@ -677,16 +677,21 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
 .ax-giants-rule {
   grid-column: 1 / -1;
 }
+/* Message column (kicker over body) on the left; the fact cards are the real
+   element on the right. Avoids the floating-mid-paragraph split-header look. */
 .ax-giants-kicker {
-  grid-column: 1 / span 4;
+  grid-column: 1 / span 6;
+  grid-row: 3;
   padding-top: 1.4rem;
 }
 .ax-giants-body {
-  grid-column: 5 / span 3;
-  padding-top: 1.4rem;
+  grid-column: 1 / span 6;
+  grid-row: 4;
+  padding-top: 0.9rem;
 }
 .ax-giants-cards {
-  grid-column: 9 / span 4;
+  grid-column: 8 / span 5;
+  grid-row: 3 / span 2;
   padding-top: 1.4rem;
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -718,6 +723,7 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   .ax-giants-body,
   .ax-giants-cards {
     grid-column: 1 / -1;
+    grid-row: auto;
   }
   .ax-giants-body {
     padding-top: 2rem;
