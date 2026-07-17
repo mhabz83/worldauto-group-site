@@ -50,3 +50,7 @@ node_modules.nosync
 /.codex
 /.claude
 /.impeccable
+
+# Cloudflare / OpenNext build output
+.open-next/
+.wrangler/
