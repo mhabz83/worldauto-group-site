@@ -117,35 +117,81 @@ function ForesightSection() {
         const lines = Array.from(
           svg.querySelectorAll<SVGGeometryElement>(".ax-stream-cool, .ax-stream-warm"),
         );
-        const strokes = lines.map((el) => {
+        const strokes = lines.map((el, i) => {
           const len = el.getTotalLength();
           el.style.strokeDasharray = String(len);
           el.style.strokeDashoffset = String(len);
-          return { el, len, warm: el.classList.contains("ax-stream-warm") };
+          const warm = el.classList.contains("ax-stream-warm");
+          // dim the base band while the comet runs so the current reads; the
+          // readable SVG-default opacity is restored on cleanup (no-JS view)
+          el.style.opacity = String(warm ? 0.34 : 0.26 + i * 0.02);
+          return { el, len, warm };
         });
 
-        /* post-assembly current: cloned paths carrying a short moving dash */
+        /* post-assembly current: a comet rides each line downstream — a bright
+           head fading into a long tail, matching how the brand arcs taper at
+           their ends. Built as a moving horizontal gradient (flow is left→
+           right) painted over a full-length clone of each line. */
+        const NS = "http://www.w3.org/2000/svg";
+        const defs =
+          svg.querySelector("defs") ?? svg.insertBefore(document.createElementNS(NS, "defs"), svg.firstChild);
+        const TRAIL = 340; // head-to-tail length of the comet, in viewBox units
         const quiet =
           new URLSearchParams(window.location.search).get("modelfx") === "quiet";
         const pulses: SVGGeometryElement[] = [];
+        const tweens: gsap.core.Tween[] = [];
         if (!quiet) {
           strokes.forEach((s, i) => {
+            const color = s.warm ? "#FF6340" : "#1367FE";
+            const head = s.warm ? "#FFC9B0" : "#B3F0FF"; // brighter head tint
+            const gid = `ax-comet-${i}`;
+            const grad = document.createElementNS(NS, "linearGradient");
+            grad.setAttribute("id", gid);
+            grad.setAttribute("gradientUnits", "userSpaceOnUse");
+            grad.setAttribute("x1", "0");
+            grad.setAttribute("y1", "0");
+            grad.setAttribute("x2", String(TRAIL));
+            grad.setAttribute("y2", "0");
+            grad.setAttribute("gradientTransform", "translate(-1000 0)");
+            // comet profile: transparent tail → bright head → transparent tip
+            (
+              [
+                ["0", color, "0"],
+                ["0.5", color, "0.2"],
+                ["0.76", color, "0.7"],
+                ["0.9", head, "1"],
+                ["0.98", head, "1"],
+                ["1", head, "0"],
+              ] as const
+            ).forEach(([off, col, op]) => {
+              const st = document.createElementNS(NS, "stop");
+              st.setAttribute("offset", off);
+              st.setAttribute("stop-color", col);
+              st.setAttribute("stop-opacity", op);
+              grad.appendChild(st);
+            });
+            defs.appendChild(grad);
+
             const clone = s.el.cloneNode(false) as SVGGeometryElement;
             clone.removeAttribute("class");
-            clone.setAttribute("stroke", s.warm ? "#FF9E7A" : "#42D7FF");
+            clone.setAttribute("stroke", `url(#${gid})`);
             clone.setAttribute("opacity", "1");
             clone.style.opacity = "0";
             s.el.parentNode?.insertBefore(clone, s.el.nextSibling);
-            const head = Math.min(150, s.len * 0.14);
-            clone.style.strokeDasharray = `${head} ${s.len - head}`;
-            clone.style.strokeDashoffset = String(s.len);
-            gsap.to(clone, {
-              strokeDashoffset: 0,
-              duration: 6 + (i % 3) * 0.9, // stagger so the band shimmers
-              ease: "none",
-              repeat: -1,
-            });
             pulses.push(clone);
+
+            // travel the bright window from off the leading edge to off the tail
+            const pos = { x: -TRAIL };
+            tweens.push(
+              gsap.to(pos, {
+                x: 1420,
+                duration: 7 + (i % 3) * 1.1, // stagger so the band shimmers
+                ease: "none",
+                repeat: -1,
+                onUpdate: () =>
+                  grad.setAttribute("gradientTransform", `translate(${pos.x} 0)`),
+              }),
+            );
           });
         }
 
@@ -161,7 +207,8 @@ function ForesightSection() {
             const e = t * t * (3 - 2 * t); // smoothstep draw
             s.el.style.strokeDashoffset = String(s.len * (1 - e));
           });
-          const glow = seg(p, 0.42, 0.56) * 0.85;
+          // full by the time the section fills the screen (~p0.46), then hold
+          const glow = seg(p, 0.34, 0.46);
           pulses.forEach((el) => {
             el.style.opacity = String(glow);
           });
@@ -179,10 +226,13 @@ function ForesightSection() {
         });
 
         return () => {
+          tweens.forEach((t) => t.kill());
           pulses.forEach((el) => el.remove());
+          defs.querySelectorAll("[id^='ax-comet-']").forEach((el) => el.remove());
           strokes.forEach(({ el }) => {
             el.style.strokeDasharray = "";
             el.style.strokeDashoffset = "";
+            el.style.opacity = "";
           });
         };
       },

@@ -178,8 +178,10 @@ export function StreamlinesSvg({
           className={p.warm ? "ax-stream-warm" : "ax-stream-cool"}
           d={p.d}
           stroke={p.warm ? "url(#ax-stream-w)" : "url(#ax-stream-b)"}
-          strokeWidth="2"
-          opacity={p.warm ? 0.95 : 0.55 + i * 0.05}
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          vectorEffect="non-scaling-stroke"
+          opacity={p.warm ? 0.7 : 0.45 + i * 0.04}
         />
       ))}
       <defs>
