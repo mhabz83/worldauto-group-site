@@ -213,6 +213,13 @@ export const team: TeamMember[] = [
     image: "/team/dalia.webp",
     placeholder: true,
   },
+  {
+    name: "Maryam Zandi",
+    role: "General Manager, AutoData Insurance",
+    desc: "Leads AutoData Insurance day to day.",
+    image: "/team/maryam.webp",
+    placeholder: true,
+  },
 ];
 
 export const nav = {
