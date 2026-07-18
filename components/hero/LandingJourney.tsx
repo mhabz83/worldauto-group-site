@@ -399,7 +399,6 @@ export function LandingJourney() {
 
       <div ref={journeyRef} className="journey-copy-layer">
         <Stop id="group" kind="hero" accent={stopAccents.hero} label="World Automotive Group" navSection="group">
-          <p className="journey-eyebrow">{journeyContent.hero.eyebrow}</p>
           <h1>We Build And Run <SignalWord>Automotive.</SignalWord></h1>
           <p className="journey-body">{journeyContent.hero.body}</p>
         </Stop>
