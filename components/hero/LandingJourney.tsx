@@ -8,6 +8,7 @@ import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { companies, nav } from "@/content/site";
 import { StoryTail } from "@/components/about/StoryTail";
+import { ClientsCarousel } from "@/components/about/ClientsCarousel";
 import { NeonJourney } from "./NeonJourney";
 import { journeyContent, stopAccents } from "./journeyContent";
 
@@ -281,6 +282,7 @@ function CompanyStop({ company, index }: { company: (typeof companies)[number]; 
         <Link href={`/companies/${company.slug}`}>Explore {company.name} →</Link>
         <a href={company.url} target="_blank" rel="noreferrer">Visit site</a>
       </div>
+      {company.slug === "autodata" && <ClientsCarousel />}
     </Stop>
   );
 }
@@ -516,6 +518,19 @@ export function LandingJourney() {
         .journey-links { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem 1.4rem; margin-top: 1.25rem; }
         .journey-links a { display: inline-flex; min-height: 48px; align-items: center; color: #fff; text-underline-offset: .35em; text-decoration-color: var(--stop-accent); font-weight: 600; }
         .journey-links a:last-child { color: var(--text-mid); font-size: .82rem; font-weight: 400; }
+        /* AutoData clients marquee, inside the AutoData stop panel */
+        .journey-clients { margin-top: 1.5rem; max-width: 100%; }
+        .journey-clients-marquee { position: relative; overflow: hidden; -webkit-mask-image: linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent); mask-image: linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent); }
+        .journey-clients-track { display: flex; width: max-content; gap: 12px; animation: journeyClients 40s linear infinite; will-change: transform; }
+        .journey-clients-marquee:hover .journey-clients-track { animation-play-state: paused; }
+        @keyframes journeyClients { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+        .journey-clients-chip { flex: 0 0 auto; height: 42px; display: inline-flex; align-items: center; justify-content: center; background: #fff; border-radius: 7px; padding: 0 14px; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+        .journey-clients-chip img { height: 24px; width: auto; max-width: 120px; object-fit: contain; display: block; }
+        @media (prefers-reduced-motion: reduce) {
+          .journey-clients-marquee { -webkit-mask-image: none; mask-image: none; }
+          .journey-clients-track { animation: none; flex-wrap: wrap; width: auto; gap: 10px; }
+          .journey-clients-dup { display: none; }
+        }
         @media (max-width: 900px) {
           .journey-header { height: 64px; grid-template-columns: 1fr auto auto; }.journey-desktop-nav { display: none; }.journey-wordmark { font-size: .82rem; }
           /* Keep the one primary action visible on phones; the menu still lists Partner. */

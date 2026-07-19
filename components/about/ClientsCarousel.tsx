@@ -1,9 +1,9 @@
-/* AutoData clients & partners — a self-scrolling logo marquee. Real logos in
-   full colour on uniform white chips (colours untouched), on the brand navy.
-   Pure-CSS seamless loop (track duplicated), pauses on hover, and collapses to
-   a static centred grid under reduced motion. No heading by request. */
+/* AutoData clients & partners — a self-scrolling logo marquee shown inside the
+   AutoData stop of the homepage journey. Real logos in full colour on uniform
+   white chips (colours untouched). Styling lives in LandingJourney's styled-jsx
+   (journey-clients-*). Pure-CSS seamless loop; collapses under reduced motion. */
 
-const clients = [
+export const autodataClients = [
   { name: "AXA", logo: "/clients/axa.png" },
   { name: "RSA", logo: "/clients/rsa.png" },
   { name: "Qatar Insurance Group", logo: "/clients/qic.png" },
@@ -23,28 +23,21 @@ const clients = [
 
 export function ClientsCarousel() {
   return (
-    <section
-      id="clients"
-      data-ax-theme="dark"
-      data-nav-section="group"
-      className="ax-section ax-clients"
-      aria-label="Clients and partners"
-    >
-      <div className="ax-clients-marquee">
-        <div className="ax-clients-track">
-          {clients.map((c) => (
-            <div className="ax-clients-chip" key={c.name}>
+    <div className="journey-clients" aria-label="AutoData clients and partners">
+      <div className="journey-clients-marquee">
+        <div className="journey-clients-track">
+          {autodataClients.map((c) => (
+            <span className="journey-clients-chip" key={c.name}>
               <img src={c.logo} alt={c.name} loading="lazy" draggable={false} />
-            </div>
+            </span>
           ))}
-          {/* duplicate set for the seamless loop; hidden under reduced motion */}
-          {clients.map((c) => (
-            <div className="ax-clients-chip ax-clients-dup" key={`dup-${c.name}`} aria-hidden="true">
+          {autodataClients.map((c) => (
+            <span className="journey-clients-chip journey-clients-dup" key={`dup-${c.name}`} aria-hidden="true">
               <img src={c.logo} alt="" loading="lazy" draggable={false} />
-            </div>
+            </span>
           ))}
         </div>
       </div>
-    </section>
+    </div>
   );
 }
