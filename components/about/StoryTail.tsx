@@ -25,6 +25,7 @@ import { gsap, ScrollTrigger, waypointTrigger, SCRUB_SMOOTH } from "./engine";
 import { FlickerText, FlickerTitle, GlitchLabel, useRevealManager } from "./reveal";
 import { GlowSvg, StreamlinesSvg } from "./svgs";
 import { TeamCarousel, CompaniesCarousel } from "./Carousels";
+import { ClientsCarousel } from "./ClientsCarousel";
 import { ValuesTimeline } from "./ValuesTimeline";
 import { CareersCards } from "./CareersCards";
 
@@ -433,6 +434,7 @@ export function StoryTail() {
       <TeamCarousel />
       <CareersCards />
       <CompaniesCarousel />
+      <ClientsCarousel />
       <PartnerClose />
       <Endcap />
     </div>
