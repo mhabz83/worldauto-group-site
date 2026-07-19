@@ -35,9 +35,11 @@ type StopProps = {
   children: React.ReactNode;
   label: string;
   navSection: "group" | "companies";
+  /** rendered as a sibling of the panel (no panel background) */
+  overlay?: React.ReactNode;
 };
 
-function Stop({ id, kind, accent, align = "start", children, label, navSection }: StopProps) {
+function Stop({ id, kind, accent, align = "start", children, label, navSection, overlay }: StopProps) {
   return (
     <section
       id={id}
@@ -48,6 +50,7 @@ function Stop({ id, kind, accent, align = "start", children, label, navSection }
       style={{ minHeight: MOTION.stopHeight, "--stop-accent": accent } as React.CSSProperties}
       aria-label={label}
     >
+      {overlay}
       <div className="journey-panel">{Children.toArray(children)}</div>
     </section>
   );
@@ -398,22 +401,33 @@ export function LandingJourney() {
       <Header />
 
       <div ref={journeyRef} className="journey-copy-layer">
-        <Stop id="group" kind="hero" accent={stopAccents.hero} label="World Automotive Group" navSection="group">
-          <h1 className="hero-wordmark">
-            <span className="hw-lockup">
-              <span className="hw-word">WORLD</span>{" "}
-              <span className="hw-word hw-auto">AUTOMOTIVE</span>{" "}
-              <span className="hw-word">GROUP</span>
-            </span>
-            <svg className="hw-route" viewBox="0 0 1000 64" preserveAspectRatio="none" aria-hidden="true">
-              <path
-                className="hw-route-blue"
-                pathLength={1}
-                fill="none"
-                d="M0 14 H110 a16 16 0 0 1 16 16 V32 a16 16 0 0 0 16 16 H1000"
-              />
-            </svg>
-          </h1>
+        <Stop
+          id="group"
+          kind="hero"
+          accent={stopAccents.hero}
+          label="World Automotive Group"
+          navSection="group"
+          overlay={
+            <div className="hero-wordmark-overlay" aria-label="World Automotive Group">
+              <span className="hero-wordmark">
+                <span className="hw-lockup">
+                  <span className="hw-word">WORLD</span>{" "}
+                  <span className="hw-word hw-auto">AUTOMOTIVE</span>{" "}
+                  <span className="hw-word">GROUP</span>
+                </span>
+                <svg className="hw-route" viewBox="0 0 1000 64" preserveAspectRatio="none" aria-hidden="true">
+                  <path
+                    className="hw-route-blue"
+                    pathLength={1}
+                    fill="none"
+                    d="M0 14 H110 a16 16 0 0 1 16 16 V32 a16 16 0 0 0 16 16 H1000"
+                  />
+                </svg>
+              </span>
+            </div>
+          }
+        >
+          <h1>We Build And Run <SignalWord>Automotive.</SignalWord></h1>
           <p className="journey-body">{journeyContent.hero.body}</p>
         </Stop>
 
@@ -476,15 +490,15 @@ export function LandingJourney() {
         .journey-stop--center .journey-body,.journey-stop--center .journey-company-line,.journey-stop--center .journey-proof { margin-left: auto; margin-right: auto; }
         .journey-stop--center .journey-capabilities,.journey-stop--center .journey-links { justify-content: center; }
         .journey-panel h1,.journey-panel h2 { max-width: 12ch; margin: 0; color: #fff; font-size: clamp(2.65rem,6.4vw,6rem); font-weight: 300; letter-spacing: -.04em; line-height: .94; text-wrap: balance; overflow-wrap: anywhere; }
-        /* hero wordmark: WORLD AUTOMOTIVE GROUP, one line, sits in the upper space over the car.
-           Lines match the neon road (blue #1367fe / orange #ff4200 + bloom glow) and draw in on load. */
-        .journey-stop--kind-hero { align-items: flex-start; padding-top: clamp(6.5rem,16vh,11rem); }
-        .journey-stop--kind-hero .journey-panel { width: min(66rem,90vw); }
-        .journey-panel .hero-wordmark { max-width: none; margin: 0; padding-bottom: clamp(1.3rem,2.8vw,2.3rem); line-height: .92; white-space: nowrap; position: relative; display: inline-block; }
-        .hero-wordmark .hw-lockup { display: inline-block; font-size: clamp(1.6rem,5vw,4.4rem); font-weight: 700; letter-spacing: .004em; color: #fff; }
+        /* hero wordmark: WORLD AUTOMOTIVE GROUP floats over the car, NO background;
+           the bottom headline card is unchanged. Lines match the neon road
+           (blue #1367fe / orange #ff4200 + bloom glow) and draw in on load. */
+        .hero-wordmark-overlay { position: absolute; z-index: 3; top: clamp(6rem,15vh,9.5rem); left: 0; right: 0; padding: 0 var(--gutter); text-align: center; pointer-events: none; }
+        .hero-wordmark { position: relative; display: inline-block; padding-bottom: clamp(.9rem,2.2vw,1.7rem); white-space: nowrap; }
+        .hero-wordmark .hw-lockup { display: inline-block; font-size: clamp(1.5rem,4.4vw,3.6rem); font-weight: 700; letter-spacing: .01em; line-height: .92; color: #fff; }
         .hero-wordmark .hw-auto { position: relative; color: var(--highlight); }
         .hero-wordmark .hw-auto::after { content: ""; position: absolute; left: 0; right: 0; bottom: -.18em; height: 4px; border-radius: 2px; background: #ff4200; filter: drop-shadow(0 0 3px #ff4200) drop-shadow(0 0 8px rgba(255,66,0,.6)); transform-origin: left center; }
-        .hero-wordmark .hw-route { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: clamp(1.05rem,2.3vw,1.9rem); overflow: visible; }
+        .hero-wordmark .hw-route { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: clamp(.9rem,2vw,1.6rem); overflow: visible; }
         .hero-wordmark .hw-route-blue { stroke: #1367fe; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; filter: drop-shadow(0 0 3px #1367fe) drop-shadow(0 0 8px rgba(19,103,254,.55)); }
         @media (prefers-reduced-motion: no-preference) {
           .hero-wordmark .hw-route-blue { stroke-dasharray: 1; stroke-dashoffset: 1; animation: hwDraw 1.1s cubic-bezier(.16,1,.3,1) .35s forwards; }
