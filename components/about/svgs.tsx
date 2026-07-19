@@ -202,6 +202,61 @@ export function StreamlinesSvg({
   );
 }
 
+/* "Why we're different" capability constellation — a central hub with five
+   nodes (one per capability), joined by neon spokes and a pentagon ring.
+   Matches the road/wordmark neon language (blue #1367fe, orange #ff4200 with
+   bloom glow). Lines draw in and nodes pop when the section enters view
+   (CSS keyed on the section's .ax-approach-in class). */
+export function CapabilitySvg({ className }: { className?: string }) {
+  const nodes = [
+    { x: 240, y: 75 },
+    { x: 397, y: 189 },
+    { x: 337, y: 373 },
+    { x: 143, y: 373 },
+    { x: 83, y: 189 },
+  ];
+  const hub = { x: 240, y: 240 };
+  const pentagon = nodes.map((n, i) => `${i ? "L" : "M"}${n.x} ${n.y}`).join(" ") + " Z";
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 480 480"
+      fill="none"
+      aria-hidden="true"
+    >
+      {/* outer pentagon ring */}
+      <path className="ax-cap-ring" pathLength={1} d={pentagon} />
+      {/* spokes hub -> node */}
+      {nodes.map((n, i) => (
+        <line
+          key={`s${i}`}
+          className="ax-cap-spoke"
+          pathLength={1}
+          x1={hub.x}
+          y1={hub.y}
+          x2={n.x}
+          y2={n.y}
+          style={{ animationDelay: `${0.25 + i * 0.08}s` }}
+        />
+      ))}
+      {/* nodes */}
+      {nodes.map((n, i) => (
+        <circle
+          key={`n${i}`}
+          className="ax-cap-node"
+          cx={n.x}
+          cy={n.y}
+          r={8}
+          style={{ animationDelay: `${0.6 + i * 0.08}s` }}
+        />
+      ))}
+      {/* hub */}
+      <circle className="ax-cap-hub" cx={hub.x} cy={hub.y} r={13} />
+      <circle className="ax-cap-hub-core" cx={hub.x} cy={hub.y} r={5} />
+    </svg>
+  );
+}
+
 /* S6 values rings — 1080x1080, two scroll-rotated dashed-arc groups */
 export function RingsSvg({
   className,

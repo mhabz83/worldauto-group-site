@@ -18,12 +18,12 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { group, footer as footerContent } from "@/content/site";
-import { model } from "@/content/home";
+import { approach } from "@/content/home";
 import { companies } from "@/content/site";
 import { journeyContent } from "@/components/hero/journeyContent";
-import { gsap, ScrollTrigger, waypointTrigger, SCRUB_SMOOTH } from "./engine";
+import { ScrollTrigger } from "./engine";
 import { FlickerText, FlickerTitle, GlitchLabel, useRevealManager } from "./reveal";
-import { GlowSvg, StreamlinesSvg } from "./svgs";
+import { GlowSvg, CapabilitySvg } from "./svgs";
 import { TeamCarousel, CompaniesCarousel } from "./Carousels";
 import { ValuesTimeline } from "./ValuesTimeline";
 import { CareersCards } from "./CareersCards";
@@ -83,161 +83,27 @@ function StoryOpener() {
 
 function ForesightSection() {
   const sectionRef = useRef<HTMLElement>(null);
-  const svgWrapRef = useRef<HTMLDivElement>(null);
-  const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
-    const mm = gsap.matchMedia();
-    mm.add(
-      {
-        motion: "(prefers-reduced-motion: no-preference)",
-        md: "(min-width: 768px)",
-      },
-      (ctx) => {
-        const { motion, md } = ctx.conditions as { motion: boolean; md: boolean };
-        if (!motion || !md) return;
-        /* orbital drift: −5vw → +5vw across section visibility */
-        waypointTrigger({
-          el: svgWrapRef.current,
-          measure: sectionRef.current,
-          waypoints: [
-            { a: 100, b: 0, transform: "translateY(-5vw)" },
-            { a: 0, b: 100, transform: "translateY(5vw)" },
-          ],
-        });
-
-        /* scroll assembly: the wind-tunnel streamlines draw themselves in from
-           the leading edge, top band first, as the section scrolls through.
-           Once drawn, a current rides each line downstream (blue over the
-           cool lines, warm over the orange). `?modelfx=quiet` stops the
-           current and shows only the drawn streamlines. */
-        const svg = svgRef.current;
-        if (!svg) return;
-
-        const lines = Array.from(
-          svg.querySelectorAll<SVGGeometryElement>(".ax-stream-cool, .ax-stream-warm"),
-        );
-        const strokes = lines.map((el, i) => {
-          const len = el.getTotalLength();
-          el.style.strokeDasharray = String(len);
-          el.style.strokeDashoffset = String(len);
-          const warm = el.classList.contains("ax-stream-warm");
-          // dim the base band while the comet runs so the current reads; the
-          // readable SVG-default opacity is restored on cleanup (no-JS view)
-          el.style.opacity = String(warm ? 0.34 : 0.26 + i * 0.02);
-          return { el, len, warm };
-        });
-
-        /* post-assembly current: a comet rides each line downstream — a bright
-           head fading into a long tail, matching how the brand arcs taper at
-           their ends. Built as a moving horizontal gradient (flow is left→
-           right) painted over a full-length clone of each line. */
-        const NS = "http://www.w3.org/2000/svg";
-        const defs =
-          svg.querySelector("defs") ?? svg.insertBefore(document.createElementNS(NS, "defs"), svg.firstChild);
-        const TRAIL = 340; // head-to-tail length of the comet, in viewBox units
-        const quiet =
-          new URLSearchParams(window.location.search).get("modelfx") === "quiet";
-        const pulses: SVGGeometryElement[] = [];
-        const tweens: gsap.core.Tween[] = [];
-        if (!quiet) {
-          strokes.forEach((s, i) => {
-            const color = s.warm ? "#FF6340" : "#1367FE";
-            const head = s.warm ? "#FFC9B0" : "#B3F0FF"; // brighter head tint
-            const gid = `ax-comet-${i}`;
-            const grad = document.createElementNS(NS, "linearGradient");
-            grad.setAttribute("id", gid);
-            grad.setAttribute("gradientUnits", "userSpaceOnUse");
-            grad.setAttribute("x1", "0");
-            grad.setAttribute("y1", "0");
-            grad.setAttribute("x2", String(TRAIL));
-            grad.setAttribute("y2", "0");
-            grad.setAttribute("gradientTransform", "translate(-1000 0)");
-            // comet profile: transparent tail → bright head → transparent tip
-            (
-              [
-                ["0", color, "0"],
-                ["0.5", color, "0.2"],
-                ["0.76", color, "0.7"],
-                ["0.9", head, "1"],
-                ["0.98", head, "1"],
-                ["1", head, "0"],
-              ] as const
-            ).forEach(([off, col, op]) => {
-              const st = document.createElementNS(NS, "stop");
-              st.setAttribute("offset", off);
-              st.setAttribute("stop-color", col);
-              st.setAttribute("stop-opacity", op);
-              grad.appendChild(st);
-            });
-            defs.appendChild(grad);
-
-            const clone = s.el.cloneNode(false) as SVGGeometryElement;
-            clone.removeAttribute("class");
-            clone.setAttribute("stroke", `url(#${gid})`);
-            clone.setAttribute("opacity", "1");
-            clone.style.opacity = "0";
-            s.el.parentNode?.insertBefore(clone, s.el.nextSibling);
-            pulses.push(clone);
-
-            // travel the bright window from off the leading edge to off the tail
-            const pos = { x: -TRAIL };
-            tweens.push(
-              gsap.to(pos, {
-                x: 1420,
-                duration: 7 + (i % 3) * 1.1, // stagger so the band shimmers
-                ease: "none",
-                repeat: -1,
-                onUpdate: () =>
-                  grad.setAttribute("gradientTransform", `translate(${pos.x} 0)`),
-              }),
-            );
-          });
+    const el = sectionRef.current;
+    if (!el) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      el.classList.add("ax-approach-in");
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            el.classList.add("ax-approach-in");
+            io.disconnect();
+          }
         }
-
-        const seg = (p: number, a: number, b: number) =>
-          Math.min(1, Math.max(0, (p - a) / (b - a)));
-
-        /* windows sized so the band is fully drawn by p≈0.42 — where the
-           (taller-than-viewport) section fills the screen — then the current
-           fades up. Top lines lead, lower lines follow. */
-        const draw = (p: number) => {
-          strokes.forEach((s, i) => {
-            const t = seg(p, 0.04 + i * 0.045, 0.26 + i * 0.045);
-            const e = t * t * (3 - 2 * t); // smoothstep draw
-            s.el.style.strokeDashoffset = String(s.len * (1 - e));
-          });
-          // full by the time the section fills the screen (~p0.46), then hold
-          const glow = seg(p, 0.34, 0.46);
-          pulses.forEach((el) => {
-            el.style.opacity = String(glow);
-          });
-        };
-
-        waypointTrigger({
-          el: null,
-          measure: sectionRef.current,
-          waypoints: [
-            { a: 100, b: 0 },
-            { a: 0, b: 100 },
-          ],
-          scrub: SCRUB_SMOOTH,
-          onProgress: draw,
-        });
-
-        return () => {
-          tweens.forEach((t) => t.kill());
-          pulses.forEach((el) => el.remove());
-          defs.querySelectorAll("[id^='ax-comet-']").forEach((el) => el.remove());
-          strokes.forEach(({ el }) => {
-            el.style.strokeDasharray = "";
-            el.style.strokeDashoffset = "";
-            el.style.opacity = "";
-          });
-        };
       },
+      { threshold: 0.35 },
     );
-    return () => mm.revert();
+    io.observe(el);
+    return () => io.disconnect();
   }, []);
 
   return (
@@ -246,36 +112,46 @@ function ForesightSection() {
       ref={sectionRef}
       data-ax-theme="dark"
       data-nav-section="group"
-      className="ax-section ax-foresight"
+      className="ax-section ax-approach"
     >
-      <GlowSvg className="ax-foresight-glow" />
-      <div className="ax-container ax-foresight-inner">
-        <div className="ax-grid">
-          <div className="ax-foresight-head">
-            <FlickerTitle
-              as="h2"
-              className="ax-t2 ax-orange"
-              reveal="title"
-              segments={["The Approach"]}
-            />
-            <span className="ax-hairline" style={{ margin: "0.9rem 0 1.5rem" }} />
-            <FlickerText
-              as="p"
-              className="ax-h3"
-              reveal="text"
-              segments={["Automotive, run like infrastructure."]}
-            />
+      <GlowSvg className="ax-approach-glow" />
+      <div className="ax-container ax-approach-inner">
+        <div className="ax-approach-head">
+          <FlickerTitle
+            as="p"
+            className="ax-t2 ax-orange ax-approach-eyebrow"
+            reveal="title"
+            segments={[approach.eyebrow]}
+          />
+          <FlickerTitle
+            as="h2"
+            className="ax-h2 ax-approach-heading"
+            reveal="title"
+            segments={[approach.heading]}
+          />
+          <FlickerText
+            as="p"
+            className="ax-lead ax-approach-lead"
+            reveal="text"
+            segments={[approach.lead]}
+          />
+        </div>
+
+        <div className="ax-approach-grid">
+          <div className="ax-approach-graphic" data-about-reveal="fade-in">
+            <CapabilitySvg className="ax-cap-svg" />
           </div>
-          <div className="ax-foresight-svg-col">
-            <div ref={svgWrapRef} className="ax-foresight-svg">
-              <StreamlinesSvg svgRef={svgRef} />
-            </div>
-          </div>
-          <div className="ax-foresight-card-col">
-            <div className="ax-glass-card" data-about-reveal="flicker-in">
-              <p className="ax-lead">{model.intro}</p>
-            </div>
-          </div>
+          <ol className="ax-approach-list">
+            {approach.capabilities.map((c, i) => (
+              <li key={c.title} className="ax-approach-item" data-about-reveal="fade-in">
+                <span className="ax-approach-num">{String(i + 1).padStart(2, "0")}</span>
+                <div className="ax-approach-copy">
+                  <h3 className="ax-approach-cap-title">{c.title}</h3>
+                  <p className="ax-approach-cap-body">{c.body}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
         </div>
       </div>
     </section>

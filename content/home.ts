@@ -132,3 +132,34 @@ export const ctaBand = {
     alt: "Waterfront city skyline at night across dark water",
   },
 } as const;
+
+/* "Why we're different" — the group's five proven operating capabilities.
+   Verified from the corporate deck (Automotive DNA slide). */
+export const approach = {
+  eyebrow: "Why we're different",
+  heading: "Automotive DNA",
+  lead:
+    "Five proven capabilities that make every rollout repeatable, not a one-off.",
+  capabilities: [
+    {
+      title: "Dealership operating discipline",
+      body: "North American dealership expertise across Toyota, Lexus, Hyundai and Ford, bringing standardized retail operations and KPI discipline.",
+    },
+    {
+      title: "Quick-service operating know-how",
+      body: "More than 40 years of quick service in the GCC, with UAE operations since 2004, station-ready SOPs and repeatable delivery.",
+    },
+    {
+      title: "Proprietary data and analytics",
+      body: "AutoData in the region since 2013, with data and analytics that sharpen pricing, valuation and risk decisions.",
+    },
+    {
+      title: "Digital transformation execution",
+      body: "Vicimus across Canada and the USA, focused on loyalty, retention and repeat service visits.",
+    },
+    {
+      title: "Consulting and governance pedigree",
+      body: "Standards, training, audits and governance across OEMs, distributors, marketplaces and aftermarket.",
+    },
+  ],
+} as const;

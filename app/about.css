@@ -1905,3 +1905,157 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   height: auto;
   display: block;
 }
+
+/* ------------------------------------------------------------------ */
+/* "Why we're different" — capabilities + constellation graphic        */
+/* ------------------------------------------------------------------ */
+.ax-approach {
+  background: var(--wag-navy-700);
+  overflow: hidden;
+}
+.ax-approach-glow {
+  position: absolute;
+  width: 120vw;
+  height: auto;
+  left: -34vw;
+  top: -40vw;
+  opacity: 0.7;
+  pointer-events: none;
+}
+.ax-approach-inner {
+  position: relative;
+  z-index: 1;
+  padding-block: clamp(4rem, 10vh, 8rem);
+}
+.ax-approach-head {
+  max-width: 48rem;
+  margin-bottom: clamp(2.5rem, 6vh, 4.5rem);
+}
+.ax-approach-eyebrow {
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin: 0 0 0.9rem;
+}
+.ax-approach-heading {
+  margin: 0 0 1.1rem;
+}
+.ax-approach-lead {
+  max-width: 42ch;
+  color: var(--text-mid);
+}
+.ax-approach-grid {
+  display: grid;
+  grid-template-columns: 0.88fr 1.12fr;
+  gap: clamp(2rem, 5vw, 5rem);
+  align-items: center;
+}
+.ax-approach-graphic {
+  position: relative;
+}
+.ax-cap-svg {
+  display: block;
+  width: 100%;
+  max-width: 460px;
+  height: auto;
+  margin-inline: auto;
+  overflow: visible;
+}
+.ax-approach-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ax-approach-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.4rem 1.3rem;
+  padding: 1.1rem 0;
+  border-top: 1px solid var(--hairline-strong);
+  align-items: start;
+}
+.ax-approach-item:last-child {
+  border-bottom: 1px solid var(--hairline-strong);
+}
+.ax-approach-num {
+  font-size: 0.8rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  color: var(--highlight);
+  padding-top: 0.35rem;
+}
+.ax-approach-cap-title {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.05rem, 1.5vw, 1.28rem);
+  font-weight: 500;
+  color: var(--text-hi);
+}
+.ax-approach-cap-body {
+  margin: 0;
+  max-width: 54ch;
+  font-size: var(--ax-t1);
+  line-height: 1.5;
+  color: var(--text-mid);
+}
+@media (max-width: 900px) {
+  .ax-approach-grid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+  .ax-approach-graphic {
+    order: -1;
+    max-width: 380px;
+    margin-inline: auto;
+  }
+}
+
+/* constellation: neon spokes + pentagon ring, nodes + orange hub */
+.ax-cap-spoke {
+  stroke: #1367fe;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  filter: drop-shadow(0 0 3px #1367fe) drop-shadow(0 0 7px rgba(19, 103, 254, 0.5));
+}
+.ax-cap-ring {
+  stroke: #1367fe;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  opacity: 0.45;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  filter: drop-shadow(0 0 2px rgba(19, 103, 254, 0.5));
+}
+.ax-cap-node,
+.ax-cap-hub,
+.ax-cap-hub-core {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(0);
+}
+.ax-cap-node {
+  fill: #42d7ff;
+  filter: drop-shadow(0 0 4px #42d7ff);
+}
+.ax-cap-hub {
+  fill: none;
+  stroke: #ff4200;
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 5px #ff4200) drop-shadow(0 0 12px rgba(255, 66, 0, 0.55));
+}
+.ax-cap-hub-core {
+  fill: #ff4200;
+  filter: drop-shadow(0 0 5px #ff4200);
+}
+/* draw in when the section scrolls into view */
+.ax-approach-in .ax-cap-ring { animation: axCapDraw 1s var(--ax-ease-out) 0.1s forwards; }
+.ax-approach-in .ax-cap-spoke { animation: axCapDraw 0.7s var(--ax-ease-out) forwards; }
+.ax-approach-in .ax-cap-node { animation: axCapPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.ax-approach-in .ax-cap-hub { animation: axCapPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s forwards; }
+.ax-approach-in .ax-cap-hub-core { animation: axCapPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.25s forwards; }
+@keyframes axCapDraw { to { stroke-dashoffset: 0; } }
+@keyframes axCapPop { to { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .ax-cap-spoke, .ax-cap-ring { stroke-dashoffset: 0; animation: none; }
+  .ax-cap-node, .ax-cap-hub, .ax-cap-hub-core { transform: scale(1); animation: none; }
+}
