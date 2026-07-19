@@ -21,7 +21,15 @@ export function ContactForm() {
   }
 
   return (
-    <form action={formAction} className="space-y-6">
+    <form action={formAction} className="relative space-y-6">
+      {/* Honeypot: hidden from real visitors, catches bots that fill every field. */}
+      <div aria-hidden="true" className="absolute left-[-9999px] top-auto h-px w-px overflow-hidden">
+        <label>
+          Company website
+          <input name="company_website" type="text" tabIndex={-1} autoComplete="off" />
+        </label>
+      </div>
+
       <div className="grid gap-6 sm:grid-cols-2">
         <label className="block">
           <span className="type-kicker text-mid">Name</span>
@@ -36,13 +44,26 @@ export function ContactForm() {
         </label>
       </div>
 
-      <label className="block">
-        <span className="type-kicker text-mid">Email</span>
-        <input name="email" type="email" autoComplete="email" className={fieldClass} placeholder="you@company.com" />
-        {state.errors?.email && (
-          <span className="mt-2 block type-mono text-highlight">{state.errors.email}</span>
-        )}
-      </label>
+      <div className="grid gap-6 sm:grid-cols-2">
+        <label className="block">
+          <span className="type-kicker text-mid">Email</span>
+          <input name="email" type="email" autoComplete="email" className={fieldClass} placeholder="you@company.com" />
+          {state.errors?.email && (
+            <span className="mt-2 block type-mono text-highlight">{state.errors.email}</span>
+          )}
+        </label>
+        <label className="block">
+          <span className="type-kicker text-mid">I&rsquo;m reaching out as</span>
+          <select name="vertical" defaultValue="" className={fieldClass}>
+            <option value="">Select one (optional)</option>
+            <option value="Fuel retail">Fuel retail</option>
+            <option value="Insurance">Insurance</option>
+            <option value="Banking">Banking</option>
+            <option value="Automotive">Automotive</option>
+            <option value="Other">Other</option>
+          </select>
+        </label>
+      </div>
 
       <label className="block">
         <span className="type-kicker text-mid">Message</span>

@@ -18,7 +18,7 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { group, footer as footerContent } from "@/content/site";
-import { approach } from "@/content/home";
+import { approach, verticals, whyPartner } from "@/content/home";
 import { companies } from "@/content/site";
 import { journeyContent } from "@/components/hero/journeyContent";
 import { ScrollTrigger } from "./engine";
@@ -180,7 +180,49 @@ function CommitmentSection() {
 }
 
 /* ------------------------------------------------------------------ */
-/* partner close — the about S8 bottom CTA block as its own section    */
+/* who we partner with — one door per partner vertical                 */
+/* ------------------------------------------------------------------ */
+
+function VerticalsSection() {
+  return (
+    <section
+      id="verticals"
+      data-ax-theme="dark"
+      data-nav-section="partner"
+      className="ax-section ax-verticals"
+    >
+      <div className="ax-container ax-verticals-inner">
+        <div className="ax-verticals-head">
+          <FlickerTitle
+            as="p"
+            className="ax-t2 ax-orange ax-verticals-eyebrow"
+            reveal="title"
+            segments={[verticals.eyebrow]}
+          />
+          <FlickerTitle
+            as="h2"
+            className="ax-h2"
+            reveal="title"
+            segments={[verticals.heading]}
+          />
+        </div>
+        <div className="ax-verticals-grid">
+          {verticals.hooks.map((v) => (
+            <div key={v.vertical} className="ax-vertical" data-about-reveal="fade-in">
+              <p className="ax-t2 ax-vertical-label">{v.vertical}</p>
+              <h3 className="ax-vertical-hook">{v.hook}</h3>
+              <p className="ax-vertical-body">{v.body}</p>
+              <p className="ax-vertical-proof">{v.proof}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* partner close — why partner (how we win → what it unlocks) + CTA    */
 /* (one partner CTA on the whole merged page)                          */
 /* ------------------------------------------------------------------ */
 
@@ -204,16 +246,28 @@ function PartnerClose() {
           <p className="ax-t1 ax-cta-body" data-about-reveal="fade-in">
             {journeyContent.partner.body}
           </p>
-          <div className="ax-cta-action" data-about-reveal="fade-in">
-            <Link
-              href="/contact"
-              className="ax-btn-primary"
-              data-ax-glitch
-              aria-label={journeyContent.partner.cta}
-            >
-              <GlitchLabel text={journeyContent.partner.cta} /> →
-            </Link>
-          </div>
+        </div>
+        <ul className="ax-why-list">
+          {whyPartner.rows.map((r) => (
+            <li key={r.strength} className="ax-why-row" data-about-reveal="fade-in">
+              <p className="ax-t2 ax-why-strength">{r.strength}</p>
+              <p className="ax-why-we">{r.we}</p>
+              <p className="ax-why-unlock">
+                <span aria-hidden="true">→ </span>
+                {r.unlock}
+              </p>
+            </li>
+          ))}
+        </ul>
+        <div className="ax-cta-action ax-partner-action" data-about-reveal="fade-in">
+          <Link
+            href="/contact"
+            className="ax-btn-primary"
+            data-ax-glitch
+            aria-label={journeyContent.partner.cta}
+          >
+            <GlitchLabel text={journeyContent.partner.cta} /> →
+          </Link>
         </div>
       </div>
     </section>
@@ -303,6 +357,7 @@ export function StoryTail() {
       <TeamCarousel />
       <CareersCards />
       <CompaniesCarousel />
+      <VerticalsSection />
       <PartnerClose />
       <Endcap />
     </div>

@@ -16,7 +16,7 @@ export const journeyContent = {
         cue: "Deploy",
         title: "Quick Service, Plug and Play",
         body:
-          "A standardized quick-service network, ready to deploy: site formats, equipment kits, an operating stack, a technician academy and parts supply.",
+          "A standardized quick-service network, ready to deploy: site formats, equipment kits, an operating stack, a technician academy and parts supply. Productized as Express Fit, with rollout underway beyond the UAE.",
       },
       {
         cue: "Understand",

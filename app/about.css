@@ -1546,7 +1546,8 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
 .ax-partner .ax-partner-inner {
   margin-top: 0;
   padding-top: clamp(6rem, 16vh, 11rem);
-  padding-bottom: clamp(7rem, 18vh, 13rem);
+  /* tightened: the why-partner rows + CTA now follow inside the section */
+  padding-bottom: clamp(2rem, 5vh, 3.5rem);
 }
 .ax-careers-bottom .ax-cta-title {
   grid-column: 1 / span 4;
@@ -2084,4 +2085,119 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
 @media (prefers-reduced-motion: reduce) {
   .ax-cap-video { display: none; }
   .ax-cap-poster { display: block; }
+}
+
+/* ------------------------------------------------------------------ */
+/* who we partner with — four vertical doors, flush on the deck        */
+/* ------------------------------------------------------------------ */
+.ax-verticals {
+  background: var(--wag-navy-900);
+}
+.ax-verticals-inner {
+  padding-block: clamp(4rem, 10vh, 7.5rem) clamp(3rem, 8vh, 6rem);
+}
+.ax-verticals-head {
+  max-width: 46rem;
+  margin-bottom: clamp(2.2rem, 5vh, 4rem);
+}
+.ax-verticals-eyebrow {
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin: 0 0 0.9rem;
+}
+.ax-verticals-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+}
+.ax-vertical {
+  padding: 1.4rem clamp(1rem, 2vw, 1.8rem) 1.6rem 0;
+  border-top: 1px solid var(--hairline-strong);
+}
+.ax-vertical + .ax-vertical {
+  border-left: 1px solid var(--hairline-strong);
+  padding-left: clamp(1rem, 2vw, 1.8rem);
+}
+.ax-vertical-label {
+  margin: 0 0 0.9rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--highlight);
+}
+.ax-vertical-hook {
+  margin: 0 0 0.6rem;
+  font-size: clamp(1.05rem, 1.5vw, 1.3rem);
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--text-hi);
+}
+.ax-vertical-body {
+  margin: 0 0 1rem;
+  font-size: var(--ax-t1);
+  line-height: 1.5;
+  color: var(--text-mid);
+}
+.ax-vertical-proof {
+  margin: 0;
+  font-size: var(--ax-t2);
+  color: var(--text-hi);
+  opacity: 0.85;
+}
+@media (max-width: 1023px) {
+  .ax-verticals-grid { grid-template-columns: 1fr 1fr; }
+  .ax-vertical + .ax-vertical { border-left: 0; padding-left: 0; }
+  .ax-vertical:nth-child(even) { border-left: 1px solid var(--hairline-strong); padding-left: clamp(1rem, 2vw, 1.8rem); }
+}
+@media (max-width: 599px) {
+  .ax-verticals-grid { grid-template-columns: 1fr; }
+  .ax-vertical:nth-child(even) { border-left: 0; padding-left: 0; }
+}
+
+/* why partner — how we win mapped to what it unlocks, inside the close */
+.ax-why-list {
+  list-style: none;
+  margin: clamp(2rem, 5vh, 3.5rem) 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 clamp(2rem, 4vw, 4rem);
+}
+.ax-why-row {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr;
+  grid-template-areas: "s we" "s unlock";
+  gap: 0.3rem 1.2rem;
+  padding: 1.15rem 0;
+  border-top: 1px solid var(--hairline-strong);
+  align-items: start;
+}
+.ax-why-strength {
+  grid-area: s;
+  margin: 0;
+  padding-top: 0.15rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--highlight);
+}
+.ax-why-we {
+  grid-area: we;
+  margin: 0;
+  font-size: var(--ax-t1);
+  line-height: 1.45;
+  color: var(--text-hi);
+}
+.ax-why-unlock {
+  grid-area: unlock;
+  margin: 0;
+  font-size: var(--ax-t1);
+  line-height: 1.45;
+  color: var(--text-mid);
+}
+.ax-why-unlock span { color: var(--highlight); }
+.ax-partner-action {
+  margin-top: clamp(2rem, 5vh, 3rem);
+  padding-bottom: clamp(6rem, 14vh, 10rem);
+}
+@media (max-width: 899px) {
+  .ax-why-list { grid-template-columns: 1fr; }
 }

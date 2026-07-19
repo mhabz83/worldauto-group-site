@@ -42,7 +42,7 @@ export const model = {
       flagship: true,
       /* [TO CONFIRM: Quick Service Plug and Play positioning copy from owner] */
       body: "A standardized quick-service network, ready to deploy: site formats, per-bay equipment kits, an operating stack, a technician academy and parts supply. Built to plug into large fuel and retail networks.",
-      footnote: "The flagship. Proven on live forecourts since 2004.",
+      footnote: "The flagship. Proven on live forecourts since 2004, productized as Express Fit.",
     },
     {
       number: "02",
@@ -160,6 +160,66 @@ export const approach = {
     {
       title: "Consulting and governance pedigree",
       body: "Standards, training, audits and governance across OEMs, distributors, marketplaces and aftermarket.",
+    },
+  ],
+} as const;
+
+/* "Who we partner with" — one door per partner vertical.
+   Facts verified against the corporate deck (clients, dates, footprints). */
+export const verticals = {
+  eyebrow: "Who we partner with",
+  heading: "One platform, four doors in",
+  hooks: [
+    {
+      vertical: "Fuel retail",
+      hook: "Non-fuel revenue on your forecourts.",
+      body: "Station-embedded quick service, proven with Emarat since 2004 and productized as Express Fit for rollout across new networks.",
+      proof: "32 live locations in the UAE",
+    },
+    {
+      vertical: "Insurance",
+      hook: "Claims and vehicle intelligence, insurer-grade.",
+      body: "Axxion runs motor-claims administration as the UAE's first TPA; AutoData valuations, inspections and history support pricing and risk.",
+      proof: "Working with AXA, RSA, QIC and more",
+    },
+    {
+      vertical: "Banking",
+      hook: "Valuations you can underwrite on.",
+      body: "AutoData's valuation engine and vehicle reports support underwriting, financing and fraud checks, integrated by API.",
+      proof: "Clients include Emirates NBD and Dubai Islamic Bank",
+    },
+    {
+      vertical: "Automotive",
+      hook: "Operator know-how, transferred.",
+      body: "Dealership operations across Toyota, Lexus, Hyundai and Ford, with consulting, training, governance and retention software.",
+      proof: "30+ years of multi-site retail",
+    },
+  ],
+} as const;
+
+/* "Why partner with the group" — how we win mapped to what it unlocks.
+   Verbatim substance from the corporate deck's partner slide. */
+export const whyPartner = {
+  rows: [
+    {
+      strength: "Heritage",
+      we: "30+ years of automotive operating experience and regional execution know-how.",
+      unlock: "A proven playbook that reduces execution risk from day one.",
+    },
+    {
+      strength: "Scale",
+      we: "One integrated platform across quick service, data, digital and governance.",
+      unlock: "Faster multi-site rollout with fewer handoffs and simpler vendor management.",
+    },
+    {
+      strength: "Team",
+      we: "Led by operators with fuel-retail and OEM experience, delivering to clear KPIs.",
+      unlock: "Governance that protects standards, safety and uptime across locations.",
+    },
+    {
+      strength: "Innovation",
+      we: "Vehicle intelligence and digital tools that improve decisions and customer trust.",
+      unlock: "Data-led outcomes and stronger customer engagement over time.",
     },
   ],
 } as const;
