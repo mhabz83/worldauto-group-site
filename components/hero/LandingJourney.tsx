@@ -518,17 +518,18 @@ export function LandingJourney() {
         .journey-links { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem 1.4rem; margin-top: 1.25rem; }
         .journey-links a { display: inline-flex; min-height: 48px; align-items: center; color: #fff; text-underline-offset: .35em; text-decoration-color: var(--stop-accent); font-weight: 600; }
         .journey-links a:last-child { color: var(--text-mid); font-size: .82rem; font-weight: 400; }
-        /* AutoData clients marquee, inside the AutoData stop panel */
+        /* AutoData clients marquee — full-colour transparent logos on one soft
+           light tray (no per-logo cards). The tray fades at both ends. */
         .journey-clients { margin-top: 1.5rem; max-width: 100%; }
-        .journey-clients-marquee { position: relative; overflow: hidden; -webkit-mask-image: linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent); mask-image: linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent); }
-        .journey-clients-track { display: flex; width: max-content; gap: 12px; animation: journeyClients 40s linear infinite; will-change: transform; }
+        .journey-clients-marquee { position: relative; overflow: hidden; background: rgba(255,255,255,.95); border-radius: 10px; -webkit-mask-image: linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent); mask-image: linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent); }
+        .journey-clients-track { display: flex; width: max-content; gap: 30px; padding: 12px 26px; animation: journeyClients 40s linear infinite; will-change: transform; }
         .journey-clients-marquee:hover .journey-clients-track { animation-play-state: paused; }
         @keyframes journeyClients { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-        .journey-clients-chip { flex: 0 0 auto; height: 42px; display: inline-flex; align-items: center; justify-content: center; background: #fff; border-radius: 7px; padding: 0 14px; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
-        .journey-clients-chip img { height: 24px; width: auto; max-width: 120px; object-fit: contain; display: block; }
+        .journey-clients-chip { flex: 0 0 auto; height: 40px; display: inline-flex; align-items: center; justify-content: center; }
+        .journey-clients-chip img { height: 30px; width: auto; max-width: 140px; object-fit: contain; display: block; }
         @media (prefers-reduced-motion: reduce) {
           .journey-clients-marquee { -webkit-mask-image: none; mask-image: none; }
-          .journey-clients-track { animation: none; flex-wrap: wrap; width: auto; gap: 10px; }
+          .journey-clients-track { animation: none; flex-wrap: wrap; width: auto; justify-content: center; gap: 22px; }
           .journey-clients-dup { display: none; }
         }
         @media (max-width: 900px) {
