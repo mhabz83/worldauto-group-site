@@ -2060,17 +2060,16 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   .ax-cap-node, .ax-cap-hub, .ax-cap-hub-core { transform: scale(1); animation: none; }
 }
 
-/* Automotive DNA — generated cinematic video plate (replaces the constellation) */
+/* Automotive DNA — generated cinematic video, sitting flush on the deck:
+   no frame/box; its edges fade into the navy so it melts into the section. */
 .ax-cap-video-frame {
   position: relative;
   width: 100%;
-  max-width: 460px;
+  max-width: 620px;
   margin-inline: auto;
   aspect-ratio: 1 / 1;
-  border-radius: 16px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 34%, rgba(0, 0, 0, 0.55) 58%, transparent 80%);
+  mask-image: radial-gradient(circle at 50% 50%, #000 34%, rgba(0, 0, 0, 0.55) 58%, transparent 80%);
 }
 .ax-cap-video,
 .ax-cap-poster {
