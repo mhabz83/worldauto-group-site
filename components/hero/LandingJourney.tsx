@@ -494,6 +494,9 @@ export function LandingJourney() {
         @keyframes hwDraw { to { stroke-dashoffset: 0; } }
         @keyframes hwGrow { to { transform: scaleX(1); } }
         .journey-panel h2 { font-size: clamp(2.35rem,5vw,4.5rem); }
+        /* hero statement wears the group display voice; every other journey
+           heading (companies intro + company names) stays Suisse */
+        .journey-panel h1 { max-width: 11ch; font-family: var(--font-display); font-weight: var(--font-display-weight); font-size: var(--fs-display-hero); letter-spacing: var(--tracking-display); line-height: .96; }
         .journey-panel h3 { color: #fff; font-size: clamp(1.05rem,1.5vw,1.28rem); font-weight: 500; line-height: 1.2; }
         .journey-eyebrow,.journey-region { margin: 0 0 1.2rem; color: color-mix(in srgb,var(--stop-accent) 74%,white); font-size: .8rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
         .journey-body,.journey-company-line,.journey-statement { max-width: 46ch; margin: 1.35rem 0 0; color: rgba(255,255,255,.88); font-size: clamp(1rem,1.3vw,1.18rem); line-height: 1.62; }
@@ -523,7 +526,8 @@ export function LandingJourney() {
           .journey-static-image { object-position: 65% center; }.journey-stop,.journey-stop--end { align-items: flex-end; justify-content: stretch; padding: 5rem 0 0; }
           .journey-stop:first-child { min-height: 100svh !important; }
           .journey-panel,.journey-stop--end .journey-panel { width: 100%; padding: 5.5rem var(--gutter) max(1.5rem,env(safe-area-inset-bottom)); background: linear-gradient(0deg,rgba(0,5,31,.98),rgba(0,8,53,.84) 62%,transparent); -webkit-mask-image: none; mask-image: none; }
-          .journey-panel h1,.journey-panel h2 { font-size: clamp(2.45rem,12vw,4.6rem); }
+          .journey-panel h2 { font-size: clamp(2.45rem,12vw,4.6rem); }
+          .journey-panel h1 { font-size: var(--fs-display-hero); }
         }
         @media (prefers-reduced-motion: reduce) {
           /* NeonJourney renders one motionless 3D frame in reduced-motion

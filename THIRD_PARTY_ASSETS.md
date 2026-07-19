@@ -10,3 +10,14 @@
 
 The optimized derivative is distributed only as part of this website in
 `public/webgl-lines/autodata-scanner.glb`.
+
+# Fonts
+
+## Khand (display voice)
+
+- **Title:** Khand Semibold
+- **Creator:** Indian Type Foundry
+- **Source:** [Fontshare](https://www.fontshare.com/fonts/khand)
+- **License:** [Fontshare Free Font License (ITF FFL)](https://www.fontshare.com/licenses/itf-ffl) — free for personal and commercial use, self-hosting permitted
+- **Files:** `app/fonts/Khand-Semibold.woff2` (source mirror) and `public/fonts/Khand-Semibold.woff2` (served)
+- **Usage:** hero statement and major section titles only (`--font-display`)

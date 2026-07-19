@@ -90,6 +90,39 @@
 }
 
 /* ------------------------------------------------------------------ */
+/* display voice — the major section titles only (hero statement gets  */
+/* the same voice in LandingJourney). Body copy stays Suisse.          */
+/* ------------------------------------------------------------------ */
+
+.ax-giants-title,
+.ax-values-title-swap .ax-h1,
+.ax-team-title,
+.ax-careers-top .ax-h1,
+.ax-cta-title {
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  font-size: var(--fs-display-hero);
+  letter-spacing: var(--tracking-display);
+  line-height: 0.96;
+}
+/* heritage phase of the pinned title swap: same voice, kept at the h2
+   scale so its three lines stay inside the pinned band */
+.ax-values-title-swap .ax-h2 {
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  letter-spacing: var(--tracking-display);
+}
+/* the recovered accent trick stays orange but matches the display weight */
+.ax .ax-giants-title .ax-accent-b,
+.ax .ax-values-title-swap .ax-h1 .ax-accent-b,
+.ax .ax-values-title-swap .ax-h2 .ax-accent-b,
+.ax .ax-team-title .ax-accent-b,
+.ax .ax-careers-top .ax-h1 .ax-accent-b,
+.ax .ax-cta-title .ax-accent-b {
+  font-weight: var(--font-display-weight);
+}
+
+/* ------------------------------------------------------------------ */
 /* layout primitives                                                   */
 /* ------------------------------------------------------------------ */
 

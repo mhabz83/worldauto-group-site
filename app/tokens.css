@@ -27,6 +27,19 @@
   font-display: swap;
 }
 
+/* ---- Display voice: Khand Semibold (Fontshare, free license) ------------- */
+/* Chosen over Archivo Expanded and Clash Display in the 2026-07 comparison:
+   condensed caps grotesk, engineered and automotive, holds the display clamp
+   at every viewport. Used ONLY for the hero statement and the major section
+   titles; all body copy stays Suisse. */
+@font-face {
+  font-family: "Khand";
+  src: url("/fonts/Khand-Semibold.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   /* ---- Foundation: one navy scale (between WAG near-black and Madar navy) - */
   --wag-navy-900: #02040f; /* deepest — page base on WorldAuto */
@@ -69,6 +82,11 @@
 
   /* ---- Type — sans-led ---------------------------------------------------- */
   --font-sans: "Suisse Intl", ui-sans-serif, system-ui, Helvetica, Arial, sans-serif;
+  /* Display voice — hero statement + major section titles ONLY */
+  --font-display: "Khand", var(--font-sans);
+  --font-display-weight: 600;
+  --fs-display-hero: clamp(3.5rem, 7vw, 8rem);
+  --tracking-display: -0.02em;
   --font-mono: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, monospace;
   /* fluid display scale */
   --fs-display: clamp(3rem, 8vw, 8.5rem);
