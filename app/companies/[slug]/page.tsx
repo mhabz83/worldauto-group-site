@@ -51,7 +51,7 @@ export default async function CompanyPage({
           </p>
           <h1
             data-reveal
-            className="mt-6 font-light leading-[0.95] text-hi"
+            className="type-display mt-6"
             style={{ fontSize: "var(--fs-display)" }}
           >
             {company.name}

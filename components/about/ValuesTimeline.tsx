@@ -44,6 +44,7 @@ export function ValuesTimeline() {
   const braidRef = useRef<SVGSVGElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const yearRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const textRefs = useRef<(HTMLDivElement | null)[]>([]);
   const pinRefs = useRef<(HTMLDivElement | null)[]>([]);
   const tailRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -166,6 +167,35 @@ export function ValuesTimeline() {
                 { a: 100, b: 0, transform: "translate(-50%, -50%) translateY(80px)" },
                 { a: 0, b: 100, transform: "translate(-50%, -50%) translateY(-80px)" },
               ],
+            });
+            /* event copy — held on its 40svh line for the whole item passage
+               (counter-translated 1:1 against scroll, scrub direct so it can
+               never drift into the pinned heritage title band above ~288px),
+               crossfading between beats. The last beat ends its hold at rest
+               (translateY 0) so the copy leaves in flow with the section. */
+            waypointTrigger({
+              el: textRefs.current[i],
+              measure: item,
+              scrub: true,
+              waypoints: () => {
+                const vh = window.innerHeight;
+                /* fades are sequential, never overlapping: the outgoing copy
+                   is fully out (b:82) before the next one starts (a:18) at
+                   the same absolute scroll position, so no rest position can
+                   show two beats superimposed */
+                const hold = [
+                  { a: 100, b: 0, transform: `translateY(${-vh}px)`, opacity: 0 },
+                  { a: 18, b: 0, transform: `translateY(${-0.18 * vh}px)`, opacity: 0 },
+                  { a: 0, b: 0, transform: "translateY(0px)", opacity: 1 },
+                ];
+                if (i === beats.length - 1) return hold;
+                return [
+                  ...hold,
+                  { a: 0, b: 65, transform: `translateY(${0.65 * vh}px)`, opacity: 1 },
+                  { a: 0, b: 82, transform: `translateY(${0.82 * vh}px)`, opacity: 0 },
+                  { a: 0, b: 100, transform: `translateY(${vh}px)`, opacity: 0 },
+                ];
+              },
             });
             waypointTrigger({
               el: tailRefs.current[i],
@@ -417,7 +447,12 @@ export function ValuesTimeline() {
               >
                 <h3 className="ax-h1">{b.year}</h3>
               </div>
-              <div className="ax-tl-item-text">
+              <div
+                ref={(el) => {
+                  textRefs.current[i] = el;
+                }}
+                className="ax-tl-item-text"
+              >
                 {b.year === "Today" && (
                   <p className="ax-h2 ax-orange ax-tl-stat">32</p>
                 )}

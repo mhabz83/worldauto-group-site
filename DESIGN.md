@@ -19,11 +19,11 @@ colors:
   paper: "#ffffff"
 typography:
   display:
-    fontFamily: "Suisse Intl, ui-sans-serif, system-ui, sans-serif"
-    fontSize: "clamp(3rem, 8vw, 8.5rem)"
-    fontWeight: 300
-    lineHeight: 0.9
-    letterSpacing: "-0.015em"
+    fontFamily: "Khand, Suisse Intl, ui-sans-serif, system-ui, sans-serif"
+    fontSize: "clamp(3.5rem, 7vw, 8rem)"
+    fontWeight: 600
+    lineHeight: 0.96
+    letterSpacing: "-0.02em"
   headline:
     fontFamily: "Suisse Intl, ui-sans-serif, system-ui, sans-serif"
     fontSize: "clamp(2.25rem, 5vw, 4.5rem)"
@@ -79,14 +79,14 @@ components:
 
 The whole system is a highway interchange at night, rendered in real time. A near-black navy ground, glowing light-trails that converge and morph as you move, and a single orange that reads like a signal, not a decoration. Automotive, run like infrastructure — so the interface is engineered, in motion, and unmistakably serious, the way a control room or a lit interchange is serious. Nothing here is retail, playful, or bought off a shelf.
 
-The atmosphere is carried by a live WebGL line-field that sits behind every page and shifts with scroll. Content floats above it on flat surfaces, separated by thin hairlines and dark legibility scrims rather than boxes and shadows. Type is one family, Suisse Intl, worked through weight and case: a light, lowercase display that states rather than shouts. The result should feel institutional but never sterile — the seriousness of an operator, wrapped in cinematic light.
+The atmosphere is carried by a live WebGL line-field that sits behind every page and shifts with scroll. Content floats above it on flat surfaces, separated by thin hairlines and dark legibility scrims rather than boxes and shadows. Type is two voices: Khand Semibold, a condensed engineered grotesk, carries the hero statement and the top-level titles; Suisse Intl carries everything else. The display voice is confident and automotive without shouting; the body voice stays quiet and light. The result should feel institutional but never sterile — the seriousness of an operator, wrapped in cinematic light.
 
 This system explicitly rejects four things, drawn straight from the brand's anti-references: generic corporate or consulting blandness (stock-photo grey), flashy consumer-startup energy (gradient-hero hype, playfulness, emoji), anything templated or off-the-shelf, and the retail look of a car dealership or showroom.
 
 **Key Characteristics:**
 - Near-black navy ground (`#02040f`) with a live WebGL neon field as the atmosphere
 - A single orange signal (`#ff6340`), used on ≤10% of any screen
-- Suisse Intl throughout; a light, lowercase display is the signature
+- Khand Semibold display voice over Suisse Intl body; the pairing is the signature
 - Flat surfaces — depth comes from light and hairlines, never drop shadows
 - Expressive but disciplined motion; every animation has a reduced-motion path
 
@@ -126,24 +126,38 @@ Signal Orange (`#ff6340`) remains the single dominant energy accent for group-le
 
 ## 3. Typography
 
-**Display Font:** Suisse Intl (Light 300 / Regular 400)
-**Body Font:** Suisse Intl
+**Display Font:** Khand SemiBold 600 (Fontshare, ITF Free Font License — recorded in THIRD_PARTY_ASSETS.md, self-hosted in `app/fonts` / `public/fonts`)
+**Body Font:** Suisse Intl (Light 300 / Regular 400)
 **Label / Mono Font:** JetBrains Mono / `ui-monospace` (data labels and section numbers only)
 
-**Character:** One family, carried by weight and case rather than by mixing typefaces. The display is light-weight and lowercase — quiet confidence, the opposite of a bold all-caps hero.
+**Character:** Two voices with fixed jobs. Khand — a condensed, engineered, automotive grotesk — is the display voice: it carries the hero statement and top-level titles at Semibold 600. Suisse Intl, light and quiet, carries every sentence a visitor actually reads. The contrast between the two is the typographic signature; neither voice ever does the other's job.
+
+### The Display Voice (tokens)
+Shipped in `app/tokens.css` and applied via these tokens only — never hard-code the face:
+- `--font-display`: `"Khand", var(--font-sans)`
+- `--font-display-weight`: `600`
+- `--tracking-display`: `-0.02em`
+- `--fs-display-hero`: `clamp(3.5rem, 7vw, 8rem)` (the homepage hero/section-title scale; other pages keep their own size scale)
+- line-height: `0.96` (`0.96`–`1.0` on multi-line titles)
+
+**Where it applies:** the homepage hero statement and the major homepage section titles (Part of Skelmore, The Model / Three Decades title swap, Five companies one standard, The group in numbers, the partner close), the `/companies` hero h1, and the five `/companies/[slug]` company-name h1s (utility class `.type-display` in `globals.css` for the inner pages, the `.ax-*` display rules in `about.css` for the homepage).
+
+**Where Suisse remains:** all body copy and leads, sub-section headings (h3 and below), values names and cue titles, timeline event copy, stats and fact cards, navigation, footers, forms, and every inner-page element that is not the page's single hero title.
 
 ### Hierarchy
-- **Display** (300, `clamp(3rem, 8vw, 8.5rem)`, line-height 0.9, lowercase): the hero statement only. Lowercase and light is the signature move.
-- **Headline** (300, `clamp(2.25rem, 5vw, 4.5rem)`, line-height 1.02): section titles.
-- **Title** (300, `clamp(1.75rem, 3.4vw, 3rem)`, line-height 1.02): sub-sections.
-- **Body** (400, `clamp(1rem, 1.1vw, 1.125rem)`, line-height 1.7, capped ~68ch): paragraphs.
+- **Display** (Khand 600, `clamp(3.5rem, 7vw, 8rem)`, line-height 0.96, tracking −0.02em): the hero statement and major section titles.
+- **Headline** (Suisse 300, `clamp(2.25rem, 5vw, 4.5rem)`, line-height 1.02): mid-level section titles.
+- **Title** (Suisse 300, `clamp(1.75rem, 3.4vw, 3rem)`, line-height 1.02): sub-sections.
+- **Body** (Suisse 400, `clamp(1rem, 1.1vw, 1.125rem)`, line-height 1.7, capped ~68ch): paragraphs.
 - **Label / Kicker** (600, `0.6875rem`, tracking 0.28em, UPPERCASE): eyebrows and nav.
 - **Mono** (400, `0.66rem`, tracking 0.14em, UPPERCASE): data labels, stat units, section numbers.
 
 ### Named Rules
-**The Lowercase Display Rule.** The hero display is lowercase and Light (300). Never set it in bold or all-caps; the restraint is the voice.
+**The Display Voice Rule.** Khand Semibold 600, applied through the `--font-display` tokens, is reserved for the hero statement and top-level titles — one display title per view. It never sets body copy, sub-headings, labels, or anything longer than a title. (Supersedes the retired One Family and Lowercase Display rules from the pre-elevation system.)
 
-**The One Family Rule.** Suisse Intl for everything. The only second face is a monospace, and only for data, units, and section numbers.
+**The Quiet Body Rule.** Everything a visitor reads as a sentence is Suisse Intl, Light or Regular. The only other face is the monospace, and only for data, units, and section numbers.
+
+**The Clearance Rule.** Pinned or scroll-held display titles own their band: moving copy must keep at least 48px clear of a resting display title (see the heritage timeline hold in `ValuesTimeline.tsx`). Never let body copy cross a display title at rest.
 
 ## 4. Elevation
 
@@ -179,9 +193,9 @@ Flat. There are no drop shadows, no glassmorphism, and no backdrop-blur anywhere
 
 ### Do:
 - **Do** keep Signal Orange (`#ff6340`) to ≤10% of any screen; let its rarity carry the emphasis.
-- **Do** set the hero display lowercase and Light (300).
+- **Do** set hero and top-level titles in the Khand display voice via the `--font-display` tokens; keep every sentence in Suisse.
 - **Do** carry depth with hairlines, scrims, and the WebGL field — light, not shadow.
-- **Do** keep everything in Suisse Intl; reserve mono for data, units, and numbers.
+- **Do** keep all body copy in Suisse Intl; reserve mono for data, units, and numbers, and Khand for display titles only.
 - **Do** give every animation a `prefers-reduced-motion` path; motion is never required to reach content.
 
 ### Don't:

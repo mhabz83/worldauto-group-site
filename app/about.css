@@ -1313,7 +1313,10 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   align-self: flex-start;
   width: min(34rem, 33vw);
   margin-inline-start: calc(50vw + 8vw);
-  padding-block-start: 40svh;
+  /* the copy is scroll-held at this line (see ValuesTimeline); the 21rem
+     floor keeps it >=48px below the pinned heritage title's ~288px bottom
+     on short viewports */
+  padding-block-start: max(40svh, 21rem);
   color: rgba(255, 255, 255, 0.85);
   position: absolute;
   left: 0;

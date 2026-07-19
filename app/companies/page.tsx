@@ -18,7 +18,7 @@ export default function CompaniesPage() {
           <p data-reveal className="type-kicker text-accent">The Companies</p>
           <h1
             data-reveal
-            className="mt-6 max-w-4xl font-light leading-[1.02] text-hi"
+            className="type-display mt-6 max-w-4xl"
             style={{ fontSize: "var(--fs-h1)" }}
           >
             Five companies, one standard.

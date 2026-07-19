@@ -133,6 +133,16 @@ body {
   color: var(--text-hi);
 }
 
+/* display voice — Khand Semibold via the shared tokens (tokens.css). Page-level
+   hero titles only; each page keeps its own size scale. Body copy stays Suisse. */
+.type-display {
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  letter-spacing: var(--tracking-display);
+  line-height: 0.96;
+  color: var(--text-hi);
+}
+
 .type-kicker {
   font-family: var(--font-grotesk);
   font-size: var(--type-kicker);
