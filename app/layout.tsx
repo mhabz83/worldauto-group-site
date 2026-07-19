@@ -13,6 +13,22 @@ export const metadata: Metadata = {
   },
   description:
     "World Automotive Group is the automotive arm of Skelmore. Five operating companies across the UAE and North America: FastTrack, AutoData, Axxion, PAG Direct and Vicimus.",
+  openGraph: {
+    title: "World Automotive Group",
+    description:
+      "We build and run automotive. UAE and North America, since 1994.",
+    url: "https://worldauto.group",
+    siteName: "World Automotive Group",
+    type: "website",
+    images: [{ url: "/og.jpg", width: 1200, height: 630, alt: "World Automotive Group" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "World Automotive Group",
+    description:
+      "We build and run automotive. UAE and North America, since 1994.",
+    images: ["/og.jpg"],
+  },
 };
 
 export default function RootLayout({
