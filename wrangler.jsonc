@@ -2,7 +2,9 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "worldauto-group-site",
   "main": ".open-next/worker.js",
-  "compatibility_date": "2025-03-25",
+  // >= 2025-04-01 so nodejs_compat populates process.env (the contact action
+  // reads RESEND_API_KEY / CONTACT_TO_EMAIL from there)
+  "compatibility_date": "2025-04-02",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "directory": ".open-next/assets",
