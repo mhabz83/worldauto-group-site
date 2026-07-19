@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 import { nav } from "@/content/site";
 
 /* Mobile navigation for inner pages: hamburger toggle + full-screen overlay.
-   Mirrors the homepage journey menu so the chrome feels identical across
-   the site. Renders nothing on md-up (CSS-gated). */
+   Same classes as the homepage journey menu so the chrome is identical
+   across the site. Renders nothing on desktop (CSS-gated). */
 export function SiteHeaderMenu() {
   const [open, setOpen] = useState(false);
 
@@ -26,7 +26,7 @@ export function SiteHeaderMenu() {
     <>
       <button
         type="button"
-        className="site-menu-toggle"
+        className="journey-menu-toggle"
         aria-expanded={open}
         aria-controls="site-mobile-menu"
         aria-label={open ? "Close navigation" : "Open navigation"}
@@ -38,7 +38,7 @@ export function SiteHeaderMenu() {
 
       <nav
         id="site-mobile-menu"
-        className={`site-mobile-menu${open ? " is-open" : ""}`}
+        className={`journey-mobile-menu${open ? " is-open" : ""}`}
         aria-label="Mobile navigation"
         aria-hidden={!open}
       >
@@ -57,7 +57,6 @@ export function SiteHeaderMenu() {
           href={nav.cta.href}
           tabIndex={open ? 0 : -1}
           onClick={() => setOpen(false)}
-          className="site-mobile-menu-cta"
         >
           <span>{nav.cta.label}</span>
           <span aria-hidden="true">→</span>

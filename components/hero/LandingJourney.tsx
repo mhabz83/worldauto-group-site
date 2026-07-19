@@ -107,7 +107,7 @@ function HighlightedText({ text, highlight }: { text: string; highlight: string 
 }
 
 function Header() {
-  const [activeSection, setActiveSection] = useState<NavSection>("group");
+  const [activeSection, setActiveSection] = useState<NavSection | null>("group");
   const [onLight, setOnLight] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const progressRef = useRef<HTMLDivElement>(null);
@@ -136,7 +136,9 @@ function Header() {
         const r = el.getBoundingClientRect();
         if (r.top <= probe && r.bottom >= probe) active = el.dataset.navSection;
       }
-      if (active) setActiveSection(active as NavSection);
+      // Sections without a nav owner (e.g. the numbers stack) clear the
+      // highlight instead of leaving the previous item stuck active.
+      setActiveSection((active as NavSection | undefined) ?? null);
     };
     const schedule = () => {
       cancelAnimationFrame(raf);
@@ -454,27 +456,10 @@ export function LandingJourney() {
         .journey-static-image { object-fit: cover; object-position: center; }
         .journey-webgl { z-index: 1; }
         .journey-copy-layer { position: relative; z-index: 3; }
-        .journey-header { position: fixed; z-index: 8; inset: 0 0 auto; height: 72px; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: clamp(1rem,3vw,3rem); padding: 0 var(--gutter); background: linear-gradient(180deg,rgba(0,8,53,.96),rgba(0,8,53,.58) 70%,transparent); }
         .journey-signal { color: var(--highlight); }
-        .journey-desktop-nav { display: flex; justify-content: center; gap: clamp(1rem,2.4vw,2.5rem); }
-        .journey-desktop-nav a,.journey-header-cta { position: relative; display: inline-flex; min-height: 44px; align-items: center; color: var(--text-mid); text-decoration: none; font-size: .6875rem; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; white-space: nowrap; transition: color var(--dur-fast) ease; }
-        .journey-desktop-nav a::after { position: absolute; right: 0; bottom: 7px; left: 0; height: 1px; background: currentColor; content: ""; transform: scaleX(0); transform-origin: right; transition: transform var(--dur-fast) var(--ease-reveal); }
-        .journey-desktop-nav a:hover,.journey-desktop-nav a:focus-visible,.journey-desktop-nav a.is-active { color: #fff; }
-        .journey-desktop-nav a:hover::after,.journey-desktop-nav a:focus-visible::after,.journey-desktop-nav a.is-active::after { transform: scaleX(1); transform-origin: left; }
-        .journey-header-cta { display: inline-flex; width: fit-content; align-items: center; justify-content: center; min-height: 44px; padding: .72rem 1.05rem; background: var(--highlight); color: #fff; text-decoration: none; border-radius: 4px; transition: background var(--dur-fast) ease, outline-color var(--dur-fast) ease; }
-        .journey-header-cta.is-active { outline: 1px solid rgba(255,255,255,.82); outline-offset: 3px; }
-        .journey-header-cta:hover { background: var(--highlight-hover); }
-        .journey-menu-toggle,.journey-mobile-menu { display: none; }
-        /* Theme flip: the story tail has ui-light sections; the header and the
-           progress rail re-skin so the nav stays legible over paper. */
-        .journey-header { transition: background .45s ease; }
-        .journey-header--light { background: linear-gradient(180deg,rgba(255,255,255,.97),rgba(255,255,255,.66) 70%,transparent); }
-        .journey-header--light .journey-wordmark { color: var(--wag-ink); }
-        .journey-header--light .journey-wordmark > span { color: rgba(7,9,14,.62); }
-        .journey-header--light .journey-desktop-nav a { color: rgba(7,9,14,.66); }
-        .journey-header--light .journey-desktop-nav a:hover,.journey-header--light .journey-desktop-nav a:focus-visible,.journey-header--light .journey-desktop-nav a.is-active { color: var(--wag-ink); }
-        .journey-header--light .journey-header-cta.is-active { outline-color: rgba(7,9,14,.7); }
-        .journey-header--light .journey-menu-toggle { color: var(--wag-ink); }
+        /* Header chrome (.journey-header and friends) is shared with the
+           inner pages and lives in globals.css. Only the homepage-specific
+           progress rail stays here. */
         .journey-progress--light { background: rgba(7,9,14,.16); }
         .journey-progress--light .journey-progress-fill { background: var(--wag-ink); }
         .journey-progress--light .journey-progress-stops span { background: rgba(7,9,14,.45); box-shadow: 0 0 0 2px rgba(255,255,255,.8); }
@@ -533,18 +518,8 @@ export function LandingJourney() {
           .journey-clients-dup { display: none; }
         }
         @media (max-width: 900px) {
-          .journey-header { height: 64px; grid-template-columns: 1fr auto auto; }.journey-desktop-nav { display: none; }.journey-wordmark { font-size: .82rem; }
-          /* Keep the one primary action visible on phones; the menu still lists Partner. */
-          .journey-header-cta { min-height: 40px; padding: .5rem .75rem; font-size: .62rem; letter-spacing: .14em; }
-          .journey-menu-toggle { display: grid; width: 44px; height: 44px; place-content: center; gap: 6px; padding: 0; border: 0; background: transparent; color: #fff; cursor: pointer; }
-          .journey-menu-toggle span { display: block; width: 22px; height: 1px; background: currentColor; transition: transform var(--dur-fast) var(--ease-reveal); }
-          .journey-menu-toggle[aria-expanded="true"] span:first-child { transform: translateY(3.5px) rotate(45deg); }.journey-menu-toggle[aria-expanded="true"] span:last-child { transform: translateY(-3.5px) rotate(-45deg); }
           .journey-progress { top: 63px; }
           .journey-progress-stops { inset-inline: var(--gutter); }
-          .journey-mobile-menu { position: fixed; z-index: 7; inset: 64px 0 0; display: flex; flex-direction: column; padding: clamp(2.5rem,9vh,5rem) var(--gutter); background: rgba(0,5,31,.985); opacity: 0; pointer-events: none; transform: translateY(-12px); transition: opacity var(--dur-med) var(--ease-reveal),transform var(--dur-med) var(--ease-reveal); }
-          .journey-mobile-menu.is-open { opacity: 1; pointer-events: auto; transform: translateY(0); }
-          .journey-mobile-menu a { display: flex; min-height: 58px; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,.13); color: rgba(255,255,255,.72); font-size: clamp(1.35rem,7vw,2rem); font-weight: 300; letter-spacing: -.02em; text-decoration: none; }
-          .journey-mobile-menu a.is-active { color: #fff; }.journey-mobile-menu a span:last-child { color: var(--highlight); font-size: .9em; }
           .journey-static-image { object-position: 65% center; }.journey-stop,.journey-stop--end { align-items: flex-end; justify-content: stretch; padding: 5rem 0 0; }
           .journey-stop:first-child { min-height: 100svh !important; }
           .journey-panel,.journey-stop--end .journey-panel { width: 100%; padding: 5.5rem var(--gutter) max(1.5rem,env(safe-area-inset-bottom)); background: linear-gradient(0deg,rgba(0,5,31,.98),rgba(0,8,53,.84) 62%,transparent); -webkit-mask-image: none; mask-image: none; }
@@ -555,7 +530,6 @@ export function LandingJourney() {
              mode, so the licensed SUV remains visible without animation. */
           .journey-static-frame { opacity: 0 !important; transform: none !important; }
           .journey-stop { min-height: auto !important; padding-block: clamp(5rem,12vw,8rem); }.journey-panel { will-change: auto; opacity: 1 !important; transform: none !important; }
-          .journey-header,.journey-mobile-menu,.journey-menu-toggle span,.journey-desktop-nav a::after { transition: none !important; }
         }
         html.webgl-unavailable .journey-webgl { display: none !important; }
         html.webgl-unavailable .journey-static-frame { opacity: 1 !important; transform: none !important; }

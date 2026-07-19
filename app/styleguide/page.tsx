@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { NavBar } from "@/components/blocks/NavBar";
 import { Footer } from "@/components/blocks/Footer";
 import { Section } from "@/components/blocks/Section";
@@ -44,7 +45,9 @@ function Spec({ title, children }: { title: string; children: React.ReactNode })
   );
 }
 
+/* Internal working page — dev-only, returns the 404 page in production. */
 export default function Styleguide() {
+  if (process.env.NODE_ENV === "production") notFound();
   return (
     <>
       <NavBar />

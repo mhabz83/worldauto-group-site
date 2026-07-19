@@ -321,27 +321,6 @@ html.gsap [data-reveal] {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Header fade — keeps content legible as it scrolls under the fixed  */
-/*  nav. A soft dark gradient sits behind the header, taller than the  */
-/*  bar itself, fading to transparent so it never reads as a solid bar.*/
-/* ------------------------------------------------------------------ */
-.header-fade::before {
-  content: "";
-  position: absolute;
-  inset-inline: 0;
-  top: 0;
-  height: 160%;
-  z-index: -1;
-  pointer-events: none;
-  background: linear-gradient(
-    to bottom,
-    rgba(2, 4, 15, 0.92) 0%,
-    rgba(2, 4, 15, 0.72) 45%,
-    rgba(2, 4, 15, 0) 100%
-  );
-}
-
-/* ------------------------------------------------------------------ */
 /*  Inner-page legibility scrim — layered so the text column stays     */
 /*  readable over the fixed neon artwork at every viewport. Follows    */
 /*  the reading column; the artwork still breathes at the edges.       */
@@ -400,30 +379,148 @@ html.gsap [data-reveal] {
   color: rgba(7, 9, 14, 0.62);
 }
 
-/* Small screens: shrink the wordmark and inner-page CTA so wordmark + CTA
-   + menu toggle all fit within a 320px viewport. (Unlayered so these rules
-   beat the .type-kicker base.) */
+/* Small screens: shrink the wordmark so wordmark + CTA + menu toggle all
+   fit within a 320px viewport. */
 @media (max-width: 767px) {
   .wag-wordmark {
     font-size: 0.85rem;
   }
-  .site-header-cta {
-    padding: 0.55rem 0.8rem;
-    font-size: 0.6rem;
-    letter-spacing: 0.14em;
-  }
 }
 
 /* ------------------------------------------------------------------ */
-/*  Inner-page mobile menu — same language as the homepage journey     */
-/*  menu: full-screen navy overlay, large light links, hairline rules, */
-/*  orange arrows. Toggle collapses to an X while open.                */
+/*  Site header — ONE header design for the whole site. The homepage   */
+/*  journey header is canonical; inner pages reuse the same classes    */
+/*  with the --solid variant (opaque navy, no hero to sit over).       */
+/*  The homepage-only progress rail stays in LandingJourney.           */
 /* ------------------------------------------------------------------ */
-.site-menu-toggle {
+.journey-header {
+  position: fixed;
+  z-index: 8;
+  inset: 0 0 auto;
+  height: 72px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: clamp(1rem, 3vw, 3rem);
+  padding: 0 var(--gutter);
+  background: linear-gradient(180deg, rgba(0, 8, 53, 0.96), rgba(0, 8, 53, 0.58) 70%, transparent);
+  transition: background 0.45s ease;
+}
+.journey-header--solid {
+  background: rgba(0, 8, 53, 0.96);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.journey-desktop-nav {
+  display: flex;
+  justify-content: center;
+  gap: clamp(1rem, 2.4vw, 2.5rem);
+}
+.journey-desktop-nav a,
+.journey-header-cta {
+  position: relative;
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  color: var(--text-mid);
+  text-decoration: none;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: color var(--dur-fast) ease;
+}
+.journey-desktop-nav a::after {
+  position: absolute;
+  right: 0;
+  bottom: 7px;
+  left: 0;
+  height: 1px;
+  background: currentColor;
+  content: "";
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform var(--dur-fast) var(--ease-reveal);
+}
+.journey-desktop-nav a:hover,
+.journey-desktop-nav a:focus-visible,
+.journey-desktop-nav a.is-active {
+  color: #fff;
+}
+.journey-desktop-nav a:hover::after,
+.journey-desktop-nav a:focus-visible::after,
+.journey-desktop-nav a.is-active::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+.journey-header-cta {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.72rem 1.05rem;
+  background: var(--highlight);
+  color: #fff;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background var(--dur-fast) ease, outline-color var(--dur-fast) ease;
+}
+.journey-header-cta.is-active {
+  outline: 1px solid rgba(255, 255, 255, 0.82);
+  outline-offset: 3px;
+}
+.journey-header-cta:hover {
+  background: var(--highlight-hover);
+}
+.journey-menu-toggle,
+.journey-mobile-menu {
   display: none;
 }
-@media (max-width: 767px) {
-  .site-menu-toggle {
+/* Theme flip: the homepage story tail has ui-light sections; the header
+   re-skins so the nav stays legible over paper. */
+.journey-header--light {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(255, 255, 255, 0.66) 70%, transparent);
+}
+.journey-header--light .journey-wordmark {
+  color: var(--wag-ink);
+}
+.journey-header--light .journey-wordmark > span {
+  color: rgba(7, 9, 14, 0.62);
+}
+.journey-header--light .journey-desktop-nav a {
+  color: rgba(7, 9, 14, 0.66);
+}
+.journey-header--light .journey-desktop-nav a:hover,
+.journey-header--light .journey-desktop-nav a:focus-visible,
+.journey-header--light .journey-desktop-nav a.is-active {
+  color: var(--wag-ink);
+}
+.journey-header--light .journey-header-cta.is-active {
+  outline-color: rgba(7, 9, 14, 0.7);
+}
+.journey-header--light .journey-menu-toggle {
+  color: var(--wag-ink);
+}
+@media (max-width: 900px) {
+  .journey-header {
+    height: 64px;
+    grid-template-columns: 1fr auto auto;
+  }
+  .journey-desktop-nav {
+    display: none;
+  }
+  .journey-wordmark {
+    font-size: 0.82rem;
+  }
+  /* Keep the one primary action visible on phones; the menu still lists it. */
+  .journey-header-cta {
+    min-height: 40px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+  }
+  .journey-menu-toggle {
     display: grid;
     width: 44px;
     height: 44px;
@@ -435,73 +532,64 @@ html.gsap [data-reveal] {
     color: #fff;
     cursor: pointer;
   }
-  .site-menu-toggle span {
+  .journey-menu-toggle span {
     display: block;
     width: 22px;
     height: 1px;
     background: currentColor;
     transition: transform var(--dur-fast) var(--ease-reveal);
   }
-  .site-menu-toggle[aria-expanded="true"] span:first-child {
+  .journey-menu-toggle[aria-expanded="true"] span:first-child {
     transform: translateY(3.5px) rotate(45deg);
   }
-  .site-menu-toggle[aria-expanded="true"] span:last-child {
+  .journey-menu-toggle[aria-expanded="true"] span:last-child {
     transform: translateY(-3.5px) rotate(-45deg);
   }
-}
-.site-mobile-menu {
-  position: fixed;
-  z-index: 19;
-  inset: 76px 0 0;
-  display: flex;
-  flex-direction: column;
-  padding: clamp(2rem, 8vh, 4rem) var(--gutter);
-  background: rgba(0, 5, 31, 0.985);
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-12px);
-  transition:
-    opacity var(--dur-med) var(--ease-reveal),
-    transform var(--dur-med) var(--ease-reveal);
-}
-.site-mobile-menu.is-open {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateY(0);
-}
-.site-mobile-menu a {
-  display: flex;
-  min-height: 58px;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.13);
-  color: rgba(255, 255, 255, 0.72);
-  font-size: clamp(1.35rem, 7vw, 2rem);
-  font-weight: 300;
-  letter-spacing: -0.02em;
-  text-decoration: none;
-}
-.site-mobile-menu a:hover,
-.site-mobile-menu a:focus-visible {
-  color: #fff;
-}
-.site-mobile-menu a span:last-child {
-  color: var(--highlight);
-  font-size: 0.9em;
-}
-.site-mobile-menu a.site-mobile-menu-cta {
-  margin-top: 1.5rem;
-  border-bottom: 0;
-  color: var(--highlight);
-}
-@media (min-width: 768px) {
-  .site-mobile-menu {
-    display: none;
+  .journey-mobile-menu {
+    position: fixed;
+    z-index: 7;
+    inset: 64px 0 0;
+    display: flex;
+    flex-direction: column;
+    padding: clamp(2.5rem, 9vh, 5rem) var(--gutter);
+    background: rgba(0, 5, 31, 0.985);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-12px);
+    transition:
+      opacity var(--dur-med) var(--ease-reveal),
+      transform var(--dur-med) var(--ease-reveal);
+  }
+  .journey-mobile-menu.is-open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+  .journey-mobile-menu a {
+    display: flex;
+    min-height: 58px;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.13);
+    color: rgba(255, 255, 255, 0.72);
+    font-size: clamp(1.35rem, 7vw, 2rem);
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    text-decoration: none;
+  }
+  .journey-mobile-menu a.is-active {
+    color: #fff;
+  }
+  .journey-mobile-menu a span:last-child {
+    color: var(--highlight);
+    font-size: 0.9em;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .site-mobile-menu,
-  .site-menu-toggle span {
-    transition: none;
+  .journey-header,
+  .journey-mobile-menu,
+  .journey-menu-toggle span,
+  .journey-desktop-nav a::after {
+    transition: none !important;
   }
 }

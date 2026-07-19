@@ -970,7 +970,9 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   grid-column: 1 / span 5;
   pointer-events: auto;
   border-radius: 5px;
-  background: rgba(13, 27, 66, 0.5);
+  /* Near-opaque navy: the scroll drift can rest this card over the light
+     section background, where the old 50% glass washed the text out. */
+  background: rgba(13, 27, 66, 0.92);
   backdrop-filter: blur(26px);
   -webkit-backdrop-filter: blur(26px);
   color: #fff;

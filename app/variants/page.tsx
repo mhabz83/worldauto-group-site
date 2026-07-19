@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { CinematicHero } from "@/components/blocks/CinematicHero";
 import { HeroMonolith } from "@/components/variants/HeroMonolith";
 import { HeroAurora } from "@/components/variants/HeroAurora";
@@ -24,8 +25,10 @@ function VariantLabel({ tag, name, note }: { tag: string; name: string; note: st
   );
 }
 
-/** Owner picker: four full-screen hero directions, same facts, same tokens. */
+/** Owner picker: four full-screen hero directions, same facts, same tokens.
+    Internal working page — dev-only, returns the 404 page in production. */
 export default function Variants() {
+  if (process.env.NODE_ENV === "production") notFound();
   return (
     <main id="main">
       <div className="flex flex-col justify-between gap-2 px-[var(--gutter)] py-6 sm:flex-row sm:items-center">
