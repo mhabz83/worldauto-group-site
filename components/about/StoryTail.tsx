@@ -23,7 +23,7 @@ import { companies } from "@/content/site";
 import { journeyContent } from "@/components/hero/journeyContent";
 import { ScrollTrigger } from "./engine";
 import { FlickerText, FlickerTitle, GlitchLabel, useRevealManager } from "./reveal";
-import { GlowSvg, CapabilitySvg } from "./svgs";
+import { GlowSvg } from "./svgs";
 import { TeamCarousel, CompaniesCarousel } from "./Carousels";
 import { ValuesTimeline } from "./ValuesTimeline";
 import { CareersCards } from "./CareersCards";
@@ -82,34 +82,9 @@ function StoryOpener() {
 /* ------------------------------------------------------------------ */
 
 function ForesightSection() {
-  const sectionRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    const el = sectionRef.current;
-    if (!el) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      el.classList.add("ax-approach-in");
-      return;
-    }
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) {
-            el.classList.add("ax-approach-in");
-            io.disconnect();
-          }
-        }
-      },
-      { threshold: 0.35 },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-
   return (
     <section
       id="foresight"
-      ref={sectionRef}
       data-ax-theme="dark"
       data-nav-section="group"
       className="ax-section ax-approach"
@@ -139,7 +114,27 @@ function ForesightSection() {
 
         <div className="ax-approach-grid">
           <div className="ax-approach-graphic" data-about-reveal="fade-in">
-            <CapabilitySvg className="ax-cap-svg" />
+            <div className="ax-cap-video-frame">
+              <video
+                className="ax-cap-video"
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                poster="/video/automotive-dna-poster.webp"
+                aria-hidden="true"
+              >
+                <source src="/video/automotive-dna.webm" type="video/webm" />
+                <source src="/video/automotive-dna.mp4" type="video/mp4" />
+              </video>
+              <img
+                className="ax-cap-poster"
+                src="/video/automotive-dna-poster.webp"
+                alt=""
+                aria-hidden="true"
+              />
+            </div>
           </div>
           <ol className="ax-approach-list">
             {approach.capabilities.map((c, i) => (
