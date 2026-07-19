@@ -16,7 +16,7 @@ views the site and feels compelled to reach out. Every angle: design, content, e
 | 7 | Mobile | VERIFIED | No overflow on any new section (390px) |
 | 8 | Shared-link first impression | DONE | Branded OG/Twitter card live (`/og.jpg`) |
 | 9 | Team-page accuracy | CLOSED | Owner decision: site roster/titles are the source of truth |
-| 10 | **Reach-out loop (form delivery)** | **BLOCKED — owner input** | Code complete; requires `RESEND_API_KEY` + `CONTACT_TO_EMAIL` secrets |
+| 10 | Reach-out loop (form delivery) | DONE (2026-07-19) | Live form delivers via Resend; verified end-to-end. Interim inbox: owner's Gmail (Resend account address). Upgrade path: verify wag-me.com in Resend, then flip `CONTACT_TO_EMAIL` to mhabib@wag-me.com and set `CONTACT_FROM_EMAIL` |
 
 ## The one open item (10): activation steps
 
