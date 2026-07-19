@@ -125,7 +125,6 @@ function ForesightSection() {
                 poster="/video/automotive-dna-poster.webp"
                 aria-hidden="true"
               >
-                <source src="/video/automotive-dna.webm" type="video/webm" />
                 <source src="/video/automotive-dna.mp4" type="video/mp4" />
               </video>
               <img
