@@ -16,7 +16,7 @@ export default function NotFound() {
         404 · PAGE NOT FOUND
       </MonoLabel>
       <h1 className="type-editorial max-w-[16ch]">
-        This page does not <em className="serif-italic">exist.</em>
+        This road doesn&apos;t <em className="serif-italic">exist.</em>
       </h1>
       <Link
         href="/"
