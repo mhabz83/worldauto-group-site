@@ -18,6 +18,12 @@ import "./axxion.css";
    cropped and framed on an ember keyline. Every claim traces to axxion.co;
    the site's own cost-outcome figures are held back pending owner sign-off. */
 
+/* Inline low-quality placeholder for the chapter-03 parts-cost plate. The
+   plate is a deep-navy map that, unplaced, reads as an empty black framed box
+   in OG captures and on a fast scroll. This blurred data URI is server-rendered
+   as the image background, so the frame is never empty at rest. */
+const PARTS_BLUR = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAASABIAAD/4QBMRXhpZgAATU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAGKADAAQAAAABAAAADwAAAAD/7QA4UGhvdG9zaG9wIDMuMAA4QklNBAQAAAAAAAA4QklNBCUAAAAAABDUHYzZjwCyBOmACZjs+EJ+/8AAEQgADwAYAwEiAAIRAQMRAf/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC//EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/bAEMABAQEBAQEBgQEBgkGBgYJDAkJCQkMDwwMDAwMDxIPDw8PDw8SEhISEhISEhUVFRUVFRkZGRkZHBwcHBwcHBwcHP/bAEMBBAUFBwcHDAcHDB0UEBQdHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHf/dAAQAAv/aAAwDAQACEQMRAD8A+YrK80/+zJ1liCXI4XyxjcCO/XuMmqMSxSRAyKGdn5YngDoBis2FgjK5Ycc45/LpR552suPvV7vPdHiKFmbms22mWp8mzuFncDlguBnOMfWucxT2kUptx82etRbqximkk3c6JyUpNxVl2P/Z";
+
 const company = companies.find((c) => c.slug === "axxion")!;
 const next = companies[(companies.findIndex((c) => c.slug === "axxion") + 1) % companies.length];
 
@@ -80,7 +86,7 @@ export default function AxxionPage() {
                 </Link>
                 <p className="ax-hero-proof">
                   The UAE&apos;s first dedicated motor claims TPA. More than 75
-                  workshops in a governed repair network, with 40 years of GCC
+                  workshops in an approved repair network, with 40 years of GCC
                   motor experience behind the team.
                 </p>
               </div>
@@ -151,7 +157,7 @@ export default function AxxionPage() {
               </div>
 
               <p className="ax-op-route" data-axr>
-                <strong>Repairs go to a governed network, not an open panel.</strong>{" "}
+                <strong>Repairs go to a managed network, not an open panel.</strong>{" "}
                 More than 75 workshops, allocated on capability and performance,
                 not geography or relationships. Every member holds to transparent
                 pricing, quality standards with post-repair inspection, and
@@ -239,15 +245,17 @@ export default function AxxionPage() {
                     </div>
                     <Image
                       src="/images/axxion/ui-parts-model.png"
-                      alt="Axxion parts-cost model: a world map showing modelled collision-parts inflation by origin region, with the highest bands on China and India"
-                      width={602}
-                      height={384}
+                      alt="Axxion parts-cost model: a world map shading collision-parts cost pressure by origin region, with the highest bands on China and India"
+                      width={1204}
+                      height={768}
+                      placeholder="blur"
+                      blurDataURL={PARTS_BLUR}
                     />
                   </div>
                 </div>
                 <figcaption className="ax-caption">
                   <span aria-hidden />
-                  Modelled parts inflation by origin region
+                  Parts-cost pressure mapped by origin region
                 </figcaption>
               </figure>
             </div>
