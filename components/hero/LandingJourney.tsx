@@ -430,8 +430,8 @@ function Header() {
 /* Per-stop signature scenes. The info card is LOCKED to one position across
    all five company stops; only this layer changes. Each motif follows the
    company's detail-page family in its hue:
-   - FastTrack: forecourt canopy light-trails over the manifest forecourt
-     imagery (#1367FE)
+   - FastTrack: none — scene graphic removed per CEO (2026-07-20); the WebGL
+     road at its camera pose carries the stop
    - AutoData: none here — the WebGL valuation-curve terrain at its camera
      pose IS the motif (#42D7FF)
    - Axxion: none here — the WebGL routing-junction road lines at its camera
@@ -440,27 +440,7 @@ function Header() {
      WebGL road at its camera pose carries the stop
    - Vicimus: none — scene graphic removed per CEO (2026-07-20); the WebGL
      road at its camera pose carries the stop */
-function CompanyScene({ slug }: { slug: string }) {
-  if (slug === "fasttrack") {
-    return (
-      <div className="journey-scene journey-scene--fasttrack" data-journey-scene aria-hidden="true">
-        <div className="journey-ft-frame">
-          <div className="journey-ft-fade">
-            <Image
-              src="/images/forecourt-service-night.png"
-              alt=""
-              fill
-              sizes="(max-width: 900px) 100vw, 68vw"
-              className="journey-ft-img"
-            />
-            <span className="journey-ft-tint" />
-          </div>
-        </div>
-        <span className="journey-ft-trail journey-ft-trail--1" />
-        <span className="journey-ft-trail journey-ft-trail--2" />
-      </div>
-    );
-  }
+function CompanyScene(_: { slug: string }) {
   return null;
 }
 
@@ -788,14 +768,6 @@ export function LandingJourney() {
         }
         /* Signature scenes — the layer that CHANGES while the card holds. */
         .journey-scene { position: absolute; inset: 0; overflow: hidden; pointer-events: none; will-change: transform,opacity; }
-        /* FastTrack: forecourt canopy imagery + blue canopy light-trails */
-        .journey-ft-frame { position: absolute; top: 0; right: 0; bottom: 0; width: 76vw; -webkit-mask-image: linear-gradient(97deg,transparent 0%,#000 36%,#000 100%); mask-image: linear-gradient(97deg,transparent 0%,#000 36%,#000 100%); }
-        .journey-ft-fade { position: absolute; inset: 0; -webkit-mask-image: linear-gradient(180deg,transparent 0%,#000 14%,#000 80%,transparent 100%); mask-image: linear-gradient(180deg,transparent 0%,#000 14%,#000 80%,transparent 100%); }
-        .journey-ft-img { object-fit: cover; object-position: center 38%; opacity: .8; }
-        .journey-ft-tint { position: absolute; inset: 0; background: linear-gradient(200deg,rgba(19,103,254,.26) 0%,rgba(0,8,53,.22) 52%,rgba(0,8,53,.72) 100%); }
-        .journey-ft-trail { position: absolute; right: -8vw; width: 74vw; border-radius: 999px; }
-        .journey-ft-trail--1 { top: 41%; height: 2px; background: linear-gradient(90deg,transparent 4%,rgba(19,103,254,.85) 44%,rgba(140,190,255,.9) 58%,transparent 96%); filter: blur(1px) drop-shadow(0 0 8px rgba(19,103,254,.8)); animation: journeyStreakDrift 24s ease-in-out -6s infinite alternate; }
-        .journey-ft-trail--2 { top: 46%; height: 88px; background: linear-gradient(95deg,transparent 10%,rgba(19,103,254,.16) 48%,transparent 90%); filter: blur(26px); animation: journeyStreakDrift 30s ease-in-out infinite alternate-reverse; }
         .journey-stop--center { justify-content: center; }
         .journey-stop--center .journey-panel { width: min(40rem,64vw); text-align: center; background: linear-gradient(180deg,rgba(0,6,42,.32) 0%,rgba(0,8,53,.9) 26%,rgba(0,8,53,.9) 74%,rgba(0,6,42,.32) 100%); }
         .journey-stop--center .journey-panel h2 { max-width: none; }
@@ -877,15 +849,6 @@ export function LandingJourney() {
           .journey-static-image { object-position: 65% center; }.journey-stop,.journey-stop--end { align-items: flex-end; justify-content: stretch; padding: 5rem 0 0; }
           .journey-stop:first-child { min-height: 100svh !important; }
           .journey-panel,.journey-stop--end .journey-panel,.journey-stop--kind-company .journey-panel { width: 100%; padding: 5.5rem var(--gutter) max(1.5rem,env(safe-area-inset-bottom)); background: linear-gradient(0deg,rgba(0,5,31,.98),rgba(0,8,53,.84) 62%,transparent); -webkit-mask-image: none; mask-image: none; }
-          /* Scenes move into the free upper half of the mobile stop; the
-             bottom-sheet card owns the lower half unchanged. */
-          /* the phone crop is tall and narrow: hold the frame to the free
-             upper half and aim at the pump bays (right of the image centre) */
-          .journey-ft-frame { width: 100%; bottom: auto; height: 64%; -webkit-mask-image: none; mask-image: none; }
-          .journey-ft-img { object-position: 66% center; }
-          .journey-ft-trail { right: -14vw; width: 128vw; }
-          .journey-ft-trail--1 { top: 30%; }
-          .journey-ft-trail--2 { top: 34%; }
           .journey-panel h2 { font-size: clamp(2.45rem,12vw,4.6rem); }
           /* first stop is 100svh on mobile: park the cue at the true bottom
              and clear room for it under the statement. The anchor statement
@@ -906,7 +869,6 @@ export function LandingJourney() {
           .journey-scroll-cue { display: none; }
           /* scenes hold still and stay visible (no GSAP in this mode) */
           .journey-scene { will-change: auto; opacity: 1 !important; transform: none !important; }
-          .journey-ft-trail { animation: none; }
         }
         html.webgl-unavailable .journey-webgl { display: none !important; }
         html.webgl-unavailable .journey-static-frame { opacity: 1 !important; transform: none !important; }
