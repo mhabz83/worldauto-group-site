@@ -1,0 +1,797 @@
+/* ==========================================================================
+   Vicimus model page (/companies/vicimus).
+   Same structure grammar as the AutoData model page (numbered chapters, a
+   left progress rail, alternating dark/light slides, keyline media plates,
+   a slow rhythm), but this is Vicimus's own page, not a recolour: its hue is
+   the Vicimus green (--co, #34E39B), its hero is the group's Madar neon render
+   graded to green, its plates are real Vicimus product captures, and its
+   third chapter is a horizontal ownership-journey band, not AutoData's
+   vertical record timeline. Everything sits on app/tokens.css. Orange stays
+   the action colour. Group-level positioning only: no client counts or names.
+
+   Composition varies chapter to chapter so the page never reads as one
+   repeated template: Ch01 dark, copy-left, the retention dashboard bleeds off
+   the right; Ch02 light, the reporting board runs large on the LEFT with copy
+   to its right; Ch03 dark, a centred statement over a horizontal journey line.
+   ========================================================================== */
+
+/* ---- S0 · Hero ----------------------------------------------------------- */
+.vc-hero {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  overflow: clip;
+}
+.vc-hero-bg {
+  position: absolute;
+  inset: 0;
+}
+.vc-hero-bg img {
+  object-fit: cover;
+}
+/* Navy tint seats the green render on our page: deeper top and bottom-left
+   for the header and the title, open on the right so the neon breathes. */
+.vc-hero-tint {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(2, 4, 15, 0.66) 0%, rgba(2, 4, 15, 0.14) 30%, rgba(2, 4, 15, 0.2) 58%, rgba(2, 4, 15, 0.94) 100%),
+    radial-gradient(62% 52% at 14% 88%, rgba(2, 4, 15, 0.7) 0%, transparent 72%);
+}
+.vc-hero-content {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 8.5rem var(--gutter) clamp(3rem, 7vh, 5rem);
+}
+.vc-hero-foot {
+  margin-top: clamp(3rem, 12vh, 8rem);
+  max-width: 47rem;
+}
+.vc-hero-rule {
+  margin-top: 0.9rem;
+  border-top: 1px solid var(--hairline-strong);
+}
+.vc-hero-title {
+  margin-top: 1.4rem;
+  font-size: var(--fs-display-hero);
+  text-transform: uppercase;
+}
+.vc-hero-signal {
+  margin-top: 0.9rem;
+  color: #fff;
+  font-size: clamp(1.35rem, 2.6vw, 2.1rem);
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+.vc-hero-sub {
+  margin-top: 1.4rem;
+  max-width: 48ch;
+  color: var(--text-mid);
+  font-size: clamp(1rem, 1.4vw, 1.15rem);
+  line-height: 1.6;
+}
+/* One primary action beside one real proof line, not a button pair. */
+.vc-hero-action {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.1rem 1.6rem;
+  margin-top: 1.9rem;
+}
+.vc-hero-proof {
+  max-width: 34ch;
+  padding-left: 1.05rem;
+  border-left: 1px solid color-mix(in srgb, var(--co) 48%, transparent);
+  color: var(--text-mid);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+/* ---- Chapter rail (left edge, desktop): the page's single ordinal ------- */
+.vc-chapters {
+  position: relative;
+}
+.vc-rail {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: clamp(3.4rem, 5vw, 5rem);
+  z-index: 4;
+  pointer-events: none;
+}
+.vc-rail-inner {
+  position: sticky;
+  top: 50vh;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding-left: clamp(0.8rem, 1.4vw, 1.4rem);
+  opacity: 0;
+  transition: opacity var(--dur-med) var(--ease-reveal);
+}
+.vc-rail[data-visible] .vc-rail-inner {
+  opacity: 1;
+}
+.vc-rail-track {
+  position: relative;
+  width: 1px;
+  height: 200px;
+  background: rgba(140, 160, 190, 0.28);
+}
+.vc-rail-fill {
+  position: absolute;
+  inset: 0;
+  transform-origin: top;
+  background: var(--co);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--co) 65%, transparent);
+}
+.vc-rail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.vc-rail-list a {
+  pointer-events: auto;
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  text-decoration: none;
+}
+.vc-rail-num {
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  font-size: 1.05rem;
+  line-height: 1;
+  color: rgba(150, 168, 196, 0.66);
+  transition: color var(--dur-fast) ease;
+}
+.vc-rail-label {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(150, 168, 196, 0.55);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity var(--dur-fast) ease, transform var(--dur-fast) ease, color var(--dur-fast) ease;
+  white-space: nowrap;
+}
+.vc-rail-list a[aria-current] .vc-rail-num {
+  color: var(--co);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--co) 55%, transparent);
+}
+.vc-rail-list a:hover .vc-rail-label,
+.vc-rail-list a:focus-visible .vc-rail-label {
+  opacity: 1;
+  transform: translateX(0);
+}
+.vc-rail-list a[aria-current] .vc-rail-label {
+  color: #fff;
+}
+/* over the light chapter the rail neutrals flip to ink */
+.vc-rail[data-on-light] .vc-rail-num {
+  color: rgba(7, 9, 14, 0.4);
+}
+.vc-rail[data-on-light] .vc-rail-label {
+  color: rgba(7, 9, 14, 0.45);
+}
+.vc-rail[data-on-light] .vc-rail-list a[aria-current] .vc-rail-num {
+  color: color-mix(in srgb, var(--co) 55%, var(--wag-ink));
+  text-shadow: none;
+}
+.vc-rail[data-on-light] .vc-rail-list a[aria-current] .vc-rail-label {
+  color: var(--wag-ink);
+}
+.vc-rail[data-on-light] .vc-rail-track {
+  background: rgba(7, 9, 14, 0.16);
+}
+/* phone: slim progress bar under the fixed header */
+.vc-rail-bar {
+  display: none;
+}
+@media (max-width: 899px) {
+  .vc-rail {
+    display: none;
+  }
+  .vc-rail-bar {
+    display: block;
+    position: fixed;
+    z-index: 7;
+    top: 64px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: transparent;
+    opacity: 0;
+    transition: opacity var(--dur-med) ease;
+    pointer-events: none;
+  }
+  .vc-rail-bar[data-visible] {
+    opacity: 1;
+  }
+  .vc-rail-bar span {
+    display: block;
+    height: 100%;
+    transform-origin: left;
+    background: var(--co);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--co) 60%, transparent);
+  }
+}
+
+/* ---- Chapter slides ------------------------------------------------------- */
+.vc-ch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 92svh;
+  padding: clamp(5rem, 12vh, 8rem) var(--gutter);
+  scroll-margin-top: 5rem;
+}
+.vc-ch--dark {
+  background: linear-gradient(180deg, rgba(2, 4, 15, 0.94) 0%, rgba(4, 6, 26, 0.96) 100%);
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+}
+.vc-ch--light {
+  background: var(--wag-paper);
+  color: var(--text-mid);
+  overflow: clip;
+}
+.vc-ch-bg {
+  position: absolute;
+  inset: 0;
+  opacity: 0.9;
+}
+.vc-ch-bg img {
+  object-fit: cover;
+}
+.vc-ch-inner {
+  position: relative;
+  width: 100%;
+  max-width: 90rem;
+  margin-inline: auto;
+  display: grid;
+  gap: clamp(2.5rem, 5vw, 5rem);
+  align-items: center;
+}
+@media (min-width: 900px) {
+  .vc-ch {
+    padding-left: calc(var(--gutter) + clamp(2.4rem, 4vw, 4rem));
+  }
+}
+
+/* 01 · dark, image-forward: narrow copy at the left, the retention dashboard
+   runs large and bleeds off the right gutter. */
+.vc-ch-inner--bleed {
+  max-width: none;
+  grid-template-columns: minmax(0, 22rem) minmax(0, 1fr);
+  gap: clamp(2rem, 4vw, 4rem);
+}
+@media (min-width: 900px) {
+  .vc-ch--01 .vc-ch-copy {
+    border-right: 1px solid var(--hairline);
+    padding-right: clamp(2rem, 4vw, 4rem);
+  }
+  .vc-plate--bleed {
+    margin-right: calc(-1 * var(--gutter));
+  }
+}
+
+/* 02 · light, media-led: the wide reporting board runs large on the LEFT, copy
+   to its right. Opposite side and opposite tone to Ch01. */
+.vc-ch-inner--media-left {
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+}
+@media (min-width: 900px) {
+  .vc-ch--02 .vc-plate {
+    margin-left: calc(-1 * clamp(1rem, 3vw, 3rem));
+  }
+  .vc-ch--02 .vc-ch-copy {
+    padding-left: clamp(1rem, 2vw, 2rem);
+  }
+}
+
+/* 03 · dark, text-forward: a centred intro over one wide horizontal journey. */
+.vc-ch-inner--stack {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 74rem;
+  gap: clamp(2.6rem, 5vw, 3.6rem);
+}
+
+.vc-ch-title {
+  font-size: clamp(2.4rem, 4.6vw, 4.2rem);
+  text-transform: uppercase;
+}
+.vc-ch-lead {
+  margin-top: 1rem;
+  max-width: 42ch;
+  color: #fff;
+  font-size: clamp(1.15rem, 1.9vw, 1.5rem);
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+.vc-ch--light .vc-ch-lead {
+  color: var(--wag-ink);
+}
+.vc-ch-body {
+  margin-top: 1.4rem;
+  max-width: 46ch;
+  color: var(--text-mid);
+}
+.vc-ch-copy--center {
+  max-width: 50rem;
+  margin-inline: auto;
+  text-align: center;
+}
+.vc-ch-copy--center .vc-ch-lead,
+.vc-ch-copy--center .vc-ch-body {
+  margin-inline: auto;
+}
+.vc-ch-body--wide {
+  max-width: 62ch;
+}
+
+/* ---- Media plates --------------------------------------------------------- */
+.vc-plate {
+  margin: 0;
+}
+/* Dark slides: green keyline monitor grammar. 1px stroke, 10px radius, 8px
+   inset gap, soft glow seating the plate on the navy. */
+.vc-frame {
+  border: 1px solid color-mix(in srgb, var(--co) 55%, transparent);
+  border-radius: 10px;
+  padding: 8px;
+  background: rgba(2, 4, 15, 0.5);
+  box-shadow:
+    0 0 44px color-mix(in srgb, var(--co) 12%, transparent),
+    0 28px 64px rgba(0, 0, 0, 0.5);
+}
+/* Light slide (Ch02): the same keyline on a bright card so the board reads as
+   a document on paper, with a soft grounded shadow instead of a glow. */
+.vc-frame--light {
+  border: 1px solid color-mix(in srgb, var(--co) 42%, transparent);
+  background: #fff;
+  box-shadow:
+    0 0 0 1px rgba(7, 9, 14, 0.02),
+    0 30px 60px rgba(7, 9, 14, 0.16);
+}
+.vc-browser {
+  border-radius: 5px;
+  overflow: hidden;
+  background: #fff;
+}
+.vc-browser-label {
+  padding: 0.6rem 0.95rem;
+  background: var(--wag-mist);
+  border-bottom: 1px solid rgba(7, 9, 14, 0.08);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(7, 9, 14, 0.55);
+}
+.vc-browser img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: saturate(0.9) brightness(0.97) contrast(1.02);
+}
+.vc-frame--light .vc-browser img {
+  filter: saturate(0.94) contrast(1.02);
+}
+.vc-caption {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 1rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-low);
+}
+.vc-ch--light .vc-caption {
+  color: var(--text-low);
+}
+.vc-caption > span {
+  width: 1.6rem;
+  height: 1px;
+  background: var(--co);
+  flex: none;
+}
+
+/* ---- Ch03 · the horizontal ownership-journey band ------------------------ */
+/* One green line runs left to right through five stage ticks; the label and
+   its line sit under each tick. On phones it folds to a vertical spine. This
+   is the page's own device, distinct from the vertical record timeline on the
+   AutoData page. */
+.vc-journey-wrap {
+  width: 100%;
+  max-width: 68rem;
+  margin-inline: auto;
+  border-radius: 10px;
+  padding: clamp(1.8rem, 3.4vw, 2.8rem) clamp(1.4rem, 3vw, 2.8rem) clamp(1.6rem, 3vw, 2.4rem);
+  background: linear-gradient(180deg, var(--wag-navy-800) 0%, var(--wag-navy-700) 140%);
+  border: 1px solid color-mix(in srgb, var(--co) 22%, transparent);
+}
+.vc-journey {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: clamp(0.8rem, 1.6vw, 1.6rem);
+}
+/* the connective green line through the tick row */
+.vc-journey::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 0.43rem;
+  left: 6%;
+  right: 6%;
+  height: 1px;
+  background: color-mix(in srgb, var(--co) 34%, transparent);
+  transform-origin: left;
+}
+.vc-journey li {
+  position: relative;
+  padding-top: 1.7rem;
+}
+.vc-journey-tick {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  width: 0.86rem;
+  height: 0.86rem;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--co) 85%, transparent);
+  background: var(--co);
+  box-shadow: 0 0 11px color-mix(in srgb, var(--co) 55%, transparent);
+}
+.vc-journey h3 {
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: 1.1rem;
+}
+.vc-journey p {
+  margin-top: 0.4rem;
+  font-size: 0.86rem;
+  color: var(--text-low);
+  line-height: 1.5;
+}
+.vc-journey-note {
+  margin-top: 1.4rem;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-low);
+}
+
+/* ---- Action buttons ------------------------------------------------------- */
+.vc-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 4px;
+  padding: 0.85rem 1.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease;
+}
+.vc-btn--solid {
+  background: var(--highlight);
+  color: #fff;
+}
+.vc-btn--solid:hover {
+  background: var(--highlight-hover);
+}
+.vc-btn--ghost {
+  color: #fff;
+  border: 1px solid color-mix(in srgb, var(--co) 55%, transparent);
+  background: color-mix(in srgb, var(--co) 8%, transparent);
+}
+.vc-btn--ghost:hover {
+  border-color: var(--co);
+  background: color-mix(in srgb, var(--co) 16%, transparent);
+}
+.vc-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  margin-top: 1.8rem;
+}
+
+/* ---- Group-level motif band (reuses the network plate) ------------------- */
+.vc-band {
+  position: relative;
+  overflow: hidden;
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+  min-height: clamp(19rem, 38vw, 26rem);
+  display: flex;
+  align-items: flex-end;
+  background: linear-gradient(180deg, #02040f 0%, #04061a 100%);
+}
+.vc-band-inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding: clamp(2rem, 5vw, 3.5rem) var(--gutter);
+  max-width: 82rem;
+  margin-inline: auto;
+}
+.vc-band-line {
+  margin-top: 0.8rem;
+  max-width: 40ch;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: clamp(1.15rem, 1.9vw, 1.6rem);
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+.vc-band-line b {
+  color: var(--co);
+  font-weight: 300;
+}
+
+/* ---- Standing: how it is built and how it is run ------------------------- */
+.vc-standing {
+  position: relative;
+  background: linear-gradient(180deg, var(--wag-navy-900) 0%, var(--wag-navy-800) 100%);
+  border-top: 1px solid var(--hairline);
+  padding: clamp(4.5rem, 10vh, 7rem) var(--gutter);
+}
+.vc-standing-inner {
+  max-width: 82rem;
+  margin-inline: auto;
+}
+.vc-standing-title {
+  margin-top: 0.5rem;
+  font-size: clamp(2.2rem, 4.4vw, 3.8rem);
+  text-transform: uppercase;
+  line-height: 0.98;
+}
+.vc-standing-cols {
+  margin-top: clamp(2.4rem, 5vw, 3.5rem);
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: clamp(2rem, 5vw, 4.5rem);
+}
+.vc-standing-h {
+  margin-bottom: 1.5rem;
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  text-transform: uppercase;
+  font-size: 1.35rem;
+  letter-spacing: 0.03em;
+  color: #fff;
+}
+.vc-built-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.vc-built-list li {
+  padding: 1.05rem 0;
+  color: var(--text-mid);
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+.vc-built-list li + li {
+  border-top: 1px solid var(--hairline);
+}
+.vc-built-list strong {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: #fff;
+  font-weight: 600;
+}
+.vc-standing-lead {
+  max-width: 34ch;
+  color: #fff;
+  font-size: clamp(1.15rem, 1.7vw, 1.45rem);
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+}
+.vc-standing-list {
+  margin: 1.7rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 1rem;
+  max-width: 44ch;
+}
+.vc-standing-list li {
+  padding-top: 1rem;
+  border-top: 1px solid var(--hairline);
+  color: var(--text-low);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+.vc-standing-list strong {
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ---- Closing call to action ---------------------------------------------- */
+.vc-close-line {
+  margin-top: 1rem;
+  max-width: 20ch;
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  text-transform: uppercase;
+  font-size: clamp(2.2rem, 5vw, 4rem);
+  line-height: 0.98;
+}
+.vc-close-body {
+  margin-top: 1.3rem;
+  max-width: 44ch;
+  color: var(--text-mid);
+  font-size: clamp(1.05rem, 1.6vw, 1.25rem);
+  line-height: 1.55;
+}
+.vc-contact {
+  margin-top: 2rem;
+  color: var(--text-low);
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+}
+
+/* ---- Reveal: visible default, animation enhances ------------------------- */
+.vc-page [data-adr] {
+  opacity: 1;
+  transform: none;
+}
+@keyframes vc-rise {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes vc-plate-in {
+  from { opacity: 0; transform: translateY(30px) scale(0.965); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes vc-slide-right {
+  from { opacity: 0; transform: translateX(-40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes vc-draw {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+@keyframes vc-tick-in {
+  from { opacity: 0; transform: scale(0.2); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes vc-rail-in {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .vc-page [data-adr].is-in {
+    animation: vc-rise var(--dur-reveal, 0.7s) var(--ease-reveal) both;
+  }
+  .vc-page .vc-plate[data-adr].is-in {
+    animation: vc-plate-in 0.9s var(--ease-reveal) both;
+  }
+  /* Ch02 (light): the board slides in from the left while the copy rises, so
+     it does not share the dark slides' single up-fade. */
+  .vc-ch--02 .vc-plate[data-adr].is-in {
+    animation: vc-slide-right 0.95s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .vc-ch--02 .vc-ch-copy[data-adr].is-in {
+    animation: vc-rise 0.95s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  /* Ch03 journey: the connective line draws left to right, then the ticks
+     light in sequence along it. */
+  .vc-page .vc-plate[data-adr].is-in .vc-journey::before {
+    animation: vc-draw 1s var(--ease-reveal) 0.15s both;
+  }
+  .vc-page .vc-plate[data-adr].is-in .vc-journey-tick {
+    animation: vc-tick-in 0.42s var(--ease-reveal) both;
+  }
+  .vc-plate.is-in .vc-journey li:nth-child(1) .vc-journey-tick { animation-delay: 0.35s; }
+  .vc-plate.is-in .vc-journey li:nth-child(2) .vc-journey-tick { animation-delay: 0.50s; }
+  .vc-plate.is-in .vc-journey li:nth-child(3) .vc-journey-tick { animation-delay: 0.65s; }
+  .vc-plate.is-in .vc-journey li:nth-child(4) .vc-journey-tick { animation-delay: 0.80s; }
+  .vc-plate.is-in .vc-journey li:nth-child(5) .vc-journey-tick { animation-delay: 0.95s; }
+
+  /* Hero opening move: the keyline draws, then the lockup rises in sequence. */
+  .vc-hero .co-kicker { animation: vc-rise 0.8s var(--ease-reveal) 0.05s both; }
+  .vc-hero-rule {
+    transform-origin: left center;
+    animation: vc-draw 1.1s var(--ease-reveal) 0.18s both;
+  }
+  .vc-hero-title { animation: vc-rise 0.9s var(--ease-reveal) 0.36s both; }
+  .vc-hero-signal { animation: vc-rise 0.9s var(--ease-reveal) 0.48s both; }
+  .vc-hero-sub { animation: vc-rise 0.9s var(--ease-reveal) 0.58s both; }
+  .vc-hero-action { animation: vc-rise 0.9s var(--ease-reveal) 0.68s both; }
+
+  .vc-rail[data-visible] .vc-rail-list li {
+    animation: vc-rail-in 0.5s var(--ease-reveal) both;
+  }
+  .vc-rail[data-visible] .vc-rail-list li:nth-child(1) { animation-delay: 0.06s; }
+  .vc-rail[data-visible] .vc-rail-list li:nth-child(2) { animation-delay: 0.14s; }
+  .vc-rail[data-visible] .vc-rail-list li:nth-child(3) { animation-delay: 0.22s; }
+}
+
+/* ---- Responsive ----------------------------------------------------------- */
+@media (max-width: 899px) {
+  .vc-ch {
+    min-height: 0;
+  }
+  .vc-ch-inner,
+  .vc-ch-inner--bleed,
+  .vc-ch-inner--media-left,
+  .vc-ch-inner--stack {
+    grid-template-columns: 1fr;
+  }
+  /* copy reads first on phones, media follows */
+  .vc-ch--02 .vc-plate {
+    order: 2;
+    margin-left: 0;
+  }
+  .vc-ch--02 .vc-ch-copy {
+    order: 1;
+  }
+  .vc-plate--bleed {
+    margin-right: 0;
+  }
+  /* the journey folds to a vertical spine */
+  .vc-journey {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .vc-journey::before {
+    top: clamp(1.4rem, 4vw, 1.8rem);
+    bottom: 1rem;
+    left: 0.4rem;
+    right: auto;
+    width: 1px;
+    height: auto;
+  }
+  .vc-journey li {
+    padding: 1.1rem 0 1.1rem 1.7rem;
+  }
+  .vc-journey li + li {
+    border-top: 1px solid var(--hairline);
+  }
+  .vc-journey-tick {
+    top: 1.3rem;
+  }
+  .vc-standing-cols {
+    grid-template-columns: 1fr;
+    gap: 2.6rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vc-rail-inner,
+  .vc-rail-bar,
+  .vc-rail-num,
+  .vc-rail-label {
+    transition: none;
+  }
+}
