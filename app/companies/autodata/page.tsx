@@ -4,6 +4,7 @@ import Link from "next/link";
 import { PageShell, Scrim } from "@/components/site/PageShell";
 import { companies } from "@/content/site";
 import { ChapterRail } from "./ChapterRail";
+import { Reveals } from "./Reveals";
 import "../companies.css";
 import "./autodata.css";
 
@@ -28,6 +29,7 @@ export default function AutoDataPage() {
   return (
     <PageShell hue={company.hue}>
       <div className="co-page ad-page" style={{ "--co": company.hue } as React.CSSProperties}>
+        <Reveals />
         {/* S0 · Hero: the salvaged Madar neon render, full bleed, under our
             navy tint. Kicker over a full-width hairline, then the Khand
             display name, Madar's hero grammar in the WAG voice. */}
@@ -105,7 +107,7 @@ export default function AutoDataPage() {
               real product capture right inside the cyan keyline frame. */}
           <section id="valuations" className="ad-ch ad-ch--dark">
             <div className="ad-ch-inner">
-              <div className="ad-ch-copy" data-reveal>
+              <div className="ad-ch-copy" data-adr>
                 <p className="ad-ch-num" aria-hidden>01</p>
                 <p className="co-kicker">Chapter 01 · Valuations</p>
                 <h2 className="type-display ad-ch-title">Valuations</h2>
@@ -125,7 +127,7 @@ export default function AutoDataPage() {
                   <li>A faster, cleaner appraisal</li>
                 </ul>
               </div>
-              <figure className="ad-plate" data-reveal>
+              <figure className="ad-plate" data-adr>
                 <div className="ad-frame">
                   <div className="ad-browser">
                     <div className="ad-browser-bar" aria-hidden>
@@ -160,7 +162,7 @@ export default function AutoDataPage() {
               />
             </div>
             <div className="ad-ch-inner ad-ch-inner--flip">
-              <div className="ad-insp-media" data-reveal>
+              <div className="ad-insp-media" data-adr>
                 <div className="ad-tablet">
                   <Image
                     src="/images/autodata/ui-carantee-inspection.png"
@@ -176,7 +178,7 @@ export default function AutoDataPage() {
                   <li><span>04</span>Road test</li>
                 </ol>
               </div>
-              <div className="ad-ch-copy" data-reveal>
+              <div className="ad-ch-copy" data-adr>
                 <p className="ad-ch-num" aria-hidden>02</p>
                 <p className="co-kicker">Chapter 02 · Inspections</p>
                 <h2 className="type-display ad-ch-title">Inspections</h2>
@@ -205,7 +207,7 @@ export default function AutoDataPage() {
               cyan ticks on our tokens. */}
           <section id="vehicle-history" className="ad-ch ad-ch--dark">
             <div className="ad-ch-inner">
-              <div className="ad-ch-copy" data-reveal>
+              <div className="ad-ch-copy" data-adr>
                 <p className="ad-ch-num" aria-hidden>03</p>
                 <p className="co-kicker">Chapter 03 · Vehicle history</p>
                 <h2 className="type-display ad-ch-title">Vehicle history</h2>
@@ -227,7 +229,7 @@ export default function AutoDataPage() {
                   <li>North America and Europe data</li>
                 </ul>
               </div>
-              <figure className="ad-plate" data-reveal>
+              <figure className="ad-plate" data-adr>
                 <div className="ad-frame">
                   <ol className="ad-timeline">
                     <li>
@@ -303,14 +305,14 @@ export default function AutoDataPage() {
             both of which stay out until the owner verifies them. */}
         <section className="ad-standing" aria-label="AutoData standing">
           <div className="ad-standing-inner">
-            <div className="ad-standing-head" data-reveal>
+            <div className="ad-standing-head" data-adr>
               <p className="co-kicker">Trusted and recognised</p>
               <h2 className="type-display ad-standing-title">
                 The record<br />behind the data
               </h2>
             </div>
             <div className="ad-standing-cols">
-              <div data-reveal>
+              <div data-adr>
                 <p className="ad-standing-label">
                   <span aria-hidden />
                   Awarded
@@ -339,7 +341,7 @@ export default function AutoDataPage() {
                   </li>
                 </ul>
               </div>
-              <div data-reveal>
+              <div data-adr>
                 <p className="ad-standing-label">
                   <span aria-hidden />
                   Recognised
@@ -381,15 +383,15 @@ export default function AutoDataPage() {
         <section className="relative px-[var(--gutter)] py-24">
           <Scrim />
           <div className="relative max-w-4xl">
-            <p data-reveal className="co-kicker">Start here</p>
-            <p data-reveal className="ad-close-line">
+            <p data-adr className="co-kicker">Start here</p>
+            <p data-adr className="ad-close-line">
               Put trusted vehicle data to work.
             </p>
-            <p data-reveal className="ad-close-body">
+            <p data-adr className="ad-close-body">
               Tell us the decision you need to get right. We will show you the
               data behind it.
             </p>
-            <div data-reveal className="ad-cta-row">
+            <div data-adr className="ad-cta-row">
               <Link href="/contact" className="ad-btn ad-btn--solid">
                 Book a demo
               </Link>
@@ -402,7 +404,7 @@ export default function AutoDataPage() {
                 Visit {company.urlLabel} ↗
               </a>
             </div>
-            <p data-reveal className="ad-contact">
+            <p data-adr className="ad-contact">
               Al Shafar Investment Building, Dubai, United Arab Emirates. +971
               (0)4 323 0583. info@autodata.ae.
             </p>

@@ -438,14 +438,36 @@
 .ad-timeline li + li {
   border-top: 1px solid var(--hairline);
 }
+/* Cyan connector spine: a continuous hairline running through the node column
+   so the ticks read as a sequence (what one number unlocks), not a to-do list.
+   Trimmed at the first and last nodes; the filled nodes sit on top of it. */
+.ad-timeline li::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  left: 0.3rem;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: color-mix(in srgb, var(--co) 30%, transparent);
+}
+.ad-timeline li:first-child::before {
+  top: 1.76rem;
+}
+.ad-timeline li:last-child::before {
+  bottom: calc(100% - 1.76rem);
+}
 .ad-timeline-tick {
+  position: relative;
+  z-index: 1;
   flex: none;
-  width: 0.85rem;
-  height: 0.85rem;
-  margin-top: 0.35rem;
-  border: 1px solid color-mix(in srgb, var(--co) 80%, transparent);
-  background: color-mix(in srgb, var(--co) 18%, transparent);
-  box-shadow: 0 0 10px color-mix(in srgb, var(--co) 35%, transparent);
+  width: 0.62rem;
+  height: 0.62rem;
+  margin-top: 0.4rem;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--co) 85%, transparent);
+  background: var(--co);
+  box-shadow: 0 0 11px color-mix(in srgb, var(--co) 55%, transparent);
 }
 .ad-timeline h3 {
   color: #fff;
@@ -626,6 +648,74 @@
   color: var(--text-low);
   font-size: 0.82rem;
   letter-spacing: 0.02em;
+}
+
+/* ---- Reveal: visible default, animation enhances ------------------------- */
+/* This page is deliberately OUTSIDE the site-wide [data-reveal] system, which
+   hides elements (opacity 0) until scroll reveals them and so ships blank
+   sections in static captures, OG previews, print and to crawlers. Here every
+   reveal target is fully visible by default; the .is-in class (added by
+   Reveals.tsx as an element scrolls in) only plays an entrance whose end state
+   equals this default. Anything never reached simply stays visible. */
+.ad-page [data-adr] {
+  opacity: 1;
+  transform: none;
+}
+
+@keyframes ad-rise {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes ad-plate-in {
+  from { opacity: 0; transform: translateY(30px) scale(0.965); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes ad-draw {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+@keyframes ad-rail-in {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* copy blocks rise and fade */
+  .ad-page [data-adr].is-in {
+    animation: ad-rise var(--dur-reveal, 0.7s) var(--ease-reveal) both;
+  }
+  /* media plates draw up and scale rather than fade flat */
+  .ad-page .ad-plate[data-adr].is-in {
+    animation: ad-plate-in 0.9s var(--ease-reveal) both;
+  }
+  /* chapter chips stagger in under their copy */
+  .ad-page [data-adr].is-in .co-chips li {
+    animation: ad-rise 0.55s var(--ease-reveal) both;
+  }
+  .ad-page [data-adr].is-in .co-chips li:nth-child(1) { animation-delay: 0.14s; }
+  .ad-page [data-adr].is-in .co-chips li:nth-child(2) { animation-delay: 0.21s; }
+  .ad-page [data-adr].is-in .co-chips li:nth-child(3) { animation-delay: 0.28s; }
+  .ad-page [data-adr].is-in .co-chips li:nth-child(4) { animation-delay: 0.35s; }
+
+  /* Hero signature beat: the cyan keyline draws in, then the title, signal,
+     sub and buttons rise in sequence. One remembered opening move. */
+  .ad-hero .co-kicker { animation: ad-rise 0.8s var(--ease-reveal) 0.05s both; }
+  .ad-hero-rule {
+    transform-origin: left center;
+    animation: ad-draw 1.1s var(--ease-reveal) 0.18s both;
+  }
+  .ad-hero-title { animation: ad-rise 0.9s var(--ease-reveal) 0.36s both; }
+  .ad-hero-signal { animation: ad-rise 0.9s var(--ease-reveal) 0.48s both; }
+  .ad-hero-sub { animation: ad-rise 0.9s var(--ease-reveal) 0.58s both; }
+  .ad-hero .ad-cta-row { animation: ad-rise 0.9s var(--ease-reveal) 0.68s both; }
+
+  /* Left rail numbers stagger in when the rail appears */
+  .ad-rail[data-visible] .ad-rail-list li {
+    animation: ad-rail-in 0.5s var(--ease-reveal) both;
+  }
+  .ad-rail[data-visible] .ad-rail-list li:nth-child(1) { animation-delay: 0.06s; }
+  .ad-rail[data-visible] .ad-rail-list li:nth-child(2) { animation-delay: 0.14s; }
+  .ad-rail[data-visible] .ad-rail-list li:nth-child(3) { animation-delay: 0.22s; }
 }
 
 /* ---- Responsive ----------------------------------------------------------- */
