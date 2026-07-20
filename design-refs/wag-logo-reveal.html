@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>World Automotive Group — Logo Reveal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Khand:wght@300;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#02040f;
+    --blue:#0b6fd8;
+    --orange:#ff6340;
+    --ease:cubic-bezier(0.22,1,0.36,1);      /* weighted settle */
+    --ease-race:cubic-bezier(0.65,0,0.35,1);  /* trails */
+  }
+  *{box-sizing:border-box;}
+
+  /* ---- Stage: fills its container; works as fullscreen intro or header ---- */
+  .wag-stage{
+    position:relative;
+    width:100%;
+    height:100%;
+    min-height:inherit;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    background:
+      radial-gradient(120% 90% at 50% 62%, #060a1c 0%, var(--navy) 60%),
+      var(--navy);
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    isolation:isolate;
+  }
+
+  /* light-trails svg */
+  .wag-trails{
+    position:absolute; inset:0; width:100%; height:100%;
+    z-index:0; pointer-events:none;
+  }
+  .wag-trails line{
+    stroke-dashoffset:1;           /* hidden by default (base = pre-anim) */
+    opacity:0;
+    stroke-linecap:round;
+  }
+
+  /* residual horizontal glow under the wordmark */
+  .wag-underglow{
+    position:absolute; left:50%; top:58%;
+    width:min(62%,760px); height:2px; z-index:1;
+    transform:translate(-50%,-50%) scaleX(0);
+    transform-origin:center;
+    background:linear-gradient(90deg,transparent,var(--blue),transparent);
+    filter:blur(1px);
+    opacity:0;
+  }
+
+  /* ---- Wordmark ---- */
+  .wag-mark{
+    position:relative; z-index:2;
+    display:inline-block;
+    overflow:hidden;                /* clips the light sweep to the box */
+    font-family:"Khand",sans-serif;
+    text-transform:uppercase;
+    line-height:.92;
+    font-size:clamp(30px,9.2vw,132px);
+    white-space:nowrap;
+    padding:.12em .06em;
+  }
+  .wag-mark .layer{ margin:0; font-weight:600; letter-spacing:.02em; }
+  /* outline layer (in flow — sets the size) */
+  .wag-mark .outline{
+    color:transparent;
+    -webkit-text-stroke:1px rgba(255,255,255,.22);
+    text-stroke:1px rgba(255,255,255,.22);
+  }
+  /* solid fill layer, wipes on over the outline */
+  .wag-mark .fill{
+    position:absolute; inset:.12em .06em auto auto; top:.12em; left:.06em;
+    clip-path:inset(0 100% 0 0);    /* base: fully hidden from the right */
+  }
+  .wag-mark .p{display:inline;}
+  .wag-mark .world{color:#fff;}
+  .wag-mark .auto{color:var(--orange);}
+  .wag-mark .group{
+    color:rgba(255,255,255,.55);
+    font-weight:300;
+    letter-spacing:.16em;
+    margin-left:.28em;
+  }
+  /* light sweep */
+  .wag-mark::after{
+    content:""; position:absolute; inset:0; z-index:3; pointer-events:none;
+    background:linear-gradient(105deg,transparent 42%,rgba(255,255,255,.5) 50%,transparent 58%);
+    mix-blend-mode:screen;
+    transform:translateX(-130%);
+    opacity:0;
+  }
+
+  /* tagline */
+  .wag-tag{
+    position:absolute; z-index:2; top:72%; left:50%;
+    transform:translateX(-50%) translateY(6px);
+    font-size:clamp(8px,1.05vw,13px);
+    letter-spacing:.42em; text-indent:.42em;
+    color:rgba(255,255,255,.42);
+    font-weight:400; text-transform:uppercase; white-space:nowrap;
+    opacity:0;
+  }
+
+  /* replay affordance */
+  .wag-replay{
+    position:absolute; z-index:4; right:18px; bottom:16px;
+    font:11px/1 "Helvetica Neue",Arial,sans-serif;
+    letter-spacing:.14em; text-transform:uppercase;
+    color:rgba(255,255,255,.4);
+    background:transparent; border:1px solid rgba(255,255,255,.14);
+    border-radius:999px; padding:7px 14px; cursor:pointer;
+    opacity:0; transition:color .25s,border-color .25s,opacity .4s;
+  }
+  .wag-replay:hover{color:#fff;border-color:var(--blue);}
+
+  /* ============ PLAY: the ~2.5s cinematic sequence ============ */
+  .wag-stage.play .wag-trails line{ animation:wagTrail 3.8s var(--ease-race) both; }
+  .wag-stage.play .wag-underglow{ animation:wagUnder 2s var(--ease) 2.1s both; }
+  .wag-stage.play .fill{ animation:wagWipe 2.3s var(--ease) 1.1s both; }
+  .wag-stage.play .auto{ animation:wagIgnite 1.1s var(--ease) 3s both; }
+  .wag-stage.play .wag-mark::after{ animation:wagSweep 1.7s cubic-bezier(.5,0,.2,1) 3.1s both; }
+  .wag-stage.play .wag-tag{ animation:wagTag 1.6s var(--ease) 3.8s both; }
+  .wag-stage.play .wag-replay{ animation:wagTag 1.2s ease 4.8s both; }
+
+  @keyframes wagTrail{
+    0%  {stroke-dashoffset:1; opacity:0;}
+    35% {opacity:1;}
+    70% {stroke-dashoffset:0; opacity:1;}
+    100%{stroke-dashoffset:0; opacity:.2;}
+  }
+  @keyframes wagUnder{
+    0%  {transform:translate(-50%,-50%) scaleX(0); opacity:0;}
+    55% {opacity:.9;}
+    100%{transform:translate(-50%,-50%) scaleX(1); opacity:.4;}
+  }
+  @keyframes wagWipe{
+    from{clip-path:inset(0 100% 0 0);}
+    to  {clip-path:inset(0 0 0 0);}
+  }
+  @keyframes wagIgnite{
+    0%  {text-shadow:0 0 0 rgba(255,99,64,0);}
+    40% {text-shadow:0 0 26px rgba(255,99,64,.85),0 0 6px rgba(255,99,64,.9);}
+    100%{text-shadow:0 0 12px rgba(255,99,64,.28);}
+  }
+  @keyframes wagSweep{
+    0%  {transform:translateX(-130%); opacity:0;}
+    30% {opacity:1;}
+    100%{transform:translateX(130%); opacity:0;}
+  }
+  @keyframes wagTag{ from{opacity:0;transform:translateX(-50%) translateY(6px);} to{opacity:1;transform:translateX(-50%) translateY(0);} }
+
+  /* ============ STATIC: final resting state (reduced-motion) ============ */
+  .wag-stage.static .wag-trails line{ stroke-dashoffset:0; opacity:.2; }
+  .wag-stage.static .wag-underglow{ transform:translate(-50%,-50%) scaleX(1); opacity:.4; }
+  .wag-stage.static .fill{ clip-path:inset(0 0 0 0); }
+  .wag-stage.static .auto{ text-shadow:0 0 12px rgba(255,99,64,.28); }
+  .wag-stage.static .wag-tag,
+  .wag-stage.static .wag-replay{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .wag-stage.static .wag-replay{ transform:none; }
+
+  @media (prefers-reduced-motion: reduce){
+    .wag-stage.play .wag-trails line,
+    .wag-stage.play .wag-underglow,
+    .wag-stage.play .fill,
+    .wag-stage.play .auto,
+    .wag-stage.play .wag-mark::after,
+    .wag-stage.play .wag-tag,
+    .wag-stage.play .wag-replay{ animation:none !important; }
+  }
+
+  /* demo host — remove when embedding */
+  html,body{margin:0;height:100%;background:var(--navy);}
+  #demo-host{height:100vh;}
+</style>
+</head>
+<body>
+<div id="demo-host">
+
+  <!-- ============ DROP-IN BLOCK ============ -->
+  <div class="wag-stage" id="wagStage" role="img" aria-label="World Automotive Group">
+    <svg class="wag-trails" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <filter id="wagGlow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="2.2" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <g filter="url(#wagGlow)" fill="none">
+        <!-- converge toward the wordmark line (~500,348); pathLength=1 so draw-on is length-agnostic -->
+        <line x1="-40"  y1="70"  x2="500" y2="348" stroke="#0b6fd8" stroke-width="1.4" pathLength="1" stroke-dasharray="1" style="animation-delay:0s"></line>
+        <line x1="-40"  y1="300" x2="500" y2="348" stroke="#ff6340" stroke-width="1.1" pathLength="1" stroke-dasharray="1" style="animation-delay:.24s"></line>
+        <line x1="-40"  y1="560" x2="500" y2="348" stroke="#0b6fd8" stroke-width="1.2" pathLength="1" stroke-dasharray="1" style="animation-delay:.4s"></line>
+        <line x1="1040" y1="50"  x2="500" y2="348" stroke="#ff6340" stroke-width="1.3" pathLength="1" stroke-dasharray="1" style="animation-delay:.12s"></line>
+        <line x1="1040" y1="290" x2="500" y2="348" stroke="#0b6fd8" stroke-width="1.1" pathLength="1" stroke-dasharray="1" style="animation-delay:.32s"></line>
+        <line x1="1040" y1="580" x2="500" y2="348" stroke="#ff6340" stroke-width="1.2" pathLength="1" stroke-dasharray="1" style="animation-delay:.48s"></line>
+      </g>
+    </svg>
+
+    <div class="wag-underglow"></div>
+
+    <div class="wag-mark">
+      <p class="layer outline" aria-hidden="true"><span class="p">WORLD</span><span class="p">AUTO</span><span class="p group">GROUP</span></p>
+      <p class="layer fill"><span class="p world">WORLD</span><span class="p auto">AUTO</span><span class="p group">GROUP</span></p>
+    </div>
+
+    <div class="wag-tag">Performance · Mobility · Precision</div>
+
+    <button class="wag-replay" type="button" aria-label="Replay animation">↻ Replay</button>
+  </div>
+  <!-- ============ /DROP-IN BLOCK ============ -->
+
+</div>
+
+<script>
+  (function(){
+    var stage = document.getElementById('wagStage');
+    if(!stage) return;
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function playOnce(){
+      stage.classList.remove('play');
+      void stage.offsetWidth;        // force reflow so the animation restarts
+      stage.classList.add('play');
+    }
+    if(reduce){
+      stage.classList.add('static'); // final logo, no motion
+    }else{
+      playOnce();
+    }
+    var btn = stage.querySelector('.wag-replay');
+    if(btn) btn.addEventListener('click', function(){
+      if(reduce) return;
+      playOnce();
+    });
+  })();
+</script>
+</body>
+</html>

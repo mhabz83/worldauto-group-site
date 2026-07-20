@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { SkipToContent } from "@/components/primitives/SkipToContent";
 import { ScrollFX } from "@/components/site/ScrollFX";
+import { LogoReveal } from "@/components/site/LogoReveal";
 
 /* Suisse Intl loads via @font-face in the shared brand tokens (app/tokens.css). */
 
@@ -46,9 +47,19 @@ export default function RootLayout({
             __html: "document.documentElement.classList.add('gsap')",
           }}
         />
+        {/* Logo reveal loader: reveal the overlay before paint on the first
+            visit of a session only, so repeat loads and client navigations
+            never flash it and server/client markup stay identical. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{if(!sessionStorage.getItem('wag-reveal-shown')){document.documentElement.classList.add('wag-reveal-active');sessionStorage.setItem('wag-reveal-shown','1');}}catch(e){document.documentElement.classList.add('wag-reveal-active');}})();",
+          }}
+        />
         <SkipToContent />
         <ScrollFX />
         {children}
+        <LogoReveal />
       </body>
     </html>
   );
