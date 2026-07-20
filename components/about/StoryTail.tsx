@@ -24,8 +24,7 @@ import { journeyContent } from "@/components/hero/journeyContent";
 import { ScrollTrigger } from "./engine";
 import { FlickerText, FlickerTitle, GlitchLabel, useRevealManager } from "./reveal";
 import { GlowSvg } from "./svgs";
-import { CompaniesCarousel } from "./Carousels";
-import { TeamBand } from "./TeamBand";
+import { TeamCarousel, CompaniesCarousel } from "./Carousels";
 import { ValuesTimeline } from "./ValuesTimeline";
 import { GroupNumbersPanel } from "./GroupNumbersPanel";
 
@@ -365,7 +364,7 @@ export function StoryTail() {
       <ForesightSection />
       <CommitmentSection />
       <ValuesTimeline />
-      <TeamBand />
+      <TeamCarousel />
       <GroupNumbersPanel />
       <CompaniesCarousel />
       <VerticalsSection />
