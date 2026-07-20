@@ -16,7 +16,7 @@ const SESSION_KEY = "wag-reveal-shown";
 const FADE_MS = 600;
 // hold long enough for the sequence to land (trails, wipe, ignite, sweep, tagline)
 // before starting the fade; then the site is visible underneath.
-const PLAY_HOLD_MS = 4100;
+const PLAY_HOLD_MS = 4500;
 const REDUCED_HOLD_MS = 800;
 
 export function LogoReveal() {
