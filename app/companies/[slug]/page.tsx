@@ -12,7 +12,14 @@ export function generateStaticParams() {
      and app/companies/vicimus (the static route wins over this dynamic one);
      the other companies keep this template. */
   return companies
-    .filter((c) => c.slug !== "autodata" && c.slug !== "vicimus")
+    .filter(
+      (c) =>
+        c.slug !== "autodata" &&
+        c.slug !== "fasttrack" &&
+        c.slug !== "axxion" &&
+        c.slug !== "pag-direct" &&
+        c.slug !== "vicimus",
+    )
     .map((c) => ({ slug: c.slug }));
 }
 
