@@ -480,21 +480,22 @@ html.gsap [data-reveal] {
   padding: 0 var(--gutter);
   transition: background 0.45s ease;
 }
-/* Header ground (design review): a 96px masked gradient scrim behind the
-   bar — solid where the wordmark, nav labels, and CTA sit, dissolving
-   below — so page copy passing beneath never sits inside the chrome at
-   full strength. The scrim carries the header background; the bar element
-   itself stays transparent (except the --solid inner-page variant). */
+/* Header ground (design review, rev 2): a FULLY OPAQUE backdrop under the
+   whole 72px bar, then a deliberate 44px fade below it. Page text can
+   never read through the bar or collide with the nav labels at any rest
+   position; the fade keeps the hand-off into the page soft. The scrim
+   carries the header background; the bar element itself stays transparent
+   (except the --solid inner-page variant). 62% of 116px = the 72px bar. */
 .journey-header::before {
   content: "";
   position: absolute;
   z-index: -1;
   inset: 0 0 auto;
-  height: 96px;
+  height: 116px;
   pointer-events: none;
-  background: rgba(0, 8, 53, 0.97);
-  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 74%, rgba(0, 0, 0, 0.7) 82%, rgba(0, 0, 0, 0.35) 90%, rgba(0, 0, 0, 0.1) 96%, transparent 100%);
-  mask-image: linear-gradient(180deg, #000 0%, #000 74%, rgba(0, 0, 0, 0.7) 82%, rgba(0, 0, 0, 0.35) 90%, rgba(0, 0, 0, 0.1) 96%, transparent 100%);
+  background: #000835;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 62%, rgba(0, 0, 0, 0.55) 76%, rgba(0, 0, 0, 0.2) 89%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 62%, rgba(0, 0, 0, 0.55) 76%, rgba(0, 0, 0, 0.2) 89%, transparent 100%);
   transition: background 0.45s ease;
 }
 .journey-header--solid {
@@ -575,7 +576,7 @@ html.gsap [data-reveal] {
 /* Theme flip: the homepage story tail has ui-light sections; the header
    re-skins so the nav stays legible over paper. */
 .journey-header--light::before {
-  background: rgba(255, 255, 255, 0.985);
+  background: var(--wag-paper);
 }
 .journey-header--light .journey-wordmark {
   color: var(--wag-ink);
@@ -601,6 +602,10 @@ html.gsap [data-reveal] {
   .journey-header {
     height: 64px;
     grid-template-columns: 1fr auto auto;
+  }
+  /* 62% of 104px = the 64px mobile bar */
+  .journey-header::before {
+    height: 104px;
   }
   .journey-desktop-nav {
     display: none;

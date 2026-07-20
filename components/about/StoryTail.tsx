@@ -179,6 +179,10 @@ function CommitmentSection() {
         />
         <span className="ax-world-map-fade ax-world-map-fade--top" aria-hidden="true" />
         <span className="ax-world-map-fade ax-world-map-fade--bottom" aria-hidden="true" />
+        {/* The section is theme-dark (navy fades top and bottom) but the
+            plate's belly renders light — this zone tells the chapter rail's
+            ink mask to treat it as a light band so the labels stay legible. */}
+        <span className="ax-world-map-lightzone" data-rail-light aria-hidden="true" />
       </div>
     </section>
   );

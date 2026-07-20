@@ -1497,6 +1497,20 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   gap: 14px 18px;
   margin-top: clamp(2rem, 5vh, 3.2rem);
 }
+/* Mobile end state (design review): at maximum scroll the closer band +
+   endcap are the final viewport. The band sizes to the space below the
+   64px fixed header and its content biases DOWN (heavier top padding in
+   the centering box), and the endcap tightens, so the full "Build With
+   The Group." headline rests clear of the header. Desktop is untouched. */
+@media (max-width: 900px) {
+  .ax-closer {
+    min-height: calc(100svh - 64px);
+    padding-block: 5rem 2rem;
+  }
+  .ax-footer {
+    margin-top: 1.5rem;
+  }
+}
 .ax-btn-ghost {
   display: inline-flex;
   align-items: center;
@@ -1664,6 +1678,12 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   .ax-partner-why {
     padding-inline-start: calc(var(--ax-pad) + 9rem);
   }
+  /* numbers band: the "UAE · NA" cell sits level with the rail, so its
+     display numerals take the same right-step and start clear of the
+     rail's label column instead of running under 01–03 */
+  .axn-cell:nth-child(3) {
+    padding-inline-start: calc(clamp(1rem, 3vw, 3rem) + 9rem);
+  }
 }
 
 /* --- world map: the commitment section IS the full-bleed plate.
@@ -1681,6 +1701,12 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   position: absolute;
   inset-inline: 0;
   height: min(200px, 32%);
+  pointer-events: none;
+}
+/* rail ink zone: the plate between the navy fades reads as a light band */
+.ax-world-map-lightzone {
+  position: absolute;
+  inset: 22% 0;
   pointer-events: none;
 }
 .ax-world-map-fade--top {

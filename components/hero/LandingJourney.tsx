@@ -69,6 +69,24 @@ const headerLinks = [
 
 type NavSection = (typeof headerLinks)[number]["section"];
 
+/* Chapter rail ranges — ORDERED document positions, independent of the
+   header scrollspy. The active chapter is the last one whose start element
+   has passed the viewport centre, so the tick can only ever move forward
+   while scrolling down (design review: the scrollspy-driven rail ran
+   02→01 over the story band and 05→02 over the companies recap). Every
+   band belongs to a chapter: the story/foresight/commitment band opens
+   The Model, the numbers band and companies recap ride out the Team
+   chapter, and Partner picks up at the verticals ("who we partner with").
+   Clicks tween to the chapter's first section (its range start). */
+const railChapters = [
+  { label: "The Group", id: "group" },
+  { label: "Companies", id: "companies" },
+  { label: "The Model", id: "story" },
+  { label: "Heritage", id: "heritage" },
+  { label: "Team", id: "team" },
+  { label: "Partner", id: "verticals" },
+] as const;
+
 const companyProofHighlights: Record<(typeof companies)[number]["slug"], string> = {
   fasttrack: "32",
   autodata: "Inspections",
@@ -113,10 +131,13 @@ function Header() {
   const [activeSection, setActiveSection] = useState<NavSection | null>("group");
   const [onLight, setOnLight] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  /* left chapter rail: hidden over the hero frame, colour-flips over the
-     light story sections, ticks the chapter that owns the viewport centre */
+  /* left chapter rail: hidden over the hero frame, ticks the chapter whose
+     ordered range owns the viewport centre (monotonic — never runs backward
+     on the way down). Light/dark ink is a masked duplicate pair driven by
+     CSS vars, so each pixel row of the rail matches the band beneath it. */
   const [railVisible, setRailVisible] = useState(false);
-  const [railLight, setRailLight] = useState(false);
+  const [activeChapter, setActiveChapter] = useState(0);
+  const railRef = useRef<HTMLElement>(null);
   /* company tab rail: only while the journey's five company stops hold the
      viewport; underlines the stop under the centre line */
   const [tabsVisible, setTabsVisible] = useState(false);
@@ -152,19 +173,45 @@ function Header() {
       setActiveSection((active as NavSection | undefined) ?? null);
 
       // Chapter rail: appears once the opening frame has mostly scrolled
-      // away, and flips to ink over the light story sections (measured at
-      // the rail's own height — the viewport centre — not the header line).
+      // away. Active chapter = the LAST ordered range start above the
+      // viewport centre — monotonic by construction.
       const hero = document.getElementById("group");
       setRailVisible(!hero || hero.getBoundingClientRect().bottom < window.innerHeight * 0.5);
-      let centerLight = false;
-      for (const el of document.querySelectorAll<HTMLElement>("[data-ax-theme]")) {
-        const r = el.getBoundingClientRect();
-        if (r.top <= probe && r.bottom >= probe) {
-          centerLight = el.dataset.axTheme === "light";
-          break;
+      let chapter = 0;
+      railChapters.forEach((ch, i) => {
+        const el = document.getElementById(ch.id);
+        if (el && el.getBoundingClientRect().top <= probe) chapter = i;
+      });
+      setActiveChapter(chapter);
+
+      // Rail ink mask: measure where the light bands intersect the rail's
+      // own box and hand the union to CSS as percentages. The ink duplicate
+      // is clipped TO that band and the dark duplicates to its complement,
+      // so no label ever renders dark-on-dark at a light/dark boundary.
+      const rail = railRef.current;
+      if (rail) {
+        const rr = rail.getBoundingClientRect();
+        let bandTop = Infinity;
+        let bandBottom = -Infinity;
+        if (rr.height > 0) {
+          for (const el of document.querySelectorAll<HTMLElement>('[data-ax-theme="light"], [data-rail-light]')) {
+            const r = el.getBoundingClientRect();
+            const top = Math.max(r.top, rr.top);
+            const bottom = Math.min(r.bottom, rr.bottom);
+            if (bottom > top) {
+              bandTop = Math.min(bandTop, top);
+              bandBottom = Math.max(bandBottom, bottom);
+            }
+          }
+        }
+        if (bandBottom > bandTop) {
+          rail.style.setProperty("--rail-lt", `${(((bandTop - rr.top) / rr.height) * 100).toFixed(2)}%`);
+          rail.style.setProperty("--rail-lb", `${(((bandBottom - rr.top) / rr.height) * 100).toFixed(2)}%`);
+        } else {
+          rail.style.setProperty("--rail-lt", "100%");
+          rail.style.setProperty("--rail-lb", "100%");
         }
       }
-      setRailLight(centerLight);
 
       // Company tabs: live from the "Five companies" intro stop until the
       // last company stop leaves the centre line.
@@ -271,29 +318,43 @@ function Header() {
       </div>
 
       {/* Fixed left chapter rail — the labelled replacement for the old
-          unlabelled dot strip. Hidden over the hero, ink over light bands. */}
+          unlabelled dot strip. Hidden over the hero. Rendered as a masked
+          duplicate pair: one white-on-dark copy and one ink-on-light copy,
+          clipped against each other along the measured light-band edges, so
+          the flip happens per pixel row instead of all at once. The dark
+          copy carries the accessible links; the clipped duplicates are
+          decorative but still clickable where visible. */}
       <nav
-        className={`journey-rail${railLight ? " journey-rail--light" : ""}${railVisible ? "" : " journey-rail--hidden"}`}
+        ref={railRef}
+        className={`journey-rail${railVisible ? "" : " journey-rail--hidden"}`}
         aria-label="Page chapters"
         aria-hidden={!railVisible}
       >
-        {headerLinks.map((link, i) => (
-          <a
-            key={link.section}
-            href={link.href}
-            className={activeSection === link.section ? "is-active" : undefined}
-            aria-current={activeSection === link.section ? "location" : undefined}
-            aria-label={`Chapter ${String(i + 1).padStart(2, "0")}: ${link.label}`}
-            tabIndex={railVisible ? 0 : -1}
-            onClick={(event) => {
-              event.preventDefault();
-              tweenToElement(document.getElementById(link.href.slice(1)));
-            }}
+        {(["dark-top", "ink", "dark-bottom"] as const).map((copy) => (
+          <div
+            key={copy}
+            className={`journey-rail-copy journey-rail-copy--${copy}`}
+            aria-hidden={copy !== "dark-top" || undefined}
           >
-            <span className="journey-rail-tick" aria-hidden="true" />
-            <span className="journey-rail-num">{String(i + 1).padStart(2, "0")}</span>
-            <span className="journey-rail-label">{link.label}</span>
-          </a>
+            {railChapters.map((ch, i) => (
+              <a
+                key={ch.id}
+                href={`#${ch.id}`}
+                className={activeChapter === i ? "is-active" : undefined}
+                aria-current={copy === "dark-top" && activeChapter === i ? "location" : undefined}
+                aria-label={copy === "dark-top" ? `Chapter ${String(i + 1).padStart(2, "0")}: ${ch.label}` : undefined}
+                tabIndex={copy === "dark-top" && railVisible ? 0 : -1}
+                onClick={(event) => {
+                  event.preventDefault();
+                  tweenToElement(document.getElementById(ch.id));
+                }}
+              >
+                <span className="journey-rail-tick" aria-hidden="true" />
+                <span className="journey-rail-num">{String(i + 1).padStart(2, "0")}</span>
+                <span className="journey-rail-label">{ch.label}</span>
+              </a>
+            ))}
+          </div>
         ))}
       </nav>
 
@@ -689,18 +750,26 @@ export function LandingJourney() {
         .journey-progress { position: fixed; z-index: 9; top: 71px; right: 0; left: 0; height: 1px; background: rgba(255,255,255,.12); pointer-events: none; }
         .journey-progress-fill { position: absolute; inset: 0; background: #fff; transform: scaleX(0); transform-origin: left; will-change: transform; }
         /* Chapter rail — fixed left, numbered caps, orange tick on the
-           active chapter. Replaces the retired dot strip. */
-        .journey-rail { position: fixed; z-index: 9; left: clamp(14px,1.8vw,30px); top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 15px; transition: opacity .45s ease, visibility 0s linear 0s; }
+           active chapter. Three stacked copies (white / ink / white) clipped
+           along the measured light-band edges (--rail-lt / --rail-lb from
+           the scroll probe): each pixel row shows exactly one copy, so
+           there is no whole-rail flip, no halo, no dark-on-dark ghost. */
+        .journey-rail { position: fixed; z-index: 9; left: clamp(14px,1.8vw,30px); top: 50%; transform: translateY(-50%); --rail-lt: 100%; --rail-lb: 100%; transition: opacity .45s ease, visibility 0s linear 0s; }
         .journey-rail--hidden { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .45s ease, visibility 0s linear .45s; }
-        .journey-rail a { display: flex; align-items: center; gap: 9px; font-size: 10px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: rgba(255,255,255,.46); text-decoration: none; text-shadow: 0 1px 10px rgba(2,4,15,.6); transition: color .3s ease; }
+        .journey-rail-copy { display: flex; flex-direction: column; gap: 15px; }
+        .journey-rail-copy--ink, .journey-rail-copy--dark-bottom { position: absolute; inset: 0; }
+        .journey-rail-copy--dark-top { clip-path: inset(0 -14px calc(100% - var(--rail-lt)) -14px); }
+        .journey-rail-copy--ink { clip-path: inset(var(--rail-lt) -14px calc(100% - var(--rail-lb)) -14px); }
+        .journey-rail-copy--dark-bottom { clip-path: inset(var(--rail-lb) -14px 0 -14px); }
+        .journey-rail a { display: flex; align-items: center; gap: 9px; font-size: 10px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: rgba(255,255,255,.46); text-decoration: none; transition: color .3s ease; }
         .journey-rail a:hover { color: rgba(255,255,255,.9); }
         .journey-rail a.is-active { color: #fff; }
         .journey-rail-tick { flex: 0 0 auto; width: 14px; height: 2px; background: var(--highlight); opacity: 0; transform: scaleX(.35); transform-origin: left; transition: opacity .3s ease, transform .3s ease; }
         .journey-rail a.is-active .journey-rail-tick { opacity: 1; transform: none; }
         .journey-rail-num { opacity: .6; }
-        .journey-rail--light a { color: rgba(7,9,14,.5); text-shadow: 0 1px 10px rgba(255,255,255,.7); }
-        .journey-rail--light a:hover { color: rgba(7,9,14,.85); }
-        .journey-rail--light a.is-active { color: var(--wag-ink); }
+        .journey-rail-copy--ink a { color: rgba(7,9,14,.5); }
+        .journey-rail-copy--ink a:hover { color: rgba(7,9,14,.85); }
+        .journey-rail-copy--ink a.is-active { color: var(--wag-ink); }
         /* below 1200px there is no spare left column: numbers + ticks only */
         @media (max-width: 1199px) {
           .journey-rail-label { display: none; }
@@ -811,7 +880,8 @@ export function LandingJourney() {
           .journey-progress { top: 63px; }
           /* minimal rail: ticks only, tucked inside the mobile gutter so
              the full-width bottom-sheet cards never collide with it */
-          .journey-rail { left: 5px; gap: 12px; }
+          .journey-rail { left: 5px; }
+          .journey-rail-copy { gap: 12px; }
           .journey-rail-label, .journey-rail-num { display: none; }
           .journey-rail-tick { width: 9px; opacity: .32; transform: none; background: currentColor; }
           .journey-rail a.is-active .journey-rail-tick { width: 14px; opacity: 1; background: var(--highlight); }
