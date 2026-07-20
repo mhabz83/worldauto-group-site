@@ -5,6 +5,11 @@
    colour playing the role Madar gives orange. Orange stays the action
    colour. Everything sits on app/tokens.css; the only literal hue is the
    company cyan already declared in content/site.ts.
+
+   Each chapter carries its own composition and its own entrance so the page
+   does not read as one repeated template: Ch01 dark and image-forward (the
+   dashboard runs off the right edge), Ch02 light and media-led (the tablet
+   overlaps the copy), Ch03 dark and text-forward (a centred timeline).
    ========================================================================== */
 
 /* ---- S0 · Hero ----------------------------------------------------------- */
@@ -23,13 +28,13 @@
   object-fit: cover;
 }
 /* Navy tint seats the Madar render on our page: deeper at top (header) and
-   bottom (title), open in the middle so the neon breathes. */
+   bottom-left (title), open on the right so the neon breathes. */
 .ad-hero-tint {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(2, 4, 15, 0.62) 0%, rgba(2, 4, 15, 0.12) 30%, rgba(2, 4, 15, 0.22) 62%, rgba(2, 4, 15, 0.9) 100%),
-    radial-gradient(58% 44% at 16% 82%, rgba(2, 4, 15, 0.6) 0%, transparent 70%);
+    linear-gradient(180deg, rgba(2, 4, 15, 0.62) 0%, rgba(2, 4, 15, 0.12) 30%, rgba(2, 4, 15, 0.2) 60%, rgba(2, 4, 15, 0.92) 100%),
+    radial-gradient(64% 52% at 12% 88%, rgba(2, 4, 15, 0.66) 0%, transparent 72%);
 }
 .ad-hero-content {
   position: relative;
@@ -39,8 +44,10 @@
   justify-content: space-between;
   padding: 8.5rem var(--gutter) clamp(3rem, 7vh, 5rem);
 }
+/* Title lockup drops into the lower-left third; the render carries the right. */
 .ad-hero-foot {
   margin-top: clamp(3rem, 12vh, 8rem);
+  max-width: 46rem;
 }
 .ad-hero-rule {
   margin-top: 0.9rem;
@@ -59,39 +66,8 @@
   letter-spacing: -0.02em;
   line-height: 1.15;
 }
-/* scroll cue, bottom right like the reference */
-.ad-scrollcue {
-  position: absolute;
-  right: var(--gutter);
-  bottom: clamp(3rem, 7vh, 5rem);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.7rem;
-  color: color-mix(in srgb, var(--co) 80%, white);
-}
-.ad-scrollcue i {
-  position: relative;
-  width: 1px;
-  height: 46px;
-  background: color-mix(in srgb, var(--co) 34%, transparent);
-  overflow: hidden;
-}
-.ad-scrollcue i::after {
-  content: "";
-  position: absolute;
-  inset: 0 auto auto 0;
-  width: 1px;
-  height: 16px;
-  background: var(--co);
-  animation: ad-cue 2.2s var(--ease-reveal) infinite;
-}
-@keyframes ad-cue {
-  from { transform: translateY(-18px); }
-  to { transform: translateY(48px); }
-}
 
-/* ---- Chapter rail (left edge, desktop) ----------------------------------- */
+/* ---- Chapter rail (left edge, desktop): the page's single ordinal ------- */
 .ad-chapters {
   position: relative;
 }
@@ -270,35 +246,45 @@
     padding-left: calc(var(--gutter) + clamp(2.4rem, 4vw, 4rem));
   }
 }
-/* light slide: media left, copy right */
-.ad-ch-inner--flip {
-  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+
+/* 01 · dark, image-forward: narrow copy at the left, the dashboard plate runs
+   large and bleeds off the right gutter. Its own column ratio. */
+.ad-ch-inner--bleed {
+  max-width: none;
+  grid-template-columns: minmax(0, 22rem) minmax(0, 1fr);
+  gap: clamp(2rem, 4vw, 4rem);
 }
-/* the Madar dark-slide hairline between copy and media */
 @media (min-width: 900px) {
-  .ad-ch--dark .ad-ch-copy {
+  .ad-ch--01 .ad-ch-copy {
     border-right: 1px solid var(--hairline);
     padding-right: clamp(2rem, 4vw, 4rem);
   }
+  .ad-plate--bleed {
+    margin-right: calc(-1 * var(--gutter));
+  }
 }
-.ad-ch-num {
-  font-family: var(--font-display);
-  font-weight: var(--font-display-weight);
-  font-size: clamp(2.6rem, 5vw, 4rem);
-  line-height: 1;
-  color: color-mix(in srgb, var(--co) 38%, transparent);
+
+/* 02 · light, media-led: the tablet overlaps the copy column; its own ratio. */
+.ad-ch-inner--overlap {
+  grid-template-columns: minmax(0, 5.5fr) minmax(0, 6.5fr);
 }
-.ad-ch--light .ad-ch-num {
-  color: color-mix(in srgb, var(--co) 60%, var(--wag-mist));
+@media (min-width: 900px) {
+  .ad-ch--02 .ad-insp-media {
+    margin-right: clamp(-6rem, -5vw, -3rem);
+  }
+  .ad-ch--02 .ad-ch-copy {
+    padding-left: clamp(3rem, 6vw, 6rem);
+  }
 }
-.ad-ch .co-kicker {
-  margin-top: 1.1rem;
+
+/* 03 · dark, text-forward: a centred intro over one wide timeline plate. */
+.ad-ch-inner--stack {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 62rem;
+  gap: clamp(2.4rem, 5vw, 3.4rem);
 }
-.ad-ch--light .co-kicker {
-  color: color-mix(in srgb, var(--co) 48%, var(--wag-ink));
-}
+
 .ad-ch-title {
-  margin-top: 0.6rem;
   font-size: clamp(2.4rem, 4.6vw, 4.2rem);
   text-transform: uppercase;
 }
@@ -307,11 +293,17 @@
   max-width: 46ch;
   color: var(--text-mid);
 }
-/* chips on the light slide need ink borders, not the dark-page fill */
-.ad-ch--light .co-chips li {
-  background: rgba(255, 255, 255, 0.8);
-  color: rgba(7, 9, 14, 0.82);
-  border-color: color-mix(in srgb, var(--co) 55%, rgba(7, 9, 14, 0.2));
+.ad-ch-copy--center {
+  max-width: 46rem;
+  margin-inline: auto;
+  text-align: center;
+}
+.ad-ch-copy--center .ad-ch-lead,
+.ad-ch-copy--center .ad-ch-body {
+  margin-inline: auto;
+}
+.ad-ch-body--wide {
+  max-width: 58ch;
 }
 
 /* ---- Media plates --------------------------------------------------------- */
@@ -319,6 +311,11 @@
    stroke, 10px radius, 8px inset gap, soft glow seating it on the navy. */
 .ad-plate {
   margin: 0;
+}
+.ad-plate--wide {
+  width: 100%;
+  max-width: 50rem;
+  margin-inline: auto;
 }
 .ad-frame {
   border: 1px solid color-mix(in srgb, var(--co) 58%, transparent);
@@ -329,24 +326,22 @@
     0 0 44px color-mix(in srgb, var(--co) 12%, transparent),
     0 28px 64px rgba(0, 0, 0, 0.5);
 }
-/* minimal browser chrome around flat product captures */
+/* Flat product captures sit inside the cyan keyline with a real product
+   label, not imitation browser chrome. */
 .ad-browser {
   border-radius: 5px;
   overflow: hidden;
   background: #fff;
 }
-.ad-browser-bar {
-  display: flex;
-  gap: 6px;
-  padding: 9px 12px;
+.ad-browser-label {
+  padding: 0.6rem 0.95rem;
   background: var(--wag-mist);
   border-bottom: 1px solid rgba(7, 9, 14, 0.08);
-}
-.ad-browser-bar i {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgba(7, 9, 14, 0.18);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(7, 9, 14, 0.55);
 }
 .ad-browser img {
   display: block;
@@ -355,6 +350,7 @@
   /* grade: settle the white UI onto the navy page */
   filter: saturate(0.88) brightness(0.95) contrast(1.02);
 }
+/* The tick-caption is reserved for product plates only. */
 .ad-caption {
   display: flex;
   align-items: center;
@@ -366,6 +362,9 @@
   text-transform: uppercase;
   color: var(--text-low);
 }
+.ad-plate--wide .ad-caption {
+  justify-content: center;
+}
 .ad-caption > span {
   width: 1.6rem;
   height: 1px;
@@ -373,51 +372,35 @@
   flex: none;
 }
 
-/* light slide media: tablet capture with soft shadow, no stroke, plus the
-   four checklist stage cards echoing Madar's card cluster */
+/* light slide media: the tablet capture runs large and overlaps the copy, with
+   the checklist stages named once in a thin caption strip beneath it. */
 .ad-insp-media {
-  display: grid;
-  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
-  gap: clamp(1.2rem, 2.5vw, 2.2rem);
-  align-items: center;
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.1rem;
 }
 .ad-tablet {
-  width: clamp(220px, 24vw, 320px);
+  width: clamp(280px, 32vw, 440px);
+  max-width: 100%;
 }
 .ad-tablet img {
   display: block;
   width: 100%;
   height: auto;
-  filter: saturate(0.92) drop-shadow(0 26px 44px rgba(7, 9, 14, 0.28));
+  filter: saturate(0.92) drop-shadow(0 30px 50px rgba(7, 9, 14, 0.3));
 }
-.ad-cards {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.8rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.ad-cards li {
-  display: flex;
-  flex-direction: column;
-  gap: 1.6rem;
-  padding: 1.1rem 1.15rem 1.05rem;
-  background: rgba(255, 255, 255, 0.88);
-  border: 1px solid rgba(7, 9, 14, 0.1);
-  border-top: 2px solid color-mix(in srgb, var(--co) 72%, rgba(7, 9, 14, 0.15));
-  border-radius: 8px;
-  color: var(--wag-ink);
+.ad-stage-strip {
+  max-width: 30rem;
+  font-size: 0.72rem;
   font-weight: 600;
-  letter-spacing: 0.01em;
-  box-shadow: 0 14px 34px rgba(7, 9, 14, 0.08);
-}
-.ad-cards li span {
-  font-family: var(--font-display);
-  font-weight: var(--font-display-weight);
-  font-size: 1.15rem;
-  line-height: 1;
-  color: color-mix(in srgb, var(--co) 55%, var(--wag-ink));
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1.7;
+  color: color-mix(in srgb, var(--co) 42%, var(--wag-ink));
 }
 
 /* chapter 03: the typographic history timeline inside the keyline frame */
@@ -429,6 +412,19 @@
   border-radius: 5px;
   background: linear-gradient(180deg, var(--wag-navy-800) 0%, var(--wag-navy-700) 130%);
 }
+/* One continuous cyan spine drawn top-to-bottom through the node column, so
+   the ticks read as a single sequence (what one number returns). */
+.ad-timeline::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  left: calc(clamp(1.4rem, 3vw, 2.8rem) + 0.3rem);
+  top: calc(clamp(1.6rem, 3vw, 2.6rem) + 1.4rem);
+  bottom: calc(clamp(1.6rem, 3vw, 2.6rem) + 1.4rem);
+  width: 1px;
+  background: color-mix(in srgb, var(--co) 30%, transparent);
+  transform-origin: top;
+}
 .ad-timeline li {
   position: relative;
   display: flex;
@@ -437,25 +433,6 @@
 }
 .ad-timeline li + li {
   border-top: 1px solid var(--hairline);
-}
-/* Cyan connector spine: a continuous hairline running through the node column
-   so the ticks read as a sequence (what one number unlocks), not a to-do list.
-   Trimmed at the first and last nodes; the filled nodes sit on top of it. */
-.ad-timeline li::before {
-  content: "";
-  position: absolute;
-  z-index: 0;
-  left: 0.3rem;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: color-mix(in srgb, var(--co) 30%, transparent);
-}
-.ad-timeline li:first-child::before {
-  top: 1.76rem;
-}
-.ad-timeline li:last-child::before {
-  bottom: calc(100% - 1.76rem);
 }
 .ad-timeline-tick {
   position: relative;
@@ -482,13 +459,29 @@
   line-height: 1.5;
 }
 
-/* ---- Hero subhead + call-to-action buttons ------------------------------- */
+/* ---- Hero subhead + action ----------------------------------------------- */
 .ad-hero-sub {
   margin-top: 1.4rem;
-  max-width: 48ch;
+  max-width: 44ch;
   color: var(--text-mid);
   font-size: clamp(1rem, 1.4vw, 1.15rem);
   line-height: 1.6;
+}
+/* One primary action beside one real proof line, not a button pair. */
+.ad-hero-action {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.1rem 1.6rem;
+  margin-top: 1.9rem;
+}
+.ad-hero-proof {
+  max-width: 32ch;
+  padding-left: 1.05rem;
+  border-left: 1px solid color-mix(in srgb, var(--co) 45%, transparent);
+  color: var(--text-mid);
+  font-size: 0.82rem;
+  line-height: 1.5;
 }
 .ad-cta-row {
   display: flex;
@@ -563,22 +556,16 @@
   grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
   gap: clamp(2rem, 5vw, 4.5rem);
 }
-.ad-standing-label {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  margin-bottom: 1.4rem;
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.16em;
+/* Heavier, rule-less label vocabulary for the standing heads, distinct from
+   the product-plate tick-caption. */
+.ad-standing-h {
+  margin-bottom: 1.5rem;
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
   text-transform: uppercase;
-  color: var(--text-low);
-}
-.ad-standing-label span {
-  width: 1.6rem;
-  height: 1px;
-  background: var(--co);
-  flex: none;
+  font-size: 1.35rem;
+  letter-spacing: 0.03em;
+  color: #fff;
 }
 .ad-award-list {
   margin: 0;
@@ -606,23 +593,34 @@
   font-size: 0.98rem;
   line-height: 1.5;
 }
-.ad-standing-facts {
-  margin: 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.6rem 2.4rem;
-}
-.ad-standing-facts dt {
-  margin-bottom: 0.4rem;
+/* Recognised column: lead on the CARFAX reach as a larger statement, then a
+   compact list. Block sizes vary so it reads as an editorial standing beat. */
+.ad-standing-lead {
+  max-width: 32ch;
   color: #fff;
-  font-weight: 600;
-  font-size: 0.98rem;
+  font-size: clamp(1.15rem, 1.7vw, 1.45rem);
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
 }
-.ad-standing-facts dd {
-  margin: 0;
+.ad-standing-list {
+  margin: 1.7rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 1rem;
+  max-width: 42ch;
+}
+.ad-standing-list li {
+  padding-top: 1rem;
+  border-top: 1px solid var(--hairline);
   color: var(--text-low);
   font-size: 0.92rem;
   line-height: 1.55;
+}
+.ad-standing-list strong {
+  color: #fff;
+  font-weight: 600;
 }
 
 /* ---- Closing call to action ---------------------------------------------- */
@@ -670,9 +668,21 @@
   from { opacity: 0; transform: translateY(30px) scale(0.965); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
+@keyframes ad-slide-left {
+  from { opacity: 0; transform: translateX(-44px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
 @keyframes ad-draw {
   from { transform: scaleX(0); }
   to   { transform: scaleX(1); }
+}
+@keyframes ad-draw-y {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+@keyframes ad-tick-in {
+  from { opacity: 0; transform: scale(0.2); }
+  to   { opacity: 1; transform: scale(1); }
 }
 @keyframes ad-rail-in {
   from { opacity: 0; transform: translateX(-6px); }
@@ -680,7 +690,7 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  /* copy blocks rise and fade */
+  /* dark-slide copy rises and fades, the default note */
   .ad-page [data-adr].is-in {
     animation: ad-rise var(--dur-reveal, 0.7s) var(--ease-reveal) both;
   }
@@ -688,17 +698,33 @@
   .ad-page .ad-plate[data-adr].is-in {
     animation: ad-plate-in 0.9s var(--ease-reveal) both;
   }
-  /* chapter chips stagger in under their copy */
-  .ad-page [data-adr].is-in .co-chips li {
-    animation: ad-rise 0.55s var(--ease-reveal) both;
+
+  /* Ch02 (light) has its own rhythm: the tablet slides in from the left on a
+     longer, softer ease while the copy fades up, so it does not share the
+     dark slides' single up-fade. */
+  .ad-ch--02 .ad-insp-media[data-adr].is-in {
+    animation: ad-slide-left 0.95s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
-  .ad-page [data-adr].is-in .co-chips li:nth-child(1) { animation-delay: 0.14s; }
-  .ad-page [data-adr].is-in .co-chips li:nth-child(2) { animation-delay: 0.21s; }
-  .ad-page [data-adr].is-in .co-chips li:nth-child(3) { animation-delay: 0.28s; }
-  .ad-page [data-adr].is-in .co-chips li:nth-child(4) { animation-delay: 0.35s; }
+  .ad-ch--02 .ad-ch-copy[data-adr].is-in {
+    animation: ad-rise 0.95s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* Ch03 timeline: the cyan spine draws top-to-bottom, then the ticks light in
+     sequence down the column. */
+  .ad-page .ad-plate--wide[data-adr].is-in .ad-timeline::before {
+    animation: ad-draw-y 1s var(--ease-reveal) 0.2s both;
+  }
+  .ad-page .ad-plate--wide[data-adr].is-in .ad-timeline-tick {
+    animation: ad-tick-in 0.45s var(--ease-reveal) both;
+  }
+  .ad-plate--wide.is-in .ad-timeline li:nth-child(1) .ad-timeline-tick { animation-delay: 0.42s; }
+  .ad-plate--wide.is-in .ad-timeline li:nth-child(2) .ad-timeline-tick { animation-delay: 0.56s; }
+  .ad-plate--wide.is-in .ad-timeline li:nth-child(3) .ad-timeline-tick { animation-delay: 0.70s; }
+  .ad-plate--wide.is-in .ad-timeline li:nth-child(4) .ad-timeline-tick { animation-delay: 0.84s; }
+  .ad-plate--wide.is-in .ad-timeline li:nth-child(5) .ad-timeline-tick { animation-delay: 0.98s; }
 
   /* Hero signature beat: the cyan keyline draws in, then the title, signal,
-     sub and buttons rise in sequence. One remembered opening move. */
+     sub and action rise in sequence. One remembered opening move. */
   .ad-hero .co-kicker { animation: ad-rise 0.8s var(--ease-reveal) 0.05s both; }
   .ad-hero-rule {
     transform-origin: left center;
@@ -707,7 +733,7 @@
   .ad-hero-title { animation: ad-rise 0.9s var(--ease-reveal) 0.36s both; }
   .ad-hero-signal { animation: ad-rise 0.9s var(--ease-reveal) 0.48s both; }
   .ad-hero-sub { animation: ad-rise 0.9s var(--ease-reveal) 0.58s both; }
-  .ad-hero .ad-cta-row { animation: ad-rise 0.9s var(--ease-reveal) 0.68s both; }
+  .ad-hero-action { animation: ad-rise 0.9s var(--ease-reveal) 0.68s both; }
 
   /* Left rail numbers stagger in when the rail appears */
   .ad-rail[data-visible] .ad-rail-list li {
@@ -724,36 +750,29 @@
     min-height: 0;
   }
   .ad-ch-inner,
-  .ad-ch-inner--flip {
+  .ad-ch-inner--bleed,
+  .ad-ch-inner--overlap,
+  .ad-ch-inner--stack {
     grid-template-columns: 1fr;
   }
   /* copy reads first on phones, media follows */
-  .ad-ch-inner--flip .ad-insp-media {
+  .ad-ch--02 .ad-insp-media {
     order: 2;
   }
+  .ad-ch--02 .ad-ch-copy {
+    order: 1;
+  }
   .ad-insp-media {
-    grid-template-columns: 1fr;
-    justify-items: center;
-  }
-  .ad-cards {
-    width: 100%;
-  }
-  .ad-scrollcue {
-    display: none;
+    align-items: center;
+    text-align: center;
   }
   .ad-standing-cols {
     grid-template-columns: 1fr;
     gap: 2.6rem;
   }
-  .ad-standing-facts {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ad-scrollcue i::after {
-    animation: none;
-  }
   .ad-rail-inner,
   .ad-rail-bar,
   .ad-rail-num,

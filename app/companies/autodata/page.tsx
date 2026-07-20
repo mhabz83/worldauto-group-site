@@ -14,8 +14,9 @@ import "./autodata.css";
    pure WAG tokens (Khand display caps, Suisse body, navy scale, AutoData cyan
    as the signal colour). The hero artwork is the group's own Madar neon
    render, lifted as-is, not recreated. Every product image is a real capture
-   from autodatame.com, cleaned and framed. All copy claims trace to
-   autodatame.com itself; no other figures are used. */
+   from autodata.me, cleaned and framed. All copy claims trace to autodata.me
+   itself; no other figures are used. Each chapter carries its own composition
+   so the page does not read as one repeated template. */
 
 const company = companies.find((c) => c.slug === "autodata")!;
 const next = companies[(companies.findIndex((c) => c.slug === "autodata") + 1) % companies.length];
@@ -31,8 +32,8 @@ export default function AutoDataPage() {
       <div className="co-page ad-page" style={{ "--co": company.hue } as React.CSSProperties}>
         <Reveals />
         {/* S0 · Hero: the salvaged Madar neon render, full bleed, under our
-            navy tint. Kicker over a full-width hairline, then the Khand
-            display name, Madar's hero grammar in the WAG voice. */}
+            navy tint. The title lockup sits low-left so the render breathes on
+            the right; the fold carries one action and one real proof line. */}
         <section className="ad-hero">
           <div className="ad-hero-bg" aria-hidden>
             <Image
@@ -67,71 +68,53 @@ export default function AutoDataPage() {
               <div className="ad-hero-rule" aria-hidden />
               <h1 className="type-display ad-hero-title">AutoData</h1>
               <p className="ad-hero-signal">
-                Accurate vehicle data.{" "}
-                <span className="co-signal">Trusted</span> for the decisions that
-                matter.
+                Valuations <span className="co-signal">insurers and banks</span>{" "}
+                price on.
               </p>
               <p className="ad-hero-sub">
-                AutoData gives insurers, banks and car businesses the valuations,
-                inspections and vehicle history they can price, underwrite and
-                lend on. Built in the UAE for the region.
+                AutoData tells insurers and banks what a car is worth and what it
+                has been through. Built in the UAE.
               </p>
-              <div className="ad-cta-row">
+              <div className="ad-hero-action">
                 <Link href="/contact" className="ad-btn ad-btn--solid">
                   Book a demo
                 </Link>
-                <a
-                  href={company.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ad-btn ad-btn--ghost"
-                >
-                  Visit {company.urlLabel} ↗
-                </a>
+                <p className="ad-hero-proof">
+                  Since 2024, data from more than 100,000 sources across 22
+                  markets, through CARFAX.
+                </p>
               </div>
             </div>
-          </div>
-
-          <div className="ad-scrollcue" aria-hidden>
-            <span className="type-kicker">Scroll</span>
-            <i />
           </div>
         </section>
 
         {/* Chapters: three numbered slides, dark / light / dark, with the
-            left rail tracking progress. Native scroll, no hijack. */}
+            left rail as the single progress index. Each chapter has its own
+            composition. Native scroll, no hijack. */}
         <div id="ad-chapters" className="ad-chapters">
           <ChapterRail />
 
-          {/* 01 · Valuations, dark slide: copy left of a hairline divider,
-              real product capture right inside the cyan keyline frame. */}
-          <section id="valuations" className="ad-ch ad-ch--dark">
-            <div className="ad-ch-inner">
+          {/* 01 · Valuations, dark, image-forward: a narrow copy column at the
+              left, the real dashboard capture running large to the right edge. */}
+          <section id="valuations" className="ad-ch ad-ch--dark ad-ch--01">
+            <div className="ad-ch-inner ad-ch-inner--bleed">
               <div className="ad-ch-copy" data-adr>
-                <p className="ad-ch-num" aria-hidden>01</p>
-                <p className="co-kicker">Chapter 01 · Valuations</p>
                 <h2 className="type-display ad-ch-title">Valuations</h2>
                 <p className="ad-ch-lead">Vehicle appraisals you can settle on.</p>
                 <p className="ad-ch-body">
-                  The Car Valuation Service gives insurers and dealerships an
-                  objective, up-to-date value for any car. Enter the make, model
-                  and type, and the system returns an accurate valuation drawn
-                  from live market pricing. It reads the vehicle identification
-                  number to remove selection errors, and authorised users can
-                  pull detailed reports and history to back their decisions.
+                  The Car Valuation Service returns an objective, up-to-date value
+                  for any car. Enter the make, model and type and it prices the car
+                  from live market data. It reads the vehicle identification number
+                  so the wrong car is never valued, and authorised users pull the
+                  full report and history behind every figure. Insurers set
+                  premiums on it; dealers set trade-in values on it.
                 </p>
-                <ul className="co-chips" aria-label="What it changes">
-                  <li>Less insurance fraud</li>
-                  <li>More accurate premiums</li>
-                  <li>Better trade-in values</li>
-                  <li>A faster, cleaner appraisal</li>
-                </ul>
               </div>
-              <figure className="ad-plate" data-adr>
+              <figure className="ad-plate ad-plate--bleed" data-adr>
                 <div className="ad-frame">
                   <div className="ad-browser">
-                    <div className="ad-browser-bar" aria-hidden>
-                      <i /><i /><i />
+                    <div className="ad-browser-label" aria-hidden>
+                      Car Valuation Service
                     </div>
                     <Image
                       src="/images/autodata/ui-cvs-appraisals.png"
@@ -149,10 +132,11 @@ export default function AutoDataPage() {
             </div>
           </section>
 
-          {/* 02 · Inspections, light slide: media left (real tablet capture
-              plus the four checklist stages), copy right. The soft light
-              streak backdrop is Madar's own light-slide plate, lifted. */}
-          <section id="inspections" className="ad-ch ad-ch--light ui-light">
+          {/* 02 · Inspections, light, media-led: the tablet capture runs large
+              and overlaps the copy column; the stages are one thin caption
+              strip under it, not a card grid, since the tablet already shows
+              the live checklist. The light streak backdrop is Madar's own. */}
+          <section id="inspections" className="ad-ch ad-ch--light ui-light ad-ch--02">
             <div className="ad-ch-bg" aria-hidden>
               <Image
                 src="/images/autodata/madar-light-streaks.webp"
@@ -161,8 +145,8 @@ export default function AutoDataPage() {
                 sizes="100vw"
               />
             </div>
-            <div className="ad-ch-inner ad-ch-inner--flip">
-              <div className="ad-insp-media" data-adr>
+            <div className="ad-ch-inner ad-ch-inner--overlap">
+              <figure className="ad-insp-media" data-adr>
                 <div className="ad-tablet">
                   <Image
                     src="/images/autodata/ui-carantee-inspection.png"
@@ -171,65 +155,43 @@ export default function AutoDataPage() {
                     height={1024}
                   />
                 </div>
-                <ol className="ad-cards" aria-label="Inspection stages">
-                  <li><span>01</span>Bodywork</li>
-                  <li><span>02</span>Under bonnet</li>
-                  <li><span>03</span>Interior</li>
-                  <li><span>04</span>Road test</li>
-                </ol>
-              </div>
+                <figcaption className="ad-stage-strip">
+                  Bodywork · Under bonnet · Interior · Under chassis · Wheels and
+                  tyres · Road test
+                </figcaption>
+              </figure>
               <div className="ad-ch-copy" data-adr>
-                <p className="ad-ch-num" aria-hidden>02</p>
-                <p className="co-kicker">Chapter 02 · Inspections</p>
                 <h2 className="type-display ad-ch-title">Inspections</h2>
-                <p className="ad-ch-lead">A certified car sells with more trust.</p>
+                <p className="ad-ch-lead">Every car checked by a certified expert.</p>
                 <p className="ad-ch-body">
                   Carantee is a vehicle inspection and certification app. Book an
-                  inspection in the app, and a certified expert examines the car
-                  in full. You get back a clear condition report, high-quality
-                  photos and an official certification. Sellers stand out and
-                  attract more buyers. Buyers know exactly what they are getting
-                  before they commit.
+                  inspection and a certified expert works through the whole car,
+                  then issues a condition report, high-quality photos and an
+                  official certificate. A seller can prove the car&apos;s condition;
+                  a buyer knows exactly what they are getting before they commit.
                 </p>
-                <ul className="co-chips" aria-label="Inspection capabilities">
-                  <li>App-guided inspections</li>
-                  <li>Certified experts</li>
-                  <li>Photo evidence</li>
-                  <li>Official certification</li>
-                </ul>
               </div>
             </div>
           </section>
 
-          {/* 03 · Vehicle history, dark slide. No product capture of the
-              history report was recovered at usable quality, so the plate is
-              typographic: the record one number unlocks, drawn in hairlines and
-              cyan ticks on our tokens. */}
-          <section id="vehicle-history" className="ad-ch ad-ch--dark">
-            <div className="ad-ch-inner">
-              <div className="ad-ch-copy" data-adr>
-                <p className="ad-ch-num" aria-hidden>03</p>
-                <p className="co-kicker">Chapter 03 · Vehicle history</p>
+          {/* 03 · Vehicle history, dark, text-forward: a short intro centred
+              above one wide typographic timeline. No product capture of the
+              history report was recovered at usable quality, so the record one
+              number returns is drawn in hairlines and cyan ticks on our tokens. */}
+          <section id="vehicle-history" className="ad-ch ad-ch--dark ad-ch--03">
+            <div className="ad-ch-inner ad-ch-inner--stack">
+              <div className="ad-ch-copy ad-ch-copy--center" data-adr>
                 <h2 className="type-display ad-ch-title">Vehicle history</h2>
-                <p className="ad-ch-lead">
-                  A car&apos;s full history, before money changes hands.
+                <p className="ad-ch-lead">A car&apos;s full history from one number.</p>
+                <p className="ad-ch-body ad-ch-body--wide">
+                  Enter a car&apos;s identification number and its record comes
+                  back: accident history, service and maintenance, and the line of
+                  previous owners. The data is pooled from across North America and
+                  Europe, and it is written to be read at a glance. A buyer avoids
+                  overpaying and hidden faults; a seller can prove a fair price.
                 </p>
-                <p className="ad-ch-body">
-                  Enter a car&apos;s identification number and get its history
-                  back. Accident records, service and maintenance history, and
-                  the line of previous owners. Buyers avoid overpaying and dodge
-                  hidden problems. Sellers can prove a fair price. The report is
-                  drawn from a wide data pool across North America and Europe,
-                  and it is written to be read at a glance.
-                </p>
-                <ul className="co-chips" aria-label="What the report covers">
-                  <li>Accident records</li>
-                  <li>Service and maintenance history</li>
-                  <li>Previous-owner line</li>
-                  <li>North America and Europe data</li>
-                </ul>
               </div>
-              <figure className="ad-plate" data-adr>
+              <figure className="ad-plate ad-plate--wide" data-adr>
                 <div className="ad-frame">
                   <ol className="ad-timeline">
                     <li>
@@ -271,7 +233,7 @@ export default function AutoDataPage() {
                 </div>
                 <figcaption className="ad-caption">
                   <span aria-hidden />
-                  What one identification number unlocks
+                  What one identification number returns
                 </figcaption>
               </figure>
             </div>
@@ -293,30 +255,27 @@ export default function AutoDataPage() {
             <p className="co-kicker">Built to bank standards</p>
             <p className="co-count">
               <span className="co-count-label">
-                Valuations, inspections and history reports that banks and
-                insurers accept.
+                Reports banks and insurers accept.
               </span>
             </p>
           </div>
         </section>
 
         {/* Standing: the record behind the data. Real, named awards and the
-            public data partnerships; no client names and no round counters,
-            both of which stay out until the owner verifies them. */}
+            public data partnerships, led by the CARFAX reach; no client names
+            and no round counters, both of which stay out until the owner
+            verifies them. */}
         <section className="ad-standing" aria-label="AutoData standing">
           <div className="ad-standing-inner">
             <div className="ad-standing-head" data-adr>
-              <p className="co-kicker">Trusted and recognised</p>
+              <p className="co-kicker">Awards and data partners</p>
               <h2 className="type-display ad-standing-title">
                 The record<br />behind the data
               </h2>
             </div>
             <div className="ad-standing-cols">
               <div data-adr>
-                <p className="ad-standing-label">
-                  <span aria-hidden />
-                  Awarded
-                </p>
+                <h3 className="ad-standing-h">Awards</h3>
                 <ul className="ad-award-list">
                   <li>
                     <span className="ad-award-year">2025</span>
@@ -341,39 +300,28 @@ export default function AutoDataPage() {
                   </li>
                 </ul>
               </div>
-              <div data-adr>
-                <p className="ad-standing-label">
-                  <span aria-hidden />
-                  Recognised
+              <div className="ad-standing-recognised" data-adr>
+                <h3 className="ad-standing-h">Data and partners</h3>
+                <p className="ad-standing-lead">
+                  Since 2024, AutoData draws on more than 100,000 sources across 22
+                  markets in the United States, Canada and Europe, through its
+                  partnership with CARFAX.
                 </p>
-                <dl className="ad-standing-facts">
-                  <div>
-                    <dt>Global data reach through CARFAX</dt>
-                    <dd>
-                      Since 2024, AutoData draws on data from more than 100,000
-                      sources across 22 markets in the United States, Canada and
-                      Europe, through its partnership with CARFAX.
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Recognised data partners</dt>
-                    <dd>
-                      AutoData works alongside globally recognised data providers
-                      and compliance partners, including JATO and CARFAX.
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Part of World Automotive Group</dt>
-                    <dd>AutoData is the group&apos;s vehicle intelligence arm.</dd>
-                  </div>
-                  <div>
-                    <dt>Published market research</dt>
-                    <dd>
-                      AutoData publishes its own reports on the UAE and Saudi used
-                      car markets.
-                    </dd>
-                  </div>
-                </dl>
+                <ul className="ad-standing-list">
+                  <li>
+                    <strong>Recognised partners.</strong> AutoData works with
+                    globally recognised data and compliance partners, including
+                    JATO and CARFAX.
+                  </li>
+                  <li>
+                    <strong>Part of World Automotive Group.</strong>{" "}
+                    AutoData is the group&apos;s vehicle intelligence arm.
+                  </li>
+                  <li>
+                    <strong>Published research.</strong> AutoData publishes its own
+                    reports on the UAE and Saudi used-car markets.
+                  </li>
+                </ul>
               </div>
             </div>
           </div>
@@ -385,7 +333,7 @@ export default function AutoDataPage() {
           <div className="relative max-w-4xl">
             <p data-adr className="co-kicker">Start here</p>
             <p data-adr className="ad-close-line">
-              Put trusted vehicle data to work.
+              Put AutoData to work.
             </p>
             <p data-adr className="ad-close-body">
               Tell us the decision you need to get right. We will show you the
