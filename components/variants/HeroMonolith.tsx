@@ -14,7 +14,7 @@ export function HeroMonolith() {
       <div className="flex items-baseline justify-between pt-4">
         <MonoLabel tone="hi">WORLD AUTOMOTIVE GROUP</MonoLabel>
         <MonoLabel>EST. 1994 · ABU DHABI</MonoLabel>
-        <MonoLabel className="hidden md:block">UAE · NORTH AMERICA</MonoLabel>
+        <MonoLabel className="hidden md:block">MENA · NORTH AMERICA</MonoLabel>
       </div>
 
       <h1

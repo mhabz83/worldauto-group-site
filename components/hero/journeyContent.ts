@@ -3,7 +3,7 @@ export const journeyContent = {
     eyebrow: "World Automotive Group · Abu Dhabi, Est. 1994",
     title: "We Build And Run Automotive.",
     body:
-      "Five operating companies across the UAE and North America. One group standard for service, data and retail. Part of Skelmore since 1994.",
+      "Five operating companies across MENA and North America. One group standard for service, data and retail. Part of Skelmore since 1994.",
   },
   companiesIntro: {
     title: "Five companies, one standard.",
@@ -43,7 +43,7 @@ export const journeyContent = {
       { value: "1994", label: "Founded, Abu Dhabi" },
       { value: "~USD 650M", label: "Annual group revenue" },
       { value: "~4,000", label: "People across the group" },
-      { value: "UAE · NA", label: "Two operating regions" },
+      { value: "MENA · NA", label: "Two operating regions" },
     ],
   },
   heritage: {

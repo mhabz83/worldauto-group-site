@@ -9,7 +9,7 @@ const ledgerStats = [
   { value: "1994", label: "FOUNDED, ABU DHABI" },
   { value: "~USD 650M", label: "ANNUAL GROUP REVENUE" },
   { value: "~4,000", label: "PEOPLE ACROSS THE GROUP" },
-  { value: "UAE · NA", label: "TWO OPERATING REGIONS" },
+  { value: "MENA · NA", label: "TWO OPERATING REGIONS" },
 ];
 
 /**

@@ -19,7 +19,7 @@ import "./company-preview.css";
 const PREVIEW: Record<string, { descriptor: string; highlights: string[] }> = {
   fasttrack: {
     descriptor: "Quick vehicle service on UAE fuel forecourts.",
-    highlights: ["32 centres", "Since 2004", "United Arab Emirates"],
+    highlights: ["32 centres", "Since 2004", "MENA"],
   },
   autodata: {
     descriptor: "Bank-grade vehicle intelligence.",

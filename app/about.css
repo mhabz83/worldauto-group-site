@@ -1408,6 +1408,7 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   margin: 0 auto;
 }
 .axn-cell {
+  min-width: 0;
   padding: clamp(1.4rem, 4.5vh, 3rem) clamp(1rem, 3vw, 3rem);
   text-align: center;
 }
@@ -1423,7 +1424,7 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   color: #fff;
   font-family: var(--font-display);
   font-weight: var(--font-display-weight);
-  font-size: clamp(4.4rem, 13.4vw, 16rem);
+  font-size: clamp(3rem, 7.5vw, 8rem);
   font-variant-numeric: tabular-nums;
   letter-spacing: var(--tracking-display);
   line-height: 0.95;
@@ -1479,7 +1480,7 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
     border-bottom: 0;
   }
   .axn-figure {
-    font-size: clamp(3.6rem, 17vw, 6rem);
+    font-size: clamp(3rem, 14.5vw, 5.5rem);
   }
   .axn-label {
     font-size: 0.68rem;
@@ -1701,12 +1702,6 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   .ax-verticals-inner,
   .ax-partner-why {
     padding-inline-start: calc(var(--ax-pad) + 9rem);
-  }
-  /* numbers band: the "UAE · NA" cell sits level with the rail, so its
-     display numerals take the same right-step and start clear of the
-     rail's label column instead of running under 01–03 */
-  .axn-cell:nth-child(3) {
-    padding-inline-start: calc(clamp(1rem, 3vw, 3rem) + 9rem);
   }
 }
 

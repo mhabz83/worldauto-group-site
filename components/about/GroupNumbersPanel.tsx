@@ -125,7 +125,7 @@ export function GroupNumbersPanel() {
         </div>
         <div className="axn-cell">
           <p className="axn-figure">
-            UAE<span className="axn-dot">·</span>NA
+            MENA<span className="axn-dot">·</span>NA
           </p>
           <p className="axn-label">Two operating regions</p>
         </div>

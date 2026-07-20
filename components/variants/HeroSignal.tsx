@@ -234,7 +234,7 @@ export function HeroSignal() {
           <p className="font-grotesk text-xl font-medium uppercase tracking-[0.3em] text-hi md:text-2xl">
             World Automotive Group
           </p>
-          <MonoLabel className="mt-4">EST. 1994 · ABU DHABI · UAE + NORTH AMERICA</MonoLabel>
+          <MonoLabel className="mt-4">EST. 1994 · ABU DHABI · MENA + NORTH AMERICA</MonoLabel>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-4">
           <MagneticButton href={hero.ctaPrimary.href} solid>

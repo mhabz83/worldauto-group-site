@@ -8,7 +8,7 @@ export const siteMeta = {
   titleDefault: "World Automotive Group",
   titleSuffix: "World Automotive Group",
   description:
-    "World Automotive Group is the automotive arm of Skelmore. Five operating companies across the UAE and North America: FastTrack, AutoData, Axxion, PAG Direct and Vicimus.",
+    "World Automotive Group is the automotive arm of Skelmore. Five operating companies across MENA and North America: FastTrack, AutoData, Axxion, PAG Direct and Vicimus.",
   url: "https://worldauto.group",
 } as const;
 
@@ -21,7 +21,7 @@ export const group = {
     founded: 1994,
   },
   hq: "Suite 203, Floor 11, Al Sarab Tower, ADGM, Abu Dhabi",
-  footprint: "UAE · North America",
+  footprint: "MENA · North America",
   est: "EST. 1994 · ABU DHABI",
 } as const;
 
@@ -56,7 +56,7 @@ export const companies: Company[] = [
       "Quick vehicle service on UAE fuel forecourts, in partnership with Emarat since 2004.",
     chipHint: "quick service · 32 centres",
     proof: "32 quick-service centres",
-    region: "United Arab Emirates",
+    region: "MENA",
     capabilities: [
       "Quick vehicle service",
       "Fuel-forecourt network",
@@ -81,7 +81,7 @@ export const companies: Company[] = [
     chipHint: "vehicle intelligence",
     // pending owner-verified figure
     proof: "Valuations, Inspections, History",
-    region: "United Arab Emirates",
+    region: "MENA",
     capabilities: [
       "Vehicle valuations",
       "Inspections",
@@ -104,7 +104,7 @@ export const companies: Company[] = [
       "The UAE's first motor-claims third-party administrator, routing insurer-contracted repair work to approved workshops.",
     chipHint: "motor-claims TPA",
     proof: "The UAE's first motor-claims TPA",
-    region: "United Arab Emirates",
+    region: "MENA",
     capabilities: [
       "Motor-claims administration",
       "Insurer-contracted repair routing",
@@ -285,7 +285,7 @@ export const nav = {
 
 export const footer = {
   blurb:
-    "World Automotive Group is the automotive arm of Skelmore, a private group founded in 1994. Operations in the UAE and North America.",
+    "World Automotive Group is the automotive arm of Skelmore, a private group founded in 1994. Operations in MENA and North America.",
   companiesHeading: "Companies",
   parentHeading: "Group",
   parentLine: "A Skelmore company",

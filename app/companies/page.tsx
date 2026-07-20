@@ -38,7 +38,7 @@ export default function CompaniesPage() {
           </h1>
           <p data-reveal className="mt-8 max-w-xl text-lg leading-relaxed text-mid">
             Each company runs on its own domain and its own P&amp;L. The group
-            sets the standard for service, data and retail across the UAE and
+            sets the standard for service, data and retail across MENA and
             North America.
           </p>
 

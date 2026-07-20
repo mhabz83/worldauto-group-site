@@ -8,7 +8,7 @@ export const hero = {
   /* Option 1 from content/copy-options.md */
   headlineLines: ["automotive, run like", "infrastructure."],
   italicWord: "infrastructure.",
-  sub: "Five operating companies across the UAE and North America. One group standard for service, data and retail. Part of Skelmore since 1994.",
+  sub: "Five operating companies across MENA and North America. One group standard for service, data and retail. Part of Skelmore since 1994.",
   ctaPrimary: { label: "The Companies", href: "#companies" },
   ctaSecondary: { label: "Partner With Us", href: "#partner" },
   image: {
@@ -24,7 +24,7 @@ export const numbers = {
     { value: 1994, label: "Founded, Abu Dhabi", format: "year" },
     { value: 650, prefix: "USD ", suffix: "M", label: "Annual group revenue", approx: true },
     { value: 4000, prefix: "~", label: "People across the group", format: "thousands" },
-    { value: 2, label: "Regions: UAE + North America" },
+    { value: 2, label: "Regions: MENA + North America" },
   ],
   credit: "Group figures include all Skelmore operations.",
 } as const;
