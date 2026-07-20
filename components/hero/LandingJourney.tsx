@@ -425,8 +425,10 @@ function Header() {
      pose IS the motif (#42D7FF)
    - Axxion: none here — the WebGL routing-junction road lines at its camera
      pose carry the stop (#FF4200)
-   - PAG Direct: dealership facade wireframe, SVG line-art (#8A6CFF)
-   - Vicimus: pulse-grid of repeat arcs, SVG (#34E39B) */
+   - PAG Direct: none — scene graphic removed per CEO (2026-07-20); the
+     WebGL road at its camera pose carries the stop
+   - Vicimus: none — scene graphic removed per CEO (2026-07-20); the WebGL
+     road at its camera pose carries the stop */
 function CompanyScene({ slug }: { slug: string }) {
   if (slug === "fasttrack") {
     return (
@@ -445,67 +447,6 @@ function CompanyScene({ slug }: { slug: string }) {
         </div>
         <span className="journey-ft-trail journey-ft-trail--1" />
         <span className="journey-ft-trail journey-ft-trail--2" />
-      </div>
-    );
-  }
-  if (slug === "pag-direct") {
-    // Dealership facade in two-point-ish perspective: canopy fascia, glass
-    // grid, receding return wall, ground light line.
-    const top = (t: number) => ({ x: 120 + t * 560, y: 168 - t * 56 });
-    const bottom = (t: number) => ({ x: 120 + t * 560, y: 520 - t * 88 });
-    const mullions = [0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875];
-    return (
-      <div className="journey-scene journey-scene--pag" data-journey-scene aria-hidden="true">
-        <svg viewBox="0 0 960 640" fill="none" preserveAspectRatio="xMaxYMid meet">
-          {/* canopy fascia */}
-          <path d="M92 150 L716 88" className="pag-line pag-line--bright" />
-          <path d="M104 176 L706 116" className="pag-line" />
-          <path d="M92 150 L104 176 M716 88 L706 116" className="pag-line" />
-          {/* facade frame */}
-          <path d="M120 168 L680 112 L680 432 L120 520 Z" className="pag-line" />
-          {/* glass mullions */}
-          {mullions.map((t) => {
-            const a = top(t);
-            const b = bottom(t);
-            return <path key={t} d={`M${a.x} ${a.y} L${b.x} ${b.y}`} className="pag-line pag-line--faint" />;
-          })}
-          {/* floor lines through the glass */}
-          <path d="M120 344 L680 272" className="pag-line pag-line--faint" />
-          <path d="M120 256 L680 192" className="pag-line pag-line--faint" />
-          {/* receding return wall */}
-          <path d="M680 112 L900 168 L900 400 L680 432" className="pag-line" />
-          <path d="M735 126 L735 424 M790 140 L790 416 M845 154 L845 408" className="pag-line pag-line--faint" />
-          {/* ground light line */}
-          <path d="M64 532 L680 432 L920 396" className="pag-line pag-line--bright pag-line--ground" />
-        </svg>
-      </div>
-    );
-  }
-  if (slug === "vicimus") {
-    // Pulse-grid: repeating arcs, staggered breathing — the retention-signal
-    // family from the Vicimus detail page, in its green.
-    const cells = Array.from({ length: 8 }, (_, i) => ({
-      cx: 130 + (i % 4) * 220,
-      cy: 150 + Math.floor(i / 4) * 250,
-      delay: (i % 4) * 0.55 + Math.floor(i / 4) * 0.85,
-    }));
-    return (
-      <div className="journey-scene journey-scene--vicimus" data-journey-scene aria-hidden="true">
-        <svg viewBox="0 0 900 560" fill="none" preserveAspectRatio="xMaxYMid meet">
-          {cells.map((cell) => (
-            <g key={`${cell.cx}-${cell.cy}`} className="vic-cell" style={{ animationDelay: `${cell.delay}s` }}>
-              <circle cx={cell.cx} cy={cell.cy} r="4" className="vic-dot" />
-              <path
-                d={`M${cell.cx - 42} ${cell.cy} A42 42 0 0 1 ${cell.cx + 42} ${cell.cy}`}
-                className="vic-arc"
-              />
-              <path
-                d={`M${cell.cx - 74} ${cell.cy} A74 74 0 0 1 ${cell.cx + 74} ${cell.cy}`}
-                className="vic-arc vic-arc--outer"
-              />
-            </g>
-          ))}
-        </svg>
       </div>
     );
   }
@@ -835,22 +776,6 @@ export function LandingJourney() {
         .journey-ft-trail { position: absolute; right: -8vw; width: 74vw; border-radius: 999px; }
         .journey-ft-trail--1 { top: 41%; height: 2px; background: linear-gradient(90deg,transparent 4%,rgba(19,103,254,.85) 44%,rgba(140,190,255,.9) 58%,transparent 96%); filter: blur(1px) drop-shadow(0 0 8px rgba(19,103,254,.8)); animation: journeyStreakDrift 24s ease-in-out -6s infinite alternate; }
         .journey-ft-trail--2 { top: 46%; height: 88px; background: linear-gradient(95deg,transparent 10%,rgba(19,103,254,.16) 48%,transparent 90%); filter: blur(26px); animation: journeyStreakDrift 30s ease-in-out infinite alternate-reverse; }
-        /* PAG Direct: dealership facade wireframe */
-        .journey-scene--pag { -webkit-mask-image: radial-gradient(115% 105% at 74% 52%,#000 52%,transparent 94%); mask-image: radial-gradient(115% 105% at 74% 52%,#000 52%,transparent 94%); }
-        .journey-scene--pag svg { position: absolute; right: 1vw; top: 50%; width: min(56vw,980px); height: auto; transform: translateY(-54%); }
-        .pag-line { stroke: rgba(138,108,255,.5); stroke-width: 1.4; filter: drop-shadow(0 0 6px rgba(138,108,255,.35)); }
-        .pag-line--faint { stroke: rgba(138,108,255,.26); stroke-width: 1; filter: none; }
-        .pag-line--bright { stroke: #a68bff; stroke-width: 2.4; filter: drop-shadow(0 0 10px rgba(138,108,255,.85)); animation: journeySceneGlow 6s ease-in-out infinite alternate; }
-        .pag-line--ground { animation-delay: -3s; }
-        /* Vicimus: pulse-grid of repeat arcs */
-        .journey-scene--vicimus { -webkit-mask-image: radial-gradient(120% 115% at 72% 46%,#000 48%,transparent 92%); mask-image: radial-gradient(120% 115% at 72% 46%,#000 48%,transparent 92%); }
-        .journey-scene--vicimus svg { position: absolute; right: 0; top: 9%; width: min(58vw,1000px); height: auto; }
-        .vic-dot { fill: rgba(52,227,155,.9); }
-        .vic-arc { stroke: rgba(52,227,155,.55); stroke-width: 1.6; }
-        .vic-arc--outer { stroke: rgba(52,227,155,.28); }
-        .vic-cell { filter: drop-shadow(0 0 6px rgba(52,227,155,.35)); animation: journeyVicPulse 4.6s ease-in-out infinite; }
-        @keyframes journeySceneGlow { from { opacity: .55; } to { opacity: 1; } }
-        @keyframes journeyVicPulse { 0%, 100% { opacity: .32; } 50% { opacity: 1; } }
         .journey-stop--center { justify-content: center; }
         .journey-stop--center .journey-panel { width: min(40rem,64vw); text-align: center; background: linear-gradient(180deg,rgba(0,6,42,.32) 0%,rgba(0,8,53,.9) 26%,rgba(0,8,53,.9) 74%,rgba(0,6,42,.32) 100%); }
         .journey-stop--center .journey-panel h2 { max-width: none; }
@@ -931,8 +856,6 @@ export function LandingJourney() {
           .journey-ft-trail { right: -14vw; width: 128vw; }
           .journey-ft-trail--1 { top: 30%; }
           .journey-ft-trail--2 { top: 34%; }
-          .journey-scene--pag svg { right: -16vw; top: 9%; width: 132vw; transform: none; }
-          .journey-scene--vicimus svg { right: -12vw; top: 5%; width: 124vw; }
           .journey-panel h2 { font-size: clamp(2.45rem,12vw,4.6rem); }
           /* first stop is 100svh on mobile: park the cue at the true bottom
              and clear room for it under the statement. The anchor statement
@@ -953,7 +876,7 @@ export function LandingJourney() {
           .journey-scroll-cue { display: none; }
           /* scenes hold still and stay visible (no GSAP in this mode) */
           .journey-scene { will-change: auto; opacity: 1 !important; transform: none !important; }
-          .journey-ft-trail,.pag-line--bright,.vic-cell { animation: none; }
+          .journey-ft-trail { animation: none; }
         }
         html.webgl-unavailable .journey-webgl { display: none !important; }
         html.webgl-unavailable .journey-static-frame { opacity: 1 !important; transform: none !important; }
