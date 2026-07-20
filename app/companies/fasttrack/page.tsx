@@ -171,7 +171,7 @@ export default function FastTrackPage() {
                 <h2 className="type-display ft-ch-title">Before you buy</h2>
                 <p className="ft-ch-lead">A 125-point check before you buy a used car.</p>
                 <p className="ft-ch-body ft-ch-body--wide">
-                  FastTrack's pre-purchase inspection runs 125 checks across the
+                  FastTrack&apos;s pre-purchase inspection runs 125 checks across the
                   engine, gearbox, brakes, suspension, electrics and body, then
                   returns a same-day digital report with photos and a valuation. A
                   technician can come to the car wherever it is, and FastTrack
