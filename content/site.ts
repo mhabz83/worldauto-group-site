@@ -35,6 +35,17 @@ export type Company = {
   capabilities: string[];
   url: string;
   urlLabel: string;
+  /* Per-company identity (matches the homepage journey stop accents). */
+  hue: string;
+  /* The word inside `proof` rendered in the company hue. */
+  proofHighlight: string;
+  /* Operations band on the company page. `image` omitted = neon motif. */
+  ops: {
+    image?: string;
+    alt?: string;
+    label: string;
+    stat?: { value: string; label: string };
+  };
 };
 
 export const companies: Company[] = [
@@ -53,6 +64,14 @@ export const companies: Company[] = [
     ],
     url: "https://www.fasttrackemarat.com",
     urlLabel: "fasttrackemarat.com",
+    hue: "#1367FE",
+    proofHighlight: "32",
+    ops: {
+      image: "/images/forecourt-service-night.png",
+      alt: "Quick-service bays glowing under a fuel forecourt canopy at night",
+      label: "On the forecourt",
+      stat: { value: "32", label: "quick-service centres across the UAE" },
+    },
   },
   {
     slug: "autodata",
@@ -70,6 +89,13 @@ export const companies: Company[] = [
     ],
     url: "https://autodata.me",
     urlLabel: "autodata.me",
+    hue: "#42D7FF",
+    proofHighlight: "Inspections",
+    ops: {
+      image: "/images/headlight-macro-night.png",
+      alt: "Close view of a car headlight under cold inspection lighting",
+      label: "Built to bank standards",
+    },
   },
   {
     slug: "axxion",
@@ -86,6 +112,13 @@ export const companies: Company[] = [
     ],
     url: "https://axxion.com",
     urlLabel: "axxion.com",
+    hue: "#FF4200",
+    proofHighlight: "first",
+    ops: {
+      image: "/images/macro-brake-disc-night.png",
+      alt: "Close view of a vehicle brake disc under studio light",
+      label: "From claim to repair",
+    },
   },
   {
     slug: "pag-direct",
@@ -102,6 +135,14 @@ export const companies: Company[] = [
     ],
     url: "https://www.pagdirect.com",
     urlLabel: "pagdirect.com",
+    hue: "#8A6CFF",
+    proofHighlight: "30+",
+    ops: {
+      image: "/images/hero-interchange-night.png",
+      alt: "Highway interchange at night with streams of vehicle lights",
+      label: "Retail across Ontario",
+      stat: { value: "2", label: "Hyundai dealerships, more than 30 years in retail" },
+    },
   },
   {
     slug: "vicimus",
@@ -121,6 +162,13 @@ export const companies: Company[] = [
     ],
     url: "https://vicimus.com",
     urlLabel: "vicimus.com",
+    hue: "#34E39B",
+    proofHighlight: "Retention",
+    /* Group-level positioning only: no client counts, no imagery claims.
+       The ops band renders the neon data motif instead of a photo. */
+    ops: {
+      label: "Built and run at group level",
+    },
   },
 ];
 

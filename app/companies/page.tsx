@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PageShell, Scrim } from "@/components/site/PageShell";
 import { companies } from "@/content/site";
+import "./companies.css";
 
 export const metadata: Metadata = {
   title: "Companies",
@@ -30,33 +31,50 @@ export default function CompaniesPage() {
           </p>
 
           <div className="mt-16 grid gap-px border-y border-hairline bg-hairline sm:grid-cols-2 lg:grid-cols-3">
-            {companies.map((c, i) => (
+            {companies.map((c) => (
               <Link
                 data-reveal
                 key={c.slug}
                 href={`/companies/${c.slug}`}
-                className="group relative flex flex-col justify-between bg-[rgba(3,6,20,0.78)] p-8 transition-colors duration-[var(--dur-fast)] hover:bg-[rgba(4,8,28,0.9)]"
+                className="co-tile group relative flex flex-col justify-between bg-[rgba(3,6,20,0.78)] p-8 transition-colors duration-[var(--dur-fast)] hover:bg-[rgba(4,8,28,0.9)]"
+                style={{ "--co": c.hue } as React.CSSProperties}
               >
                 <div>
-                  <p className="type-kicker text-highlight">
-                    {String(i + 1).padStart(2, "0")}
-                  </p>
-                  <h2 className="mt-3 text-xl font-medium text-hi">{c.name}</h2>
+                  <span aria-hidden className="co-tile-bar" />
+                  <h2 className="mt-5 text-xl font-medium text-hi">{c.name}</h2>
                   <p className="mt-3 text-mid">{c.oneLiner}</p>
                 </div>
-                <div className="mt-8 flex items-center justify-between">
+                <div className="mt-8 flex items-center justify-between gap-4">
                   <span className="type-mono text-faint">{c.chipHint}</span>
-                  <span className="type-kicker text-mid transition-colors group-hover:text-highlight">
+                  <span className="co-tile-cta type-kicker text-mid">
                     Explore →
                   </span>
                 </div>
               </Link>
             ))}
-            {/* keeps the hairline grid flush when the tile count leaves an
-                empty cell at the sm/lg breakpoints */}
-            {(companies.length % 2 === 1 || companies.length % 3 !== 0) && (
-              <div aria-hidden className="hidden bg-[rgba(3,6,20,0.78)] sm:block" />
-            )}
+            {/* Sixth cell: the group standard behind all five companies. */}
+            <Link
+              data-reveal
+              href="/#model"
+              className="co-tile co-tile--group group relative flex flex-col justify-between bg-[rgba(3,6,20,0.78)] p-8 transition-colors duration-[var(--dur-fast)] hover:bg-[rgba(4,8,28,0.9)]"
+            >
+              <div>
+                <span aria-hidden className="co-tile-bar" />
+                <h2 className="mt-5 text-xl font-medium text-hi">
+                  The Group standard
+                </h2>
+                <p className="mt-3 text-mid">
+                  One operating model behind all five companies: build, run,
+                  and share what works across the group.
+                </p>
+              </div>
+              <div className="mt-8 flex items-center justify-between gap-4">
+                <span className="type-mono text-faint">the model</span>
+                <span className="co-tile-cta type-kicker text-mid">
+                  See the model →
+                </span>
+              </div>
+            </Link>
           </div>
         </div>
       </section>

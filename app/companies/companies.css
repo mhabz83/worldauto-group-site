@@ -1,0 +1,194 @@
+/* ==========================================================================
+   Per-company identity system (/companies + /companies/[slug]).
+   Each company owns one hue (--co), matching its homepage journey stop:
+   FastTrack #1367FE · AutoData #42D7FF · Axxion #FF4200 ·
+   PAG Direct #8A6CFF · Vicimus #34E39B.
+   The hue is an accent only — kickers, borders, stats, glows. Structural
+   navy and the orange action colour stay untouched.
+   ========================================================================== */
+
+/* ---- /companies grid tiles ---------------------------------------------- */
+.co-tile {
+  --co: #1367fe;
+}
+.co-tile-bar {
+  display: block;
+  width: 2.4rem;
+  height: 2px;
+  background: linear-gradient(90deg, var(--co), color-mix(in srgb, var(--co) 20%, transparent));
+  box-shadow: 0 0 12px color-mix(in srgb, var(--co) 60%, transparent);
+}
+.co-tile:hover {
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--co) 65%, transparent);
+}
+.co-tile:hover .co-tile-cta {
+  color: color-mix(in srgb, var(--co) 72%, white);
+}
+/* the group-standard tile speaks in the house voice, not a company hue */
+.co-tile--group {
+  --co: #ff6340;
+}
+
+/* ---- Company page: hue-tinted kicker, stat and chips --------------------- */
+.co-page {
+  --co: #1367fe;
+}
+.co-kicker {
+  color: color-mix(in srgb, var(--co) 74%, white);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+/* grafted from the homepage journey panel: the big proof line with one
+   signal word in the company hue */
+.co-proof {
+  color: #fff;
+  font-size: clamp(1.5rem, 2.9vw, 2.6rem);
+  font-weight: 300;
+  letter-spacing: -0.025em;
+  line-height: 1.08;
+}
+.co-signal {
+  color: var(--co);
+}
+/* grafted from the homepage journey panel: capability chips with
+   hue-tinted borders */
+.co-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  /* set here, not via utility class: this sheet loads after the utilities
+     and a bare margin reset would swallow them */
+  margin: 2rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.co-chips li {
+  padding: 0.42rem 0.68rem;
+  border: 1px solid color-mix(in srgb, var(--co) 52%, transparent);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.74rem;
+  background: rgba(2, 4, 15, 0.7);
+}
+
+/* ---- Operations band ------------------------------------------------------ */
+.co-ops {
+  position: relative;
+  overflow: hidden;
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+  min-height: clamp(21rem, 44vw, 30rem);
+  display: flex;
+  align-items: flex-end;
+}
+.co-ops-img {
+  object-fit: cover;
+}
+/* hue wash + legibility gradient over the operations imagery */
+.co-ops-tint {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(2, 4, 15, 0.62) 0%, rgba(2, 4, 15, 0.1) 38%, rgba(2, 4, 15, 0.86) 100%),
+    linear-gradient(120deg, color-mix(in srgb, var(--co) 26%, transparent) 0%, transparent 55%);
+}
+/* neon data motif for companies without operations imagery (Vicimus):
+   fine hue grid rising out of a glow, no photography, no claims */
+.co-ops--motif {
+  background: linear-gradient(180deg, #02040f 0%, #04061a 100%);
+}
+.co-ops--motif::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--co) 34%, transparent) 0 1px, transparent 1px 64px),
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--co) 22%, transparent) 0 1px, transparent 1px 64px);
+  mask-image: radial-gradient(115% 130% at 50% 112%, rgba(0, 0, 0, 0.85) 12%, transparent 68%);
+  -webkit-mask-image: radial-gradient(115% 130% at 50% 112%, rgba(0, 0, 0, 0.85) 12%, transparent 68%);
+}
+.co-ops--motif::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    70% 62% at 50% 116%,
+    color-mix(in srgb, var(--co) 30%, transparent) 0%,
+    transparent 70%
+  );
+}
+.co-ops--motif .co-ops-inner {
+  z-index: 1;
+}
+.co-ops-inner {
+  position: relative;
+  width: 100%;
+  padding: clamp(2rem, 5vw, 3.5rem) var(--gutter);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem 3rem;
+}
+/* the centre-count treatment (FastTrack 32, PAG Direct 2) */
+.co-count {
+  display: flex;
+  align-items: baseline;
+  gap: 1.1rem;
+}
+.co-count-value {
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  font-size: clamp(4.5rem, 11vw, 9rem);
+  line-height: 0.9;
+  color: #fff;
+  text-shadow:
+    0 0 18px color-mix(in srgb, var(--co) 65%, transparent),
+    0 0 48px color-mix(in srgb, var(--co) 40%, transparent);
+}
+.co-count-label {
+  max-width: 16ch;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: clamp(0.95rem, 1.2vw, 1.1rem);
+  line-height: 1.45;
+}
+
+/* ---- Next-company band ---------------------------------------------------- */
+.co-next {
+  --co-next: #1367fe;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: clamp(1.6rem, 3vw, 2.4rem) clamp(1.4rem, 3vw, 2.2rem);
+  border: 1px solid color-mix(in srgb, var(--co-next) 38%, transparent);
+  background:
+    radial-gradient(120% 160% at 100% 0%, color-mix(in srgb, var(--co-next) 16%, transparent) 0%, transparent 58%),
+    rgba(2, 4, 15, 0.72);
+  transition: border-color var(--dur-fast), background-color var(--dur-fast);
+}
+.co-next:hover {
+  border-color: color-mix(in srgb, var(--co-next) 70%, transparent);
+}
+.co-next-kicker {
+  color: color-mix(in srgb, var(--co-next) 74%, white);
+}
+.co-next-name {
+  color: #fff;
+  font-size: clamp(1.5rem, 2.6vw, 2.2rem);
+  font-weight: 300;
+  letter-spacing: -0.02em;
+}
+.co-next-arrow {
+  color: color-mix(in srgb, var(--co-next) 74%, white);
+  font-size: clamp(1.4rem, 2.2vw, 1.9rem);
+}
+
+@media (max-width: 640px) {
+  .co-ops-inner {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

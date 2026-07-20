@@ -358,6 +358,71 @@ html.gsap [data-reveal] {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Inner-page neon field — the fixed backdrop behind PageShell pages. */
+/*  Navy base + glow + horizon line + perspective floor, all keyed to  */
+/*  --field-hue so company pages can take their own colour. Replaces   */
+/*  the recycled neon-SUV plate (homepage-only artwork now).           */
+/* ------------------------------------------------------------------ */
+.neon-field {
+  --field-hue: #1367fe;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  /* the perspective floor extends past the viewport; without this clip the
+     transformed pseudo-element widens the mobile layout */
+  overflow: clip;
+  background:
+    radial-gradient(
+      110% 70% at 76% -6%,
+      color-mix(in srgb, var(--field-hue) 22%, transparent) 0%,
+      transparent 58%
+    ),
+    radial-gradient(
+      80% 52% at 10% 108%,
+      color-mix(in srgb, var(--field-hue) 13%, transparent) 0%,
+      transparent 62%
+    ),
+    linear-gradient(180deg, #02040f 0%, #04061a 56%, #02040f 100%);
+}
+/* horizon line */
+.neon-field::before {
+  content: "";
+  position: absolute;
+  top: 62%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 4%,
+    color-mix(in srgb, var(--field-hue) 78%, transparent) 50%,
+    transparent 96%
+  );
+  box-shadow: 0 0 22px 1px color-mix(in srgb, var(--field-hue) 55%, transparent);
+  opacity: 0.55;
+}
+/* perspective floor below the horizon */
+.neon-field::after {
+  content: "";
+  position: absolute;
+  top: 62%;
+  bottom: -12%;
+  left: -18%;
+  right: -18%;
+  background: repeating-linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--field-hue) 55%, transparent) 0 1px,
+    transparent 1px 96px
+  );
+  transform: perspective(520px) rotateX(58deg);
+  transform-origin: top center;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.8) 0%, transparent 82%);
+  -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.8) 0%, transparent 82%);
+  opacity: 0.22;
+}
+
+/* ------------------------------------------------------------------ */
 /*  Shared wordmark — one lockup for the home journey header and the   */
 /*  inner-page header. WORLD+AUTO strong (AUTO in the signal colour),  */
 /*  GROUP light. Never wraps.                                          */
