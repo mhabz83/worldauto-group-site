@@ -88,6 +88,16 @@ const railChapters = [
   { label: "Partner", id: "verticals", section: "partner" },
 ] as const;
 
+// Readable button ink per stop hue: white on the deep hues, near-black navy
+// on the two light hues (AutoData cyan, Vicimus green). Matches the grid.
+const stopInk: Record<string, string> = {
+  fasttrack: "#ffffff",
+  autodata: "#02040f",
+  axxion: "#ffffff",
+  "pag-direct": "#ffffff",
+  vicimus: "#02040f",
+};
+
 const companyProofHighlights: Record<(typeof companies)[number]["slug"], string> = {
   fasttrack: "32",
   autodata: "Inspections",
@@ -477,7 +487,13 @@ function CompanyStop({ company }: { company: (typeof companies)[number] }) {
         {company.capabilities.map((capability) => <li key={capability}>{capability}</li>)}
       </ul>
       <div className="journey-links">
-        <Link href={`/companies/${company.slug}`}>Explore {company.name} →</Link>
+        <Link
+          href={`/companies/${company.slug}`}
+          className="journey-explore-btn"
+          style={{ "--stop-ink": stopInk[company.slug] ?? "#ffffff" } as React.CSSProperties}
+        >
+          Explore {company.name} →
+        </Link>
         <a href={company.url} target="_blank" rel="noreferrer">Visit site</a>
       </div>
       {company.slug === "autodata" && <ClientsCarousel />}
@@ -814,6 +830,12 @@ export function LandingJourney() {
         .journey-links { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem 1.4rem; margin-top: 1.25rem; }
         .journey-links a { display: inline-flex; min-height: 48px; align-items: center; color: #fff; text-underline-offset: .35em; text-decoration-color: var(--stop-accent); font-weight: 600; }
         .journey-links a:last-child { color: var(--text-mid); font-size: .82rem; font-weight: 400; }
+        /* Prominent Explore CTA — same button language as the /companies grid
+           and the "Partner With Us" header CTA. Solid in the stop hue with
+           readable ink (--stop-ink). Scoped past ".journey-links a" so it
+           wins the cascade. The "Visit site" link stays a plain text link. */
+        .journey-links a.journey-explore-btn { min-height: 48px; padding: .72rem 1.15rem; background: var(--stop-accent); color: var(--stop-ink,#fff); border-radius: 4px; font-size: .6875rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; text-decoration: none; white-space: nowrap; transition: filter var(--dur-fast) ease, box-shadow var(--dur-fast) ease; }
+        .journey-links a.journey-explore-btn:hover, .journey-links a.journey-explore-btn:focus-visible { filter: brightness(1.08); box-shadow: 0 0 22px color-mix(in srgb, var(--stop-accent) 45%, transparent); }
         /* AutoData clients marquee — full-colour transparent logos on one soft
            light tray (no per-logo cards). The tray fades at both ends. */
         .journey-clients { margin-top: 1.5rem; max-width: 100%; }

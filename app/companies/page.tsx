@@ -10,6 +10,17 @@ export const metadata: Metadata = {
     "The operating companies of World Automotive Group: FastTrack, AutoData, Axxion, PAG Direct and Vicimus. Each runs on its own domain and P&L; the group sets the standard.",
 };
 
+// Readable button ink per company hue: white on the deep hues, near-black
+// navy on the two light hues (AutoData cyan, Vicimus green) so the label
+// always stays legible on its solid button.
+const ctaInk: Record<string, string> = {
+  fasttrack: "#ffffff",
+  autodata: "#02040f",
+  axxion: "#ffffff",
+  "pag-direct": "#ffffff",
+  vicimus: "#02040f",
+};
+
 export default function CompaniesPage() {
   return (
     <PageShell>
@@ -37,18 +48,16 @@ export default function CompaniesPage() {
                 key={c.slug}
                 href={`/companies/${c.slug}`}
                 className="co-tile group relative flex flex-col justify-between bg-[rgba(3,6,20,0.78)] p-8 transition-colors duration-[var(--dur-fast)] hover:bg-[rgba(4,8,28,0.9)]"
-                style={{ "--co": c.hue } as React.CSSProperties}
+                style={{ "--co": c.hue, "--co-ink": ctaInk[c.slug] ?? "#ffffff" } as React.CSSProperties}
               >
                 <div>
                   <span aria-hidden className="co-tile-bar" />
                   <h2 className="mt-5 text-xl font-medium text-hi">{c.name}</h2>
                   <p className="mt-3 text-mid">{c.oneLiner}</p>
                 </div>
-                <div className="mt-8 flex items-center justify-between gap-4">
+                <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
                   <span className="type-mono text-faint">{c.chipHint}</span>
-                  <span className="co-tile-cta type-kicker text-mid">
-                    Explore →
-                  </span>
+                  <span className="co-tile-btn">Explore {c.name} →</span>
                 </div>
               </Link>
             ))}
@@ -68,9 +77,9 @@ export default function CompaniesPage() {
                   and share what works across the group.
                 </p>
               </div>
-              <div className="mt-8 flex items-center justify-between gap-4">
+              <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
                 <span className="type-mono text-faint">the model</span>
-                <span className="co-tile-cta type-kicker text-mid">
+                <span className="co-tile-btn co-tile-btn--ghost">
                   See the model →
                 </span>
               </div>

@@ -21,8 +21,41 @@
 .co-tile:hover {
   box-shadow: inset 0 1px 0 color-mix(in srgb, var(--co) 65%, transparent);
 }
-.co-tile:hover .co-tile-cta {
+/* Prominent CTA button — the obvious "this opens a full page" affordance.
+   Solid in the company hue with readable ink (--co-ink set per tile). The
+   whole tile stays the link; the button is a styled span inside it, so no
+   nested anchors. It lights on tile hover. */
+.co-tile-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 40px;
+  padding: 0.6rem 1rem;
+  background: var(--co);
+  color: var(--co-ink, #fff);
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: filter var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+}
+.co-tile:hover .co-tile-btn {
+  filter: brightness(1.08);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--co) 45%, transparent);
+}
+/* Group-standard tile: matching ghost button in the house voice. */
+.co-tile-btn--ghost {
+  background: transparent;
   color: color-mix(in srgb, var(--co) 72%, white);
+  border: 1px solid color-mix(in srgb, var(--co) 55%, transparent);
+}
+.co-tile--group:hover .co-tile-btn--ghost {
+  filter: none;
+  box-shadow: none;
+  background: color-mix(in srgb, var(--co) 12%, transparent);
+  border-color: color-mix(in srgb, var(--co) 80%, transparent);
 }
 /* the group-standard tile speaks in the house voice, not a company hue */
 .co-tile--group {
