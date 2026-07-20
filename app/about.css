@@ -932,30 +932,6 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   position: relative;
   border-radius: 2px;
 }
-.ax-person-cut {
-  position: relative;
-  aspect-ratio: 3 / 4;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  background: none;
-}
-.ax-person-cut .ax-company-panel-inner {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  transform-origin: 50% 100%;
-}
-.ax-person-cut img {
-  max-height: 100%;
-  max-width: 100%;
-  width: auto;
-  object-fit: contain;
-  display: block;
-  -webkit-user-drag: none;
-}
 .ax-company-panel-inner {
   position: absolute;
   inset: 0;
@@ -1484,48 +1460,61 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   .axn-label {
     font-size: 0.68rem;
   }
-  .ax-careers-bottom {
-    margin-top: 4rem;
-    padding-bottom: clamp(6rem, 40vw, 12rem);
-  }
 }
-/* partner close — the S8 bottom CTA block promoted to its own section */
+/* partner close — strengths grid first, then one full-viewport centered
+   closing moment (title, Abu Dhabi line, primary + ghost action pair) */
 .ax-partner {
   background: var(--wag-navy-800);
 }
-.ax-careers-bottom {
-  row-gap: 1.6rem;
-  margin-top: clamp(6rem, 18vh, 12rem);
-  padding-bottom: clamp(10rem, 30.8vw, 26rem);
+.ax-partner-why {
+  padding-top: clamp(4.5rem, 11vh, 8rem);
 }
-.ax-partner .ax-partner-inner {
+.ax-partner-why .ax-why-list {
   margin-top: 0;
-  padding-top: clamp(6rem, 16vh, 11rem);
-  /* tightened: the why-partner rows + CTA now follow inside the section */
-  padding-bottom: clamp(2rem, 5vh, 3.5rem);
 }
-.ax-careers-bottom .ax-cta-title {
-  grid-column: 1 / span 4;
+.ax-closer {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding-block: clamp(4rem, 8vh, 6rem);
 }
-.ax-careers-bottom .ax-cta-rule {
-  grid-column: 1 / -1;
+.ax-closer-title {
+  margin: 0;
 }
-.ax-careers-bottom .ax-cta-body {
-  grid-column: 5 / span 4;
+.ax-closer-line {
+  max-width: 50ch;
+  margin: clamp(1.2rem, 3vh, 2rem) auto 0;
   color: var(--text-mid);
 }
-.ax-careers-bottom .ax-cta-action {
-  grid-column: 10 / span 3;
-  justify-self: end;
-  align-self: start;
+.ax-closer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 14px 18px;
+  margin-top: clamp(2rem, 5vh, 3.2rem);
 }
-@media (max-width: 767px) {
-  .ax-careers-bottom .ax-cta-title,
-  .ax-careers-bottom .ax-cta-body,
-  .ax-careers-bottom .ax-cta-action {
-    grid-column: 1 / -1;
-    justify-self: start;
-  }
+.ax-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  border: 1px solid var(--hairline-strong);
+  background: none;
+  color: var(--text-hi);
+  font-size: var(--ax-t2);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 15px 26px;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: border-color 0.6s var(--ax-ease-flicker), background 0.6s var(--ax-ease-flicker);
+}
+.ax-btn-ghost:hover {
+  border-color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 /* ------------------------------------------------------------------ */
@@ -1662,180 +1651,169 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
 }
 
 
-/* --- Team lineup variant: the SECTION IS THE FRAME (Madar S7 look). people
-   stand ON the stage's bottom edge; neighbors clip at the stage sides; the
-   frosted card sits just left of the active (centered) person. Scoped so the
-   companies recap is untouched. */
-.ax-team-people .ax-team-inner {
-  padding-bottom: 0;              /* people stand ON the dark section edge --
-                                     any gap below reads as floating torsos */
-}
-.ax-team-people .ax-team-stage {
-  position: relative;
-  height: clamp(560px, 92vh, 1080px);   /* Madar scale: people own the frame */
-  overflow: hidden;               /* the frame does the cutting */
-  /* full-bleed: the BROWSER edge is the frame. Inside .ax-container the
-     stage would clip people at the padded edge, leaving a floating gap */
-  margin-inline: calc(-1 * var(--ax-pad));
-}
-.ax-team-people .ax-carousel {
-  position: absolute;
-  inset: 0;
-}
-.ax-team-people .ax-carousel-viewport {
-  /* Madar architecture: a NARROW CENTERED column is the slider viewport
-     (perView 1 = active always exactly centered); neighbors overflow it
-     naturally and the stage's own edges clip them. */
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  /* slide width tracks the PERSON's height (≈0.74 x stage height), not the
-     screen width, so the lineup stays shoulder-to-shoulder on wide monitors */
-  width: clamp(430px, 68vh, 800px);
-  max-width: none;
-  margin: 0;
-  overflow: visible;
-}
-.ax-team-people .ax-carousel--ready .ax-carousel-viewport {
-  overflow: visible;              /* beat the base --ready overflow:hidden */
-}
-.ax-team-people .ax-carousel-list {
-  height: 100%;
-  align-items: flex-end;
-}
-.ax-team-people .ax-carousel:not(.ax-carousel--ready) .ax-carousel-list {
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-}
-.ax-team-people .ax-carousel:not(.ax-carousel--ready) .ax-slide {
-  scroll-snap-align: center;
-  flex: 0 0 100%;
-}
-.ax-team-people .ax-slide {
-  height: 100%;
-}
-.ax-team-people .ax-person-cut {
-  aspect-ratio: auto;
-  height: 100%;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  background: none;
-}
-.ax-team-people .ax-person-cut {
-  position: relative;
-}
-.ax-team-people .ax-person-cut .ax-company-panel-inner {
-  position: absolute;
-  inset: 0;
-  height: auto;
-  width: auto;
-  padding: 0;                     /* base panel padding would lift the feet */
-  display: flex;
-  flex-direction: row;            /* base is column: without this, flex-end
-                                     means RIGHT and center means MIDDLE */
-  align-items: flex-end;
-  justify-content: center;
-  transform-origin: 50% 100%;
-}
-.ax-team-people .ax-person-cut img {
-  height: 97%;                    /* head near the frame top, feet ON the edge */
-  max-height: none;
-  width: auto;
-  max-width: none;
-  object-fit: contain;
-  object-position: bottom;
-  display: block;
-}
-.ax-team-people .ax-team-content {
-  position: absolute;
-  inset: 0;
-  display: block;
-  pointer-events: none;
-  z-index: 30;                    /* above the slide depth stack (<=20) */
-}
-.ax-team-people .ax-testimonial-card {
-  /* the one spot guaranteed empty at every width: the strip above the
-     scaled left neighbor's head (top 21% of stage), ending before the
-     active person's silhouette (~30vh left of center). vh units keep it
-     aligned with the people, whose size is also vh-driven. */
-  position: absolute;
-  right: calc(50% + 30vh);
-  left: auto;
-  top: clamp(24px, 4.5vh, 56px);  /* below the fixed header */
-  /* left edge stays right of the edge-pinned neighbor's head (~20vh);
-     Carousels.tsx caps the neighbor with the same numbers */
-  width: clamp(220px, calc(50% - 50vh - 16px), 400px);
-  padding: 18px 22px;
-}
-.ax-team-people .ax-testimonial-card .ax-team-name {
-  font-size: clamp(20px, 2.6vh, 30px);
-  line-height: 1.1;
-  min-height: 2.2em;              /* reserve 2 lines: the longest name wraps
-                                     at narrow widths, and a card that grows
-                                     only for one person moves the arrows */
-}
-.ax-team-people .ax-testimonial-card .ax-team-role {
-  margin-top: 6px;
-  font-size: 13px;
-  line-height: 1.35;
-  min-height: 2.7em;              /* reserve 2 lines: longest titles wrap */
-}
-.ax-team-people .ax-testimonial-card .ax-team-desc {
-  margin-top: 8px;
-  font-size: 13px;
-  line-height: 1.4;
-  min-height: 2.8em;              /* reserve 2 lines */
-  color: rgba(255, 255, 255, 0.8);
-}
-/* the reserved min-heights above keep the card the same size for every
-   person, so the arrows never move between clicks */
-.ax-team-people .ax-team-card-nav {
-  margin-top: 10px;
-}
-.ax-team-people .ax-team-card-nav .ax-btn-square {
-  width: 34px;
-  height: 34px;
-}
-@media (max-width: 767px) {
-  .ax-team-people .ax-team-stage { height: clamp(420px, 64vh, 620px); }
-  .ax-team-people .ax-testimonial-card {
-    left: 12px; right: 12px; width: auto; top: auto; bottom: 16px;
-  }
-  .ax-team-people .ax-person-cut img { height: 86%; }
-}
+/* ------------------------------------------------------------------ */
+/* chapter-rail clearance: tail blocks whose text is anchored to the   */
+/* container's left edge step right of the fixed rail column at wide   */
+/* viewports (the rail ends ~166px from the edge)                      */
+/* ------------------------------------------------------------------ */
 
-/* The team lineup RUNS its slider under reduced motion (instant snaps), so
-   the global reduce fallback above must not re-flow its overlay or add gaps
-   that would desync keen's slide positions. */
-@media (prefers-reduced-motion: reduce) {
-  .ax-team-people .ax-team-content {
-    position: absolute !important;
-    inset: 0;
-    margin-top: 0;
-    pointer-events: none;
-  }
-  .ax-team-people .ax-carousel--ready .ax-carousel-list {
-    overflow: visible;
-    gap: 0;
-  }
-  .ax-team-people .ax-carousel--ready .ax-slide {
-    flex: 0 0 auto;
-  }
-  /* the global reduce rule above reveals every swap item (static fallback);
-     this card still cycles, so inactive names stay hidden */
-  html.gsap .ax .ax-team-people [data-ax-swap-item][data-inactive] {
-    display: none;
+@media (min-width: 1200px) {
+  .ax-giants-inner,
+  .ax-approach-inner,
+  .ax-verticals-inner,
+  .ax-partner-why {
+    padding-inline-start: calc(var(--ax-pad) + 9rem);
   }
 }
 
-/* --- world map: the commitment section IS the full-bleed plate -------- */
+/* --- world map: the commitment section IS the full-bleed plate.
+   ~200px navy gradients ease the light plate into the dark bands on either
+   side (no hard white cut). */
+.ax-world-map {
+  position: relative;
+}
 .ax-world-map img {
   width: 100%;
   height: auto;
   display: block;
+}
+.ax-world-map-fade {
+  position: absolute;
+  inset-inline: 0;
+  height: min(200px, 32%);
+  pointer-events: none;
+}
+.ax-world-map-fade--top {
+  top: 0;
+  background: linear-gradient(180deg, var(--wag-navy-700) 0%, rgba(6, 10, 61, 0) 100%);
+}
+.ax-world-map-fade--bottom {
+  bottom: 0;
+  background: linear-gradient(0deg, var(--wag-navy-700) 0%, rgba(6, 10, 61, 0) 100%);
+}
+
+/* ------------------------------------------------------------------ */
+/* team band — panel navy, full-bleed duotone portrait row,            */
+/* editorial nameplates (replaces the recovered lineup carousel)       */
+/* ------------------------------------------------------------------ */
+
+.ax-teamband {
+  background: var(--bg-panel);
+  padding-block: clamp(4rem, 9vh, 7rem) clamp(4rem, 10vh, 7.5rem);
+}
+.ax-portrow {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  /* at rest the first tile clears the fixed chapter rail; the row still
+     bleeds to the right edge and tiles pass under the rail when scrolled.
+     scroll-padding keeps the snap rest position from swallowing the inset. */
+  padding-inline-start: clamp(2.6rem, 13vw, 11rem);
+  scroll-padding-inline-start: clamp(2.6rem, 13vw, 11rem);
+  display: flex;
+  gap: clamp(2px, 0.35vw, 6px);
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+}
+.ax-portrow::-webkit-scrollbar {
+  display: none;
+}
+.ax-port {
+  flex: 0 0 clamp(210px, 19.5vw, 300px);
+  min-width: 0;
+  scroll-snap-align: start;
+}
+.ax-port-fig {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+/* uniform 3:4 crop: every cutout is 1100px tall full-body, so a shared
+   height-based scale gives every face the same size in the frame */
+.ax-port-img {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--wag-navy-600) 0%, var(--wag-navy-700) 100%);
+}
+.ax-port-img img {
+  position: absolute;
+  left: 50%;
+  top: 4%;
+  height: 132%;
+  width: auto;
+  max-width: none;
+  transform: translateX(-50%);
+  filter: grayscale(1) brightness(1.42) contrast(1.04);
+  -webkit-user-drag: none;
+}
+/* duotone: grayscale above, then navy multiply + orange highlight screen.
+   The multiply colour is the duotone's HIGHLIGHT tone (steel blue): whites
+   map to it, shadows fall to deep navy. */
+.ax-port-img::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: color-mix(in srgb, var(--wag-navy-500) 40%, #ffffff);
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+.ax-port-img::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(
+    205deg,
+    rgba(255, 99, 64, 0.4) 0%,
+    rgba(255, 99, 64, 0.14) 42%,
+    rgba(255, 99, 64, 0.03) 78%
+  );
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+/* editorial nameplate: navy plate, orange rule, light name, small-caps
+   role — reserved heights hold one shared baseline grid across the row */
+.ax-port-plate {
+  flex: 1;
+  margin: 0;
+  padding: 16px clamp(14px, 1.3vw, 20px) 20px;
+  background: var(--wag-navy-700);
+  border-top: 1px solid var(--hairline);
+}
+.ax-port-rule {
+  display: block;
+  width: 26px;
+  height: 2px;
+  background: var(--highlight);
+  margin-bottom: 12px;
+}
+.ax-port-name {
+  margin: 0;
+  font-size: clamp(1.05rem, 1.25vw, 1.3rem);
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  line-height: 1.18;
+  min-height: 2.36em;
+  color: #fff;
+}
+.ax-port-role {
+  margin: 6px 0 0;
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  line-height: 1.5;
+  min-height: 3em;
+  color: var(--text-low);
+}
+@media (max-width: 767px) {
+  .ax-port {
+    flex-basis: min(64vw, 250px);
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -2125,10 +2103,6 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   color: var(--text-mid);
 }
 .ax-why-unlock span { color: var(--highlight); }
-.ax-partner-action {
-  margin-top: clamp(2rem, 5vh, 3rem);
-  padding-bottom: clamp(6rem, 14vh, 10rem);
-}
 @media (max-width: 899px) {
   .ax-why-list { grid-template-columns: 1fr; }
 }

@@ -24,7 +24,8 @@ import { journeyContent } from "@/components/hero/journeyContent";
 import { ScrollTrigger } from "./engine";
 import { FlickerText, FlickerTitle, GlitchLabel, useRevealManager } from "./reveal";
 import { GlowSvg } from "./svgs";
-import { TeamCarousel, CompaniesCarousel } from "./Carousels";
+import { CompaniesCarousel } from "./Carousels";
+import { TeamBand } from "./TeamBand";
 import { ValuesTimeline } from "./ValuesTimeline";
 import { GroupNumbersPanel } from "./GroupNumbersPanel";
 
@@ -164,7 +165,9 @@ function CommitmentSection() {
       data-nav-section="group"
       className="ax-section ax-commitment"
     >
-      {/* full-bleed world map plate: pins are baked into the artwork */}
+      {/* full-bleed world map plate: pins are baked into the artwork.
+          ~200px navy gradients ease the light plate into the dark bands on
+          either side instead of a hard white cut. */}
       <div className="ax-world-map">
         <img
           src="/about/world-map.webp"
@@ -174,6 +177,8 @@ function CommitmentSection() {
           loading="lazy"
           draggable={false}
         />
+        <span className="ax-world-map-fade ax-world-map-fade--top" aria-hidden="true" />
+        <span className="ax-world-map-fade ax-world-map-fade--bottom" aria-hidden="true" />
       </div>
     </section>
   );
@@ -222,8 +227,8 @@ function VerticalsSection() {
 }
 
 /* ------------------------------------------------------------------ */
-/* partner close — why partner (how we win → what it unlocks) + CTA    */
-/* (one partner CTA on the whole merged page)                          */
+/* partner close — the strengths grid first, then one full-viewport    */
+/* centered closing moment (the only partner CTA on the merged page)   */
 /* ------------------------------------------------------------------ */
 
 function PartnerClose() {
@@ -234,19 +239,7 @@ function PartnerClose() {
       data-nav-section="partner"
       className="ax-section ax-partner"
     >
-      <div className="ax-container">
-        <div className="ax-grid ax-careers-bottom ax-partner-inner">
-          <FlickerTitle
-            as="h2"
-            className="ax-h2 ax-cta-title"
-            reveal="title"
-            segments={["Build With", "\n", "The Group."]}
-          />
-          <span className="ax-hairline ax-cta-rule" />
-          <p className="ax-t1 ax-cta-body" data-about-reveal="fade-in">
-            {journeyContent.partner.body}
-          </p>
-        </div>
+      <div className="ax-container ax-partner-why">
         <ul className="ax-why-list">
           {whyPartner.rows.map((r) => (
             <li key={r.strength} className="ax-why-row" data-about-reveal="fade-in">
@@ -259,7 +252,18 @@ function PartnerClose() {
             </li>
           ))}
         </ul>
-        <div className="ax-cta-action ax-partner-action" data-about-reveal="fade-in">
+      </div>
+      <div className="ax-container ax-closer">
+        <FlickerTitle
+          as="h2"
+          className="ax-h2 ax-cta-title ax-closer-title"
+          reveal="title"
+          segments={["Build With", "\n", "The Group."]}
+        />
+        <p className="ax-t1 ax-closer-line" data-about-reveal="fade-in">
+          {journeyContent.partner.body}
+        </p>
+        <div className="ax-closer-actions" data-about-reveal="fade-in">
           <Link
             href="/contact"
             className="ax-btn-primary"
@@ -267,6 +271,9 @@ function PartnerClose() {
             aria-label={journeyContent.partner.cta}
           >
             <GlitchLabel text={journeyContent.partner.cta} /> →
+          </Link>
+          <Link href="/contact" className="ax-btn-ghost">
+            Contact the group office
           </Link>
         </div>
       </div>
@@ -354,7 +361,7 @@ export function StoryTail() {
       <ForesightSection />
       <CommitmentSection />
       <ValuesTimeline />
-      <TeamCarousel />
+      <TeamBand />
       <GroupNumbersPanel />
       <CompaniesCarousel />
       <VerticalsSection />

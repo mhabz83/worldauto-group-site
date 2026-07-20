@@ -6,13 +6,14 @@ import { Children, useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { ScrollToPlugin } from "gsap/ScrollToPlugin";
 import { companies, nav } from "@/content/site";
 import { StoryTail } from "@/components/about/StoryTail";
 import { ClientsCarousel } from "@/components/about/ClientsCarousel";
 import { NeonJourney } from "./NeonJourney";
 import { journeyContent, stopAccents } from "./journeyContent";
 
-gsap.registerPlugin(useGSAP, ScrollTrigger);
+gsap.registerPlugin(useGSAP, ScrollTrigger, ScrollToPlugin);
 
 const MOTION = {
   stopHeight: "118svh",
@@ -57,20 +58,6 @@ function Stop({ id, kind, accent, align = "start", children, label, navSection, 
   );
 }
 
-/* Progress-rail markers for the merged page: the seven journey stops plus the
-   Madar-machine story tail sections. */
-const journeyStops = [
-  { id: "group", label: "The Group" },
-  { id: "companies", label: "Companies" },
-  ...companies.map((company) => ({ id: `company-${company.slug}`, label: company.name })),
-  { id: "story", label: "One Operator, Many Engines" },
-  { id: "model", label: "The Model" },
-  { id: "heritage", label: "Heritage" },
-  { id: "numbers", label: "Group Numbers" },
-  { id: "companies-recap", label: "Companies Recap" },
-  { id: "partner", label: "Partner With Us" },
-] as const;
-
 const headerLinks = [
   { label: "The Group", href: "#story", section: "group" },
   { label: "Companies", href: "#companies", section: "companies" },
@@ -106,10 +93,34 @@ function HighlightedText({ text, highlight }: { text: string; highlight: string 
   );
 }
 
+/* Smooth-tween any orientation click (rail chapters, company tabs) to its
+   target. Reduced-motion users get an instant jump instead. */
+function tweenToElement(el: HTMLElement | null) {
+  if (!el) return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    el.scrollIntoView();
+    return;
+  }
+  gsap.to(window, {
+    duration: 0.9,
+    ease: "power2.inOut",
+    overwrite: "auto",
+    scrollTo: { y: el, autoKill: true },
+  });
+}
+
 function Header() {
   const [activeSection, setActiveSection] = useState<NavSection | null>("group");
   const [onLight, setOnLight] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  /* left chapter rail: hidden over the hero frame, colour-flips over the
+     light story sections, ticks the chapter that owns the viewport centre */
+  const [railVisible, setRailVisible] = useState(false);
+  const [railLight, setRailLight] = useState(false);
+  /* company tab rail: only while the journey's five company stops hold the
+     viewport; underlines the stop under the centre line */
+  const [tabsVisible, setTabsVisible] = useState(false);
+  const [activeCompany, setActiveCompany] = useState<string | null>(null);
   const progressRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -139,6 +150,39 @@ function Header() {
       // Sections without a nav owner (e.g. the numbers stack) clear the
       // highlight instead of leaving the previous item stuck active.
       setActiveSection((active as NavSection | undefined) ?? null);
+
+      // Chapter rail: appears once the opening frame has mostly scrolled
+      // away, and flips to ink over the light story sections (measured at
+      // the rail's own height — the viewport centre — not the header line).
+      const hero = document.getElementById("group");
+      setRailVisible(!hero || hero.getBoundingClientRect().bottom < window.innerHeight * 0.5);
+      let centerLight = false;
+      for (const el of document.querySelectorAll<HTMLElement>("[data-ax-theme]")) {
+        const r = el.getBoundingClientRect();
+        if (r.top <= probe && r.bottom >= probe) {
+          centerLight = el.dataset.axTheme === "light";
+          break;
+        }
+      }
+      setRailLight(centerLight);
+
+      // Company tabs: live from the "Five companies" intro stop until the
+      // last company stop leaves the centre line.
+      const intro = document.getElementById("companies");
+      const last = document.getElementById(`company-${companies[companies.length - 1].slug}`);
+      setTabsVisible(
+        !!intro && !!last &&
+        intro.getBoundingClientRect().top <= probe &&
+        last.getBoundingClientRect().bottom >= probe,
+      );
+      let current: string | null = null;
+      for (const company of companies) {
+        const el = document.getElementById(`company-${company.slug}`);
+        if (!el) continue;
+        const r = el.getBoundingClientRect();
+        if (r.top <= probe && r.bottom >= probe) current = company.slug;
+      }
+      setActiveCompany(current);
     };
     const schedule = () => {
       cancelAnimationFrame(raf);
@@ -224,10 +268,55 @@ function Header() {
 
       <div className={`journey-progress${light ? " journey-progress--light" : ""}`} aria-hidden="true">
         <div ref={progressRef} className="journey-progress-fill" />
-        <div className="journey-progress-stops">
-          {journeyStops.map((stop) => <span key={stop.id} title={stop.label} />)}
-        </div>
       </div>
+
+      {/* Fixed left chapter rail — the labelled replacement for the old
+          unlabelled dot strip. Hidden over the hero, ink over light bands. */}
+      <nav
+        className={`journey-rail${railLight ? " journey-rail--light" : ""}${railVisible ? "" : " journey-rail--hidden"}`}
+        aria-label="Page chapters"
+        aria-hidden={!railVisible}
+      >
+        {headerLinks.map((link, i) => (
+          <a
+            key={link.section}
+            href={link.href}
+            className={activeSection === link.section ? "is-active" : undefined}
+            aria-current={activeSection === link.section ? "location" : undefined}
+            aria-label={`Chapter ${String(i + 1).padStart(2, "0")}: ${link.label}`}
+            tabIndex={railVisible ? 0 : -1}
+            onClick={(event) => {
+              event.preventDefault();
+              tweenToElement(document.getElementById(link.href.slice(1)));
+            }}
+          >
+            <span className="journey-rail-tick" aria-hidden="true" />
+            <span className="journey-rail-num">{String(i + 1).padStart(2, "0")}</span>
+            <span className="journey-rail-label">{link.label}</span>
+          </a>
+        ))}
+      </nav>
+
+      {/* Company tab rail — a five-name index under the nav while the
+          journey's company stops hold the frame. */}
+      <nav
+        className={`journey-cotabs${tabsVisible ? " is-visible" : ""}`}
+        aria-label="Companies in this chapter"
+        aria-hidden={!tabsVisible}
+      >
+        {companies.map((company) => (
+          <button
+            key={company.slug}
+            type="button"
+            className={activeCompany === company.slug ? "is-active" : undefined}
+            aria-current={activeCompany === company.slug ? "location" : undefined}
+            tabIndex={tabsVisible ? 0 : -1}
+            onClick={() => tweenToElement(document.getElementById(`company-${company.slug}`))}
+          >
+            {company.name}
+          </button>
+        ))}
+      </nav>
 
       <nav
         id="journey-mobile-menu"
@@ -597,11 +686,33 @@ export function LandingJourney() {
            progress rail stays here. */
         .journey-progress--light { background: rgba(7,9,14,.16); }
         .journey-progress--light .journey-progress-fill { background: var(--wag-ink); }
-        .journey-progress--light .journey-progress-stops span { background: rgba(7,9,14,.45); box-shadow: 0 0 0 2px rgba(255,255,255,.8); }
         .journey-progress { position: fixed; z-index: 9; top: 71px; right: 0; left: 0; height: 1px; background: rgba(255,255,255,.12); pointer-events: none; }
         .journey-progress-fill { position: absolute; inset: 0; background: #fff; transform: scaleX(0); transform-origin: left; will-change: transform; }
-        .journey-progress-stops { position: absolute; inset: 0 var(--gutter); display: flex; justify-content: space-between; align-items: center; }
-        .journey-progress-stops span { width: 3px; height: 3px; border-radius: 50%; background: rgba(255,255,255,.56); box-shadow: 0 0 0 2px rgba(0,8,53,.82); }
+        /* Chapter rail — fixed left, numbered caps, orange tick on the
+           active chapter. Replaces the retired dot strip. */
+        .journey-rail { position: fixed; z-index: 9; left: clamp(14px,1.8vw,30px); top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 15px; transition: opacity .45s ease, visibility 0s linear 0s; }
+        .journey-rail--hidden { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .45s ease, visibility 0s linear .45s; }
+        .journey-rail a { display: flex; align-items: center; gap: 9px; font-size: 10px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: rgba(255,255,255,.46); text-decoration: none; text-shadow: 0 1px 10px rgba(2,4,15,.6); transition: color .3s ease; }
+        .journey-rail a:hover { color: rgba(255,255,255,.9); }
+        .journey-rail a.is-active { color: #fff; }
+        .journey-rail-tick { flex: 0 0 auto; width: 14px; height: 2px; background: var(--highlight); opacity: 0; transform: scaleX(.35); transform-origin: left; transition: opacity .3s ease, transform .3s ease; }
+        .journey-rail a.is-active .journey-rail-tick { opacity: 1; transform: none; }
+        .journey-rail-num { opacity: .6; }
+        .journey-rail--light a { color: rgba(7,9,14,.5); text-shadow: 0 1px 10px rgba(255,255,255,.7); }
+        .journey-rail--light a:hover { color: rgba(7,9,14,.85); }
+        .journey-rail--light a.is-active { color: var(--wag-ink); }
+        /* below 1200px there is no spare left column: numbers + ticks only */
+        @media (max-width: 1199px) {
+          .journey-rail-label { display: none; }
+        }
+        /* Company tab rail — under the nav while the company stops are on. */
+        .journey-cotabs { position: fixed; z-index: 9; top: 82px; left: 50%; transform: translate(-50%,-8px); display: flex; align-items: center; gap: clamp(1rem,2.6vw,2.3rem); padding: .5rem .25rem; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .4s ease, transform .4s ease, visibility 0s linear .4s; }
+        .journey-cotabs.is-visible { opacity: 1; visibility: visible; pointer-events: auto; transform: translate(-50%,0); transition: opacity .4s ease, transform .4s ease, visibility 0s linear 0s; }
+        .journey-cotabs button { appearance: none; background: none; border: 0; cursor: pointer; position: relative; padding: .4rem 0 .5rem; margin: 0; color: rgba(255,255,255,.54); font-family: inherit; font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; transition: color .3s ease; }
+        .journey-cotabs button::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--highlight); transform: scaleX(0); transform-origin: left; transition: transform .35s var(--ease-reveal); }
+        .journey-cotabs button:hover { color: #fff; }
+        .journey-cotabs button.is-active { color: #fff; }
+        .journey-cotabs button.is-active::after { transform: scaleX(1); }
         .journey-stop { --stop-accent: #1367fe; position: relative; display: flex; align-items: center; padding: 6rem var(--gutter); }
         .journey-stop--end { justify-content: flex-end; }
         .journey-panel { width: min(43rem,48vw); padding: clamp(1.4rem,3vw,2.8rem); background: linear-gradient(105deg,rgba(0,5,31,.96) 0%,rgba(0,8,53,.82) 52%,rgba(0,6,42,.42) 78%,transparent 100%); -webkit-mask-image: linear-gradient(180deg,transparent 0%,#000 9%,#000 91%,transparent 100%); mask-image: linear-gradient(180deg,transparent 0%,#000 9%,#000 91%,transparent 100%); will-change: transform,opacity; }
@@ -610,6 +721,14 @@ export function LandingJourney() {
            all five stops. The panel stacks above its signature scene. */
         .journey-stop--kind-company { align-items: flex-end; padding-bottom: clamp(6.5rem,15svh,10.5rem); }
         .journey-stop--kind-company .journey-panel { position: relative; z-index: 1; width: min(36rem,44vw); }
+        /* the locked company card steps right of the chapter rail's column
+           (placed after the base padding rules so it wins the cascade) */
+        @media (min-width: 1200px) {
+          .journey-stop--kind-company { padding-left: calc(var(--gutter) + 9.5rem); }
+          /* off the screen edge, the panel's dark plate needs a soft left
+             fade — the flush hard edge read as a floating rectangle */
+          .journey-stop--kind-company .journey-panel { background: linear-gradient(105deg,rgba(0,5,31,0) 0%,rgba(0,5,31,.94) 6%,rgba(0,8,53,.82) 52%,rgba(0,6,42,.42) 78%,transparent 100%); }
+        }
         /* Signature scenes — the layer that CHANGES while the card holds. */
         .journey-scene { position: absolute; inset: 0; overflow: hidden; pointer-events: none; will-change: transform,opacity; }
         /* FastTrack: forecourt canopy imagery + blue canopy light-trails */
@@ -690,7 +809,16 @@ export function LandingJourney() {
         }
         @media (max-width: 900px) {
           .journey-progress { top: 63px; }
-          .journey-progress-stops { inset-inline: var(--gutter); }
+          /* minimal rail: ticks only, tucked inside the mobile gutter so
+             the full-width bottom-sheet cards never collide with it */
+          .journey-rail { left: 5px; gap: 12px; }
+          .journey-rail-label, .journey-rail-num { display: none; }
+          .journey-rail-tick { width: 9px; opacity: .32; transform: none; background: currentColor; }
+          .journey-rail a.is-active .journey-rail-tick { width: 14px; opacity: 1; background: var(--highlight); }
+          .journey-cotabs { top: 66px; left: 0; right: 0; transform: translateY(-8px); justify-content: center; gap: .9rem; padding-inline: .75rem; overflow-x: auto; scrollbar-width: none; }
+          .journey-cotabs.is-visible { transform: translateY(0); }
+          .journey-cotabs::-webkit-scrollbar { display: none; }
+          .journey-cotabs button { font-size: 9px; letter-spacing: .13em; white-space: nowrap; }
           .journey-static-image { object-position: 65% center; }.journey-stop,.journey-stop--end { align-items: flex-end; justify-content: stretch; padding: 5rem 0 0; }
           .journey-stop:first-child { min-height: 100svh !important; }
           .journey-panel,.journey-stop--end .journey-panel,.journey-stop--kind-company .journey-panel { width: 100%; padding: 5.5rem var(--gutter) max(1.5rem,env(safe-area-inset-bottom)); background: linear-gradient(0deg,rgba(0,5,31,.98),rgba(0,8,53,.84) 62%,transparent); -webkit-mask-image: none; mask-image: none; }
