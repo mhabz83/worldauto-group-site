@@ -252,24 +252,115 @@ function Header() {
   );
 }
 
-function CompanyStop({ company, index }: { company: (typeof companies)[number]; index: number }) {
+/* Per-stop signature scenes. The info card is LOCKED to one position across
+   all five company stops; only this layer changes. Each motif follows the
+   company's detail-page family in its hue:
+   - FastTrack: forecourt canopy light-trails over the manifest forecourt
+     imagery (#1367FE)
+   - AutoData: none here — the WebGL valuation-curve terrain at its camera
+     pose IS the motif (#42D7FF)
+   - Axxion: none here — the WebGL routing-junction road lines at its camera
+     pose carry the stop (#FF4200)
+   - PAG Direct: dealership facade wireframe, SVG line-art (#8A6CFF)
+   - Vicimus: pulse-grid of repeat arcs, SVG (#34E39B) */
+function CompanyScene({ slug }: { slug: string }) {
+  if (slug === "fasttrack") {
+    return (
+      <div className="journey-scene journey-scene--fasttrack" data-journey-scene aria-hidden="true">
+        <div className="journey-ft-frame">
+          <div className="journey-ft-fade">
+            <Image
+              src="/images/forecourt-service-night.png"
+              alt=""
+              fill
+              sizes="(max-width: 900px) 100vw, 68vw"
+              className="journey-ft-img"
+            />
+            <span className="journey-ft-tint" />
+          </div>
+        </div>
+        <span className="journey-ft-trail journey-ft-trail--1" />
+        <span className="journey-ft-trail journey-ft-trail--2" />
+      </div>
+    );
+  }
+  if (slug === "pag-direct") {
+    // Dealership facade in two-point-ish perspective: canopy fascia, glass
+    // grid, receding return wall, ground light line.
+    const top = (t: number) => ({ x: 120 + t * 560, y: 168 - t * 56 });
+    const bottom = (t: number) => ({ x: 120 + t * 560, y: 520 - t * 88 });
+    const mullions = [0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875];
+    return (
+      <div className="journey-scene journey-scene--pag" data-journey-scene aria-hidden="true">
+        <svg viewBox="0 0 960 640" fill="none" preserveAspectRatio="xMaxYMid meet">
+          {/* canopy fascia */}
+          <path d="M92 150 L716 88" className="pag-line pag-line--bright" />
+          <path d="M104 176 L706 116" className="pag-line" />
+          <path d="M92 150 L104 176 M716 88 L706 116" className="pag-line" />
+          {/* facade frame */}
+          <path d="M120 168 L680 112 L680 432 L120 520 Z" className="pag-line" />
+          {/* glass mullions */}
+          {mullions.map((t) => {
+            const a = top(t);
+            const b = bottom(t);
+            return <path key={t} d={`M${a.x} ${a.y} L${b.x} ${b.y}`} className="pag-line pag-line--faint" />;
+          })}
+          {/* floor lines through the glass */}
+          <path d="M120 344 L680 272" className="pag-line pag-line--faint" />
+          <path d="M120 256 L680 192" className="pag-line pag-line--faint" />
+          {/* receding return wall */}
+          <path d="M680 112 L900 168 L900 400 L680 432" className="pag-line" />
+          <path d="M735 126 L735 424 M790 140 L790 416 M845 154 L845 408" className="pag-line pag-line--faint" />
+          {/* ground light line */}
+          <path d="M64 532 L680 432 L920 396" className="pag-line pag-line--bright pag-line--ground" />
+        </svg>
+      </div>
+    );
+  }
+  if (slug === "vicimus") {
+    // Pulse-grid: repeating arcs, staggered breathing — the retention-signal
+    // family from the Vicimus detail page, in its green.
+    const cells = Array.from({ length: 8 }, (_, i) => ({
+      cx: 130 + (i % 4) * 220,
+      cy: 150 + Math.floor(i / 4) * 250,
+      delay: (i % 4) * 0.55 + Math.floor(i / 4) * 0.85,
+    }));
+    return (
+      <div className="journey-scene journey-scene--vicimus" data-journey-scene aria-hidden="true">
+        <svg viewBox="0 0 900 560" fill="none" preserveAspectRatio="xMaxYMid meet">
+          {cells.map((cell) => (
+            <g key={`${cell.cx}-${cell.cy}`} className="vic-cell" style={{ animationDelay: `${cell.delay}s` }}>
+              <circle cx={cell.cx} cy={cell.cy} r="4" className="vic-dot" />
+              <path
+                d={`M${cell.cx - 42} ${cell.cy} A42 42 0 0 1 ${cell.cx + 42} ${cell.cy}`}
+                className="vic-arc"
+              />
+              <path
+                d={`M${cell.cx - 74} ${cell.cy} A74 74 0 0 1 ${cell.cx + 74} ${cell.cy}`}
+                className="vic-arc vic-arc--outer"
+              />
+            </g>
+          ))}
+        </svg>
+      </div>
+    );
+  }
+  return null;
+}
+
+function CompanyStop({ company }: { company: (typeof companies)[number] }) {
   const accent = stopAccents[company.slug as keyof typeof stopAccents] ?? stopAccents.hero;
   return (
     <Stop
       id={`company-${company.slug}`}
       kind="company"
       accent={accent}
-      /* middle company gets a centered interlude beat so the run of stops is
-         not a strict left/right ping-pong (audit finding: stop rhythm) */
-      align={
-        index === Math.floor(companies.length / 2)
-          ? "center"
-          : index % 2 === 0
-            ? "end"
-            : "start"
-      }
+      /* The card is locked: one position (lower-left), one width, one internal
+         order across all five stops. Only the scene behind it changes. */
+      align="start"
       label={company.name}
       navSection="companies"
+      overlay={<CompanyScene slug={company.slug} />}
     >
       <p className="journey-region">{company.region}</p>
       <h2>{company.name}</h2>
@@ -359,6 +450,11 @@ export function LandingJourney() {
           },
         );
       } else {
+        // Company cards sit low in their tall stop, so their reveal tracks
+        // the PANEL's own entry through the fold — the stop's top edge is a
+        // whole viewport ahead of the card and would finish the tween before
+        // the card ever showed.
+        const companyCard = kind === "company";
         gsap.fromTo(panel, revealFrom[kind], {
           xPercent: 0,
           yPercent: 0,
@@ -366,12 +462,39 @@ export function LandingJourney() {
           opacity: 1,
           ease: "expo.out",
           scrollTrigger: {
-            trigger: stop,
-            start: "top 82%",
-            end: "top 36%",
+            trigger: companyCard ? panel : stop,
+            start: companyCard ? "top 96%" : "top 82%",
+            end: companyCard ? "top 58%" : "top 36%",
             scrub: MOTION.revealScrub,
           },
         });
+      }
+
+      // Signature scene behind the locked card: fades in with its stop and
+      // dissolves on exit, slightly wider window than the card so the scene
+      // frames the card's own entrance and exit.
+      const scene = stop.querySelector<HTMLElement>("[data-journey-scene]");
+      if (scene) {
+        gsap.fromTo(
+          scene,
+          { opacity: 0, yPercent: 6 },
+          {
+            opacity: 1,
+            yPercent: 0,
+            ease: "none",
+            scrollTrigger: { trigger: stop, start: "top 88%", end: "top 26%", scrub: MOTION.revealScrub },
+          },
+        );
+        gsap.fromTo(
+          scene,
+          { opacity: 1 },
+          {
+            opacity: 0,
+            ease: "quart.in",
+            immediateRender: false,
+            scrollTrigger: { trigger: stop, start: "bottom 70%", end: "bottom 44%", scrub: MOTION.exitScrub },
+          },
+        );
       }
 
       // Every stop exits — including the last one, which fades before the
@@ -451,7 +574,7 @@ export function LandingJourney() {
           <h2><SignalWord>Five</SignalWord> companies, one standard.</h2>
         </Stop>
 
-        {companies.map((company, index) => <CompanyStop key={company.slug} company={company} index={index} />)}
+        {companies.map((company) => <CompanyStop key={company.slug} company={company} />)}
       </div>
 
       {/* The journey ends here; the Madar-machine story tail takes over in
@@ -483,6 +606,36 @@ export function LandingJourney() {
         .journey-stop--end { justify-content: flex-end; }
         .journey-panel { width: min(43rem,48vw); padding: clamp(1.4rem,3vw,2.8rem); background: linear-gradient(105deg,rgba(0,5,31,.96) 0%,rgba(0,8,53,.82) 52%,rgba(0,6,42,.42) 78%,transparent 100%); -webkit-mask-image: linear-gradient(180deg,transparent 0%,#000 9%,#000 91%,transparent 100%); mask-image: linear-gradient(180deg,transparent 0%,#000 9%,#000 91%,transparent 100%); will-change: transform,opacity; }
         .journey-stop--end .journey-panel { background: linear-gradient(255deg,rgba(0,5,31,.96) 0%,rgba(0,8,53,.82) 52%,rgba(0,6,42,.42) 78%,transparent 100%); }
+        /* LOCKED company card: one position (lower-left), one width, across
+           all five stops. The panel stacks above its signature scene. */
+        .journey-stop--kind-company { align-items: flex-end; padding-bottom: clamp(6.5rem,15svh,10.5rem); }
+        .journey-stop--kind-company .journey-panel { position: relative; z-index: 1; width: min(36rem,44vw); }
+        /* Signature scenes — the layer that CHANGES while the card holds. */
+        .journey-scene { position: absolute; inset: 0; overflow: hidden; pointer-events: none; will-change: transform,opacity; }
+        /* FastTrack: forecourt canopy imagery + blue canopy light-trails */
+        .journey-ft-frame { position: absolute; top: 0; right: 0; bottom: 0; width: 76vw; -webkit-mask-image: linear-gradient(97deg,transparent 0%,#000 36%,#000 100%); mask-image: linear-gradient(97deg,transparent 0%,#000 36%,#000 100%); }
+        .journey-ft-fade { position: absolute; inset: 0; -webkit-mask-image: linear-gradient(180deg,transparent 0%,#000 14%,#000 80%,transparent 100%); mask-image: linear-gradient(180deg,transparent 0%,#000 14%,#000 80%,transparent 100%); }
+        .journey-ft-img { object-fit: cover; object-position: center 38%; opacity: .8; }
+        .journey-ft-tint { position: absolute; inset: 0; background: linear-gradient(200deg,rgba(19,103,254,.26) 0%,rgba(0,8,53,.22) 52%,rgba(0,8,53,.72) 100%); }
+        .journey-ft-trail { position: absolute; right: -8vw; width: 74vw; border-radius: 999px; }
+        .journey-ft-trail--1 { top: 41%; height: 2px; background: linear-gradient(90deg,transparent 4%,rgba(19,103,254,.85) 44%,rgba(140,190,255,.9) 58%,transparent 96%); filter: blur(1px) drop-shadow(0 0 8px rgba(19,103,254,.8)); animation: journeyStreakDrift 24s ease-in-out -6s infinite alternate; }
+        .journey-ft-trail--2 { top: 46%; height: 88px; background: linear-gradient(95deg,transparent 10%,rgba(19,103,254,.16) 48%,transparent 90%); filter: blur(26px); animation: journeyStreakDrift 30s ease-in-out infinite alternate-reverse; }
+        /* PAG Direct: dealership facade wireframe */
+        .journey-scene--pag { -webkit-mask-image: radial-gradient(115% 105% at 74% 52%,#000 52%,transparent 94%); mask-image: radial-gradient(115% 105% at 74% 52%,#000 52%,transparent 94%); }
+        .journey-scene--pag svg { position: absolute; right: 1vw; top: 50%; width: min(56vw,980px); height: auto; transform: translateY(-54%); }
+        .pag-line { stroke: rgba(138,108,255,.5); stroke-width: 1.4; filter: drop-shadow(0 0 6px rgba(138,108,255,.35)); }
+        .pag-line--faint { stroke: rgba(138,108,255,.26); stroke-width: 1; filter: none; }
+        .pag-line--bright { stroke: #a68bff; stroke-width: 2.4; filter: drop-shadow(0 0 10px rgba(138,108,255,.85)); animation: journeySceneGlow 6s ease-in-out infinite alternate; }
+        .pag-line--ground { animation-delay: -3s; }
+        /* Vicimus: pulse-grid of repeat arcs */
+        .journey-scene--vicimus { -webkit-mask-image: radial-gradient(120% 115% at 72% 46%,#000 48%,transparent 92%); mask-image: radial-gradient(120% 115% at 72% 46%,#000 48%,transparent 92%); }
+        .journey-scene--vicimus svg { position: absolute; right: 0; top: 9%; width: min(58vw,1000px); height: auto; }
+        .vic-dot { fill: rgba(52,227,155,.9); }
+        .vic-arc { stroke: rgba(52,227,155,.55); stroke-width: 1.6; }
+        .vic-arc--outer { stroke: rgba(52,227,155,.28); }
+        .vic-cell { filter: drop-shadow(0 0 6px rgba(52,227,155,.35)); animation: journeyVicPulse 4.6s ease-in-out infinite; }
+        @keyframes journeySceneGlow { from { opacity: .55; } to { opacity: 1; } }
+        @keyframes journeyVicPulse { 0%, 100% { opacity: .32; } 50% { opacity: 1; } }
         .journey-stop--center { justify-content: center; }
         .journey-stop--center .journey-panel { width: min(40rem,64vw); text-align: center; background: linear-gradient(180deg,rgba(0,6,42,.32) 0%,rgba(0,8,53,.9) 26%,rgba(0,8,53,.9) 74%,rgba(0,6,42,.32) 100%); }
         .journey-stop--center .journey-panel h2 { max-width: none; }
@@ -540,7 +693,18 @@ export function LandingJourney() {
           .journey-progress-stops { inset-inline: var(--gutter); }
           .journey-static-image { object-position: 65% center; }.journey-stop,.journey-stop--end { align-items: flex-end; justify-content: stretch; padding: 5rem 0 0; }
           .journey-stop:first-child { min-height: 100svh !important; }
-          .journey-panel,.journey-stop--end .journey-panel { width: 100%; padding: 5.5rem var(--gutter) max(1.5rem,env(safe-area-inset-bottom)); background: linear-gradient(0deg,rgba(0,5,31,.98),rgba(0,8,53,.84) 62%,transparent); -webkit-mask-image: none; mask-image: none; }
+          .journey-panel,.journey-stop--end .journey-panel,.journey-stop--kind-company .journey-panel { width: 100%; padding: 5.5rem var(--gutter) max(1.5rem,env(safe-area-inset-bottom)); background: linear-gradient(0deg,rgba(0,5,31,.98),rgba(0,8,53,.84) 62%,transparent); -webkit-mask-image: none; mask-image: none; }
+          /* Scenes move into the free upper half of the mobile stop; the
+             bottom-sheet card owns the lower half unchanged. */
+          /* the phone crop is tall and narrow: hold the frame to the free
+             upper half and aim at the pump bays (right of the image centre) */
+          .journey-ft-frame { width: 100%; bottom: auto; height: 64%; -webkit-mask-image: none; mask-image: none; }
+          .journey-ft-img { object-position: 66% center; }
+          .journey-ft-trail { right: -14vw; width: 128vw; }
+          .journey-ft-trail--1 { top: 30%; }
+          .journey-ft-trail--2 { top: 34%; }
+          .journey-scene--pag svg { right: -16vw; top: 9%; width: 132vw; transform: none; }
+          .journey-scene--vicimus svg { right: -12vw; top: 5%; width: 124vw; }
           .journey-panel h2 { font-size: clamp(2.45rem,12vw,4.6rem); }
           /* first stop is 100svh on mobile: park the cue at the true bottom
              and clear room for it under the statement. The anchor statement
@@ -559,6 +723,9 @@ export function LandingJourney() {
              for the full-viewport layout this mode collapses) goes away */
           .journey-streak { animation: none; }
           .journey-scroll-cue { display: none; }
+          /* scenes hold still and stay visible (no GSAP in this mode) */
+          .journey-scene { will-change: auto; opacity: 1 !important; transform: none !important; }
+          .journey-ft-trail,.pag-line--bright,.vic-cell { animation: none; }
         }
         html.webgl-unavailable .journey-webgl { display: none !important; }
         html.webgl-unavailable .journey-static-frame { opacity: 1 !important; transform: none !important; }
