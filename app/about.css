@@ -97,7 +97,6 @@
 .ax-giants-title,
 .ax-values-title-swap .ax-h1,
 .ax-team-title,
-.ax-careers-top .ax-h1,
 .ax-cta-title {
   font-family: var(--font-display);
   font-weight: var(--font-display-weight);
@@ -117,7 +116,6 @@
 .ax .ax-values-title-swap .ax-h1 .ax-accent-b,
 .ax .ax-values-title-swap .ax-h2 .ax-accent-b,
 .ax .ax-team-title .ax-accent-b,
-.ax .ax-careers-top .ax-h1 .ax-accent-b,
 .ax .ax-cta-title .ax-accent-b {
   font-weight: var(--font-display-weight);
 }
@@ -1363,213 +1361,132 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
 }
 
 /* ------------------------------------------------------------------ */
-/* S8 careers → the group in numbers                                   */
+/* S8 — the group in numbers: one full-viewport instrument band        */
+/* (replaces the recovered stacked-sticky-cards machine)               */
 /* ------------------------------------------------------------------ */
 
-.ax-careers {
+.ax-numbers-band {
   position: relative;
-  background: var(--wag-navy-800);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100svh;
+  padding: clamp(5rem, 12vh, 8rem) var(--ax-pad) clamp(2rem, 5vh, 3.5rem);
+  background:
+    radial-gradient(90% 62% at 50% 54%, rgba(6, 10, 61, 0.9) 0%, rgba(4, 6, 26, 0) 70%),
+    var(--wag-navy-800);
   overflow: clip;
 }
-.ax-careers-bg {
+/* neon road motif behind the figures (journey palette, not content) */
+.axn-road {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
+  inset: 0;
+  opacity: 0.5;
   pointer-events: none;
 }
-.ax-careers-bg img {
+.axn-road svg {
   width: 100%;
-  height: auto;
-  opacity: 0.4;
-  filter: saturate(0.8);
-  will-change: transform;
+  height: 100%;
 }
-.ax-careers-bg::before {
-  content: "";
-  position: absolute;
-  top: -1px;
-  left: 0;
-  width: 100%;
-  height: 475px;
-  background: linear-gradient(178.19deg, var(--wag-navy-800) 70.41%, rgba(4, 6, 26, 0) 94.75%);
-  z-index: 1;
-}
-.ax-careers-inner {
+.axn-eyebrow {
   position: relative;
-  padding-top: clamp(5rem, 12vh, 9rem);
-  /* the CTA block that used to trail the cards moved to the partner close;
-     this keeps scroll room for the last card to settle */
-  padding-bottom: clamp(8rem, 24vh, 16rem);
+  margin: 0 0 clamp(1.8rem, 5vh, 3.4rem);
+  color: var(--text-low);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  text-transform: uppercase;
+  text-align: center;
 }
-.ax-careers-top {
-  row-gap: 2rem;
-  margin-bottom: clamp(10rem, 32vh, 22rem);
+.axn-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+  max-width: 90rem;
+  margin: 0 auto;
 }
-.ax-careers-top h2 {
-  grid-column: 1 / span 8;
+.axn-cell {
+  padding: clamp(1.4rem, 4.5vh, 3rem) clamp(1rem, 3vw, 3rem);
+  text-align: center;
 }
-.ax-careers-top p {
-  grid-column: 9 / span 4;
+/* hairline dividers: a centre cross on the 2x2 grid */
+.axn-cell:nth-child(odd) {
+  border-right: 1px solid var(--hairline);
+}
+.axn-cell:nth-child(-n + 2) {
+  border-bottom: 1px solid var(--hairline);
+}
+.axn-figure {
+  margin: 0;
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  font-size: clamp(4.4rem, 13.4vw, 16rem);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-display);
+  line-height: 0.95;
+  white-space: nowrap;
+}
+/* the qualifiers stay orange: tilde hedges, units, the region separator */
+.axn-tilde {
+  color: var(--highlight);
+  font-size: 0.62em;
+  vertical-align: 0.14em;
+  margin-right: 0.03em;
+}
+.axn-unit {
+  color: var(--highlight);
+  font-size: 0.38em;
+  letter-spacing: 0.02em;
+  vertical-align: 0.16em;
+  margin-inline: 0.08em;
+}
+.axn-dot {
+  color: var(--highlight);
+  margin-inline: 0.12em;
+}
+.axn-label {
+  margin: clamp(0.7rem, 2vh, 1.2rem) 0 0;
   color: var(--text-mid);
+  font-size: 0.78rem;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  text-indent: 0.22em;
+  text-transform: uppercase;
+}
+.axn-footnote {
+  position: relative;
+  margin: clamp(1.8rem, 5vh, 3.2rem) 0 0;
+  color: var(--text-faint);
+  font-size: 0.78rem;
+  text-align: center;
 }
 @media (max-width: 767px) {
-  .ax-careers-top h2,
-  .ax-careers-top p {
-    grid-column: 1 / -1;
+  .ax-numbers-band {
+    padding-block: 5.5rem 2rem;
   }
-  .ax-careers-top {
-    margin-bottom: 4rem;
+  .axn-grid {
+    grid-template-columns: 1fr;
   }
-  .ax-careers-sticky {
-    margin-top: 0;
-    margin-bottom: 0;
+  .axn-cell {
+    padding: 1.5rem 0;
+    border-right: 0 !important;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .axn-cell:last-child {
+    border-bottom: 0;
+  }
+  .axn-figure {
+    font-size: clamp(3.6rem, 17vw, 6rem);
+  }
+  .axn-label {
+    font-size: 0.68rem;
   }
   .ax-careers-bottom {
     margin-top: 4rem;
     padding-bottom: clamp(6rem, 40vw, 12rem);
-  }
-}
-/* stacked sticky cards — recovered grid + state table, verbatim numbers */
-.ax-careers-sticky {
-  display: grid;
-  grid-auto-rows: 1fr;
-  grid-template-areas: "cards";
-  grid-template-columns: 1fr;
-  grid-template-rows: auto;
-  position: relative;
-  margin-top: calc(185px - 50svh);
-  margin-bottom: calc(165px - 50svh);
-}
-.ax-cc-sticky {
-  grid-area: cards;
-  align-self: start;
-  height: 100%;
-  position: relative;
-}
-.ax-cc-layer {
-  position: sticky;
-  top: 0;
-  height: 100svh;
-  display: flex;
-  align-items: center;
-}
-.ax-career-card {
-  position: relative;
-  width: 100%;
-  border-radius: 5px;
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  height: clamp(330px, 26.4vw, 380px);
-  transition: transform 0.6s var(--ax-ease-in-out-smooth), opacity 0.6s var(--ax-ease-in-out-smooth);
-}
-.ax-career-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 10px;
-  border: 1px solid var(--highlight);
-  border-bottom: 0;
-  border-radius: 5px 5px 0 0;
-}
-.ax-cc-layout {
-  height: 100%;
-  padding: clamp(20px, 2.8vw, 40px);
-  transition: opacity 0.6s var(--ax-ease-in-out-smooth);
-  align-items: start;
-}
-.ax-cc-chip-col {
-  grid-column: 1 / span 3;
-}
-.ax-cc-chip {
-  display: inline-flex;
-  align-items: flex-start;
-  background: var(--highlight);
-  color: #fff;
-  border-radius: 5px;
-  padding: clamp(10px, 1vw, 15px) clamp(14px, 1.4vw, 20px);
-  font-weight: 300;
-  letter-spacing: -0.02em;
-  line-height: 1;
-}
-.ax-cc-chip--short {
-  font-size: clamp(3.4rem, 6.6vw, 8rem);
-  padding-bottom: clamp(14px, 1.6vw, 24px);
-}
-.ax-cc-chip--long {
-  font-size: clamp(1.8rem, 3vw, 3.4rem);
-  padding-block: clamp(16px, 2vw, 28px);
-}
-.ax-cc-title {
-  grid-column: 4 / span 4;
-}
-.ax-cc-body {
-  grid-column: 9 / span 4;
-  align-self: start;
-  color: rgba(255, 255, 255, 0.82);
-  max-width: 42ch;
-}
-@media (max-width: 767px) {
-  .ax-career-card {
-    height: clamp(340px, 62svh, 460px);
-    backdrop-filter: blur(30px);
-  }
-  .ax-career-card::before {
-    height: 5px;
-    border-radius: 5px 5px 0 0;
-  }
-  .ax-cc-layout {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-  .ax-cc-chip--short {
-    font-size: 2.2rem;
-  }
-  .ax-cc-chip--long {
-    font-size: 1.4rem;
-  }
-}
-/* the recovered --0..--4 state table (desktop / mobile variants) */
-.ax-career-card--0 {
-  opacity: 0;
-  transform: scale(1.02899) translateY(17%);
-}
-.ax-career-card--1 {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-}
-.ax-career-card--2 {
-  opacity: 0.5;
-  transform: scale(0.97183) translateY(-17%);
-}
-.ax-career-card--3 {
-  opacity: 0.3;
-  transform: scale(0.94446) translateY(-29%);
-}
-.ax-career-card--4 {
-  opacity: 0.1;
-  transform: scale(0.91785) translateY(-38%);
-}
-.ax-career-card--2 .ax-cc-layout,
-.ax-career-card--3 .ax-cc-layout,
-.ax-career-card--4 .ax-cc-layout {
-  opacity: 0;
-}
-@media (max-width: 767px) {
-  .ax-career-card--0 {
-    transform: translateY(6%) scale(1.02899);
-  }
-  .ax-career-card--2 {
-    transform: translateY(-6%) scale(0.97183);
-  }
-  .ax-career-card--3 {
-    transform: translateY(-12%) scale(0.94446);
-  }
-  .ax-career-card--4 {
-    transform: translateY(-18%) scale(0.91785);
   }
 }
 /* partner close — the S8 bottom CTA block promoted to its own section */
@@ -1716,29 +1633,6 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   .ax-progress-ind {
     display: none !important;
   }
-  .ax-cc-sticky {
-    height: auto !important;
-    margin-top: 0 !important;
-    grid-area: auto;
-  }
-  .ax-careers-sticky {
-    display: block;
-    margin: 0;
-  }
-  .ax-cc-layer {
-    position: relative !important;
-    height: auto !important;
-    padding: 1rem 0;
-  }
-  .ax-career-card {
-    opacity: 1 !important;
-    transform: none !important;
-    height: auto !important;
-    min-height: 0;
-  }
-  .ax-career-card .ax-cc-layout {
-    opacity: 1 !important;
-  }
   .ax-carousel .ax-carousel-list {
     overflow-x: auto;
     scroll-snap-type: x mandatory;
@@ -1762,8 +1656,7 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   .ax-commitment-grid img,
   .ax-commitment-statement,
   .ax-foresight-svg,
-  .ax-testimonial-card,
-  .ax-careers-bg img {
+  .ax-testimonial-card {
     transform: none !important;
   }
 }

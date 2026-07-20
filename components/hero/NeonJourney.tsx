@@ -118,6 +118,10 @@ const SUV_FIT = {
   safety: 0.94,
 } as const;
 const LINES_OFFSET = new THREE.Vector3(0, 0, 0.5);
+// Scroll parallax on the plate: it settles ~1.5% of the viewport height lower
+// by the time the first viewport has scrolled past (depth lag against the
+// camera move). Skipped entirely in reduced motion.
+const PLATE_PARALLAX = 0.015;
 
 const FLOOR = {
   size: 1.5,
@@ -815,6 +819,8 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
     const circleLines: THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>[] = [];
     let renderStatic = () => {}; // re-render hook for reduced motion
     let fittedVehicle: THREE.Group | null = null;
+    const vehicleBasePos = new THREE.Vector3(); // fitted pose, parallax origin
+    let plateParallaxWorld = 0; // PLATE_PARALLAX of viewport height, world units
 
     const projectedBounds = (object: THREE.Object3D, fitCamera: THREE.Camera) => {
       const box = new THREE.Box3().setFromObject(object);
@@ -873,6 +879,11 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
       fittedVehicle.position.addScaledVector(right, (desiredX - fitted.center.x) * halfWidth);
       fittedVehicle.position.addScaledVector(up, (SUV_FIT.centerY - fitted.center.y) * halfHeight);
       fittedVehicle.updateMatrixWorld(true);
+
+      // Re-anchor the scroll parallax to the freshly fitted pose so resizes
+      // can never accumulate offset error.
+      vehicleBasePos.copy(fittedVehicle.position);
+      plateParallaxWorld = PLATE_PARALLAX * 2 * halfHeight;
     };
 
     new THREE.TextureLoader().load(
@@ -1141,6 +1152,13 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
       smoothed = smoothDamp(smoothed, rawProgress, progressVel, CAMERA.smoothTime, dt);
       updateCamera(smoothed, now);
       updateUniforms(now - startTime, smoothed);
+      if (fittedVehicle && plateParallaxWorld > 0) {
+        // 0→1 over the first viewport of scroll; the loop never runs in
+        // reduced motion, so the plate holds its authored pose there.
+        const par = THREE.MathUtils.clamp(window.scrollY / H, 0, 1);
+        fittedVehicle.position.copy(vehicleBasePos);
+        fittedVehicle.position.y -= par * plateParallaxWorld;
+      }
       composer.render();
       publishPose();
       raf = requestAnimationFrame(frame);

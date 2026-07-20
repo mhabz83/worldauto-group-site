@@ -6,7 +6,7 @@
  * normal flow: S3 "Part of Skelmore" (crowned "One Operator, Many Engines."),
  * S2 foresight (glow + orbital drift + glass card), S4 commitment (3-layer
  * counter-drift collage + crosshair pins), S6 pinned values → timeline,
- * S5 leadership carousel, S8 stacked number cards, S7 companies recap
+ * S5 leadership carousel, S8 numbers instrument band, S7 companies recap
  * carousel + synced card, partner close, footer endcap.
  *
  * Engine: native scroll + GSAP ScrollTrigger reproducing the recovered
@@ -26,7 +26,7 @@ import { FlickerText, FlickerTitle, GlitchLabel, useRevealManager } from "./reve
 import { GlowSvg } from "./svgs";
 import { TeamCarousel, CompaniesCarousel } from "./Carousels";
 import { ValuesTimeline } from "./ValuesTimeline";
-import { CareersCards } from "./CareersCards";
+import { GroupNumbersPanel } from "./GroupNumbersPanel";
 
 /* ------------------------------------------------------------------ */
 /* story opener — the about S3 Skelmore section, crowned with the      */
@@ -355,7 +355,7 @@ export function StoryTail() {
       <CommitmentSection />
       <ValuesTimeline />
       <TeamCarousel />
-      <CareersCards />
+      <GroupNumbersPanel />
       <CompaniesCarousel />
       <VerticalsSection />
       <PartnerClose />

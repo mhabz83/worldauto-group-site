@@ -323,6 +323,16 @@ export function LandingJourney() {
     if (!root || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const stops = gsap.utils.toArray<HTMLElement>(root.querySelectorAll("[data-journey-stop]"));
 
+    // The streaks and the scroll cue belong to the opening frame only: both
+    // dissolve over the first 40% of the opening stop's scroll.
+    if (stops[0]) {
+      gsap.to(".journey-streaks, .journey-scroll-cue", {
+        opacity: 0,
+        ease: "none",
+        scrollTrigger: { trigger: stops[0], start: "top top", end: "40% top", scrub: true },
+      });
+    }
+
     stops.forEach((stop, index) => {
       const panel = stop.querySelector<HTMLElement>(".journey-panel");
       if (!panel) return;
@@ -402,6 +412,15 @@ export function LandingJourney() {
         />
       </div>
       <NeonJourney boundsRef={journeyRef} />
+      {/* Light streaks behind the opening statement: fixed between the WebGL
+          canvas (z 1) and the copy layer (z 3), masked to the upper half of
+          the frame so they read as passing behind the SUV plate. GSAP fades
+          the layer out as the opening stop scrolls away. */}
+      <div className="journey-streaks" aria-hidden="true">
+        <span className="journey-streak journey-streak--1" />
+        <span className="journey-streak journey-streak--2" />
+        <span className="journey-streak journey-streak--3" />
+      </div>
       <Header />
 
       <div ref={journeyRef} className="journey-copy-layer">
@@ -412,22 +431,11 @@ export function LandingJourney() {
           label="World Automotive Group"
           navSection="group"
           overlay={
-            <div className="hero-wordmark-overlay" aria-label="World Automotive Group">
-              <span className="hero-wordmark">
-                <span className="hw-lockup">
-                  <span className="hw-word">WORLD</span>{" "}
-                  <span className="hw-word hw-auto">AUTOMOTIVE</span>{" "}
-                  <span className="hw-word">GROUP</span>
-                </span>
-                <svg className="hw-route" viewBox="0 0 1000 64" preserveAspectRatio="none" aria-hidden="true">
-                  <path
-                    className="hw-route-blue"
-                    pathLength={1}
-                    fill="none"
-                    d="M0 14 H110 a16 16 0 0 1 16 16 V32 a16 16 0 0 0 16 16 H1000"
-                  />
-                </svg>
-              </span>
+            /* The nav carries the brand; the opening frame carries ONE
+               statement. This cue is the only other element in the frame. */
+            <div className="journey-scroll-cue" aria-hidden="true">
+              <span className="journey-scroll-cue-label">Scroll</span>
+              <span className="journey-scroll-cue-line" />
             </div>
           }
         >
@@ -477,26 +485,29 @@ export function LandingJourney() {
         .journey-stop--center .journey-body,.journey-stop--center .journey-company-line,.journey-stop--center .journey-proof { margin-left: auto; margin-right: auto; }
         .journey-stop--center .journey-capabilities,.journey-stop--center .journey-links { justify-content: center; }
         .journey-panel h1,.journey-panel h2 { max-width: 12ch; margin: 0; color: #fff; font-size: clamp(2.65rem,6.4vw,6rem); font-weight: 300; letter-spacing: -.04em; line-height: .94; text-wrap: balance; overflow-wrap: anywhere; }
-        /* hero wordmark: WORLD AUTOMOTIVE GROUP floats over the car, NO background;
-           the bottom headline card is unchanged. Lines match the neon road
-           (blue #1367fe / orange #ff4200 + bloom glow) and draw in on load. */
-        .hero-wordmark-overlay { position: absolute; z-index: 3; top: clamp(6rem,15vh,9.5rem); left: 0; right: 0; padding: 0 var(--gutter); text-align: center; pointer-events: none; }
-        .hero-wordmark { position: relative; display: inline-block; padding-bottom: clamp(.9rem,2.2vw,1.7rem); white-space: nowrap; }
-        .hero-wordmark .hw-lockup { display: inline-block; font-size: clamp(1.5rem,4.4vw,3.6rem); font-weight: 700; letter-spacing: .01em; line-height: .92; color: #fff; }
-        .hero-wordmark .hw-auto { position: relative; color: var(--highlight); }
-        .hero-wordmark .hw-auto::after { content: ""; position: absolute; left: 0; right: 0; bottom: -.18em; height: 4px; border-radius: 2px; background: #ff4200; filter: drop-shadow(0 0 3px #ff4200) drop-shadow(0 0 8px rgba(255,66,0,.6)); transform-origin: left center; }
-        .hero-wordmark .hw-route { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: clamp(.9rem,2vw,1.6rem); overflow: visible; }
-        .hero-wordmark .hw-route-blue { stroke: #1367fe; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; filter: drop-shadow(0 0 3px #1367fe) drop-shadow(0 0 8px rgba(19,103,254,.55)); }
-        @media (prefers-reduced-motion: no-preference) {
-          .hero-wordmark .hw-route-blue { stroke-dasharray: 1; stroke-dashoffset: 1; animation: hwDraw 1.1s cubic-bezier(.16,1,.3,1) .35s forwards; }
-          .hero-wordmark .hw-auto::after { transform: scaleX(0); animation: hwGrow .7s cubic-bezier(.16,1,.3,1) 1.05s forwards; }
-        }
-        @keyframes hwDraw { to { stroke-dashoffset: 0; } }
-        @keyframes hwGrow { to { transform: scaleX(1); } }
+        /* Light streaks — three masked gradient beams on slow 20–30s drift
+           loops in the journey palette (blue #1367fe / orange #ff4200). The
+           vertical mask holds them above the horizon, behind the SUV plate. */
+        .journey-streaks { position: fixed; inset: 0; z-index: 2; overflow: hidden; pointer-events: none; -webkit-mask-image: linear-gradient(180deg,transparent 0,#000 12%,#000 46%,transparent 72%); mask-image: linear-gradient(180deg,transparent 0,#000 12%,#000 46%,transparent 72%); }
+        .journey-streak { position: absolute; left: -30vw; width: 160vw; border-radius: 999px; will-change: translate; }
+        .journey-streak--1 { top: 26%; height: 2px; transform: rotate(-8deg); background: linear-gradient(90deg,transparent 6%,rgba(19,103,254,.7) 42%,rgba(66,215,255,.8) 55%,transparent 94%); filter: blur(1px) drop-shadow(0 0 6px rgba(19,103,254,.75)); animation: journeyStreakDrift 26s ease-in-out -8s infinite alternate; }
+        .journey-streak--2 { top: 34%; height: 130px; transform: rotate(-10deg); background: linear-gradient(100deg,transparent 12%,rgba(19,103,254,.13) 44%,rgba(255,66,0,.09) 62%,transparent 88%); filter: blur(28px); animation: journeyStreakDrift 30s ease-in-out infinite alternate-reverse; }
+        .journey-streak--3 { top: 17%; height: 1px; transform: rotate(-6deg); background: linear-gradient(90deg,transparent 10%,rgba(255,66,0,.6) 52%,transparent 90%); filter: blur(.6px) drop-shadow(0 0 5px rgba(255,66,0,.6)); animation: journeyStreakDrift 21s ease-in-out -14s infinite alternate; }
+        @keyframes journeyStreakDrift { from { translate: -7vw 0; } to { translate: 7vw 0; } }
+        /* Scroll cue — bottom-centre of the first viewport (the opening stop
+           is 118svh tall, so 18svh up from its bottom edge = the fold). */
+        .journey-scroll-cue { position: absolute; z-index: 4; left: 50%; bottom: calc(18svh + 2.2rem); display: flex; flex-direction: column; align-items: center; gap: .75rem; transform: translateX(-50%); pointer-events: none; }
+        .journey-scroll-cue-label { color: rgba(255,255,255,.62); font-size: .66rem; font-weight: 600; letter-spacing: .34em; text-indent: .34em; text-transform: uppercase; }
+        .journey-scroll-cue-line { position: relative; width: 1px; height: 56px; overflow: hidden; background: rgba(255,255,255,.16); }
+        .journey-scroll-cue-line::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg,transparent,#fff 45%,rgba(255,255,255,.9) 60%,transparent); transform: translateY(-100%); animation: journeyScrollCue 2.4s cubic-bezier(.55,.08,.35,.92) .8s infinite; }
+        @keyframes journeyScrollCue { 0% { transform: translateY(-100%); } 62% { transform: translateY(100%); } 100% { transform: translateY(100%); } }
         .journey-panel h2 { font-size: clamp(2.35rem,5vw,4.5rem); }
-        /* hero statement wears the group display voice; every other journey
-           heading (companies intro + company names) stays Suisse */
-        .journey-panel h1 { max-width: 11ch; font-family: var(--font-display); font-weight: var(--font-display-weight); font-size: var(--fs-display-hero); letter-spacing: var(--tracking-display); line-height: .96; }
+        /* hero statement — the single anchor of the opening frame now that the
+           wordmark overlay is gone (the nav carries the brand). Display voice,
+           promoted scale. Every other journey heading stays Suisse. */
+        .journey-panel h1 { max-width: 11ch; font-family: var(--font-display); font-weight: var(--font-display-weight); font-size: clamp(4rem,9vw,10rem); letter-spacing: var(--tracking-display); line-height: .96; }
+        /* the promoted statement needs a wider panel than the company cards */
+        .journey-stop--kind-hero .journey-panel { width: min(58rem,62vw); }
         .journey-panel h3 { color: #fff; font-size: clamp(1.05rem,1.5vw,1.28rem); font-weight: 500; line-height: 1.2; }
         .journey-eyebrow,.journey-region { margin: 0 0 1.2rem; color: color-mix(in srgb,var(--stop-accent) 74%,white); font-size: .8rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
         .journey-body,.journey-company-line,.journey-statement { max-width: 46ch; margin: 1.35rem 0 0; color: rgba(255,255,255,.88); font-size: clamp(1rem,1.3vw,1.18rem); line-height: 1.62; }
@@ -527,13 +538,23 @@ export function LandingJourney() {
           .journey-stop:first-child { min-height: 100svh !important; }
           .journey-panel,.journey-stop--end .journey-panel { width: 100%; padding: 5.5rem var(--gutter) max(1.5rem,env(safe-area-inset-bottom)); background: linear-gradient(0deg,rgba(0,5,31,.98),rgba(0,8,53,.84) 62%,transparent); -webkit-mask-image: none; mask-image: none; }
           .journey-panel h2 { font-size: clamp(2.45rem,12vw,4.6rem); }
-          .journey-panel h1 { font-size: var(--fs-display-hero); }
+          /* first stop is 100svh on mobile: park the cue at the true bottom
+             and clear room for it under the statement. The anchor statement
+             steps down so "Automotive." holds as one word on a 390px screen. */
+          .journey-panel h1 { max-width: none; font-size: clamp(3rem,14.2vw,5.5rem); }
+          .journey-stop--kind-hero .journey-panel { width: 100%; padding-bottom: 5rem; }
+          .journey-scroll-cue { bottom: 1.1rem; gap: .55rem; }
+          .journey-scroll-cue-line { height: 34px; }
         }
         @media (prefers-reduced-motion: reduce) {
           /* NeonJourney renders one motionless 3D frame in reduced-motion
              mode, so the licensed SUV remains visible without animation. */
           .journey-static-frame { opacity: 0 !important; transform: none !important; }
           .journey-stop { min-height: auto !important; padding-block: clamp(5rem,12vw,8rem); }.journey-panel { will-change: auto; opacity: 1 !important; transform: none !important; }
+          /* streaks hold still; the cue (pure motion affordance, and placed
+             for the full-viewport layout this mode collapses) goes away */
+          .journey-streak { animation: none; }
+          .journey-scroll-cue { display: none; }
         }
         html.webgl-unavailable .journey-webgl { display: none !important; }
         html.webgl-unavailable .journey-static-frame { opacity: 1 !important; transform: none !important; }
