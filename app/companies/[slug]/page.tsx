@@ -8,9 +8,18 @@ import { companies } from "@/content/site";
 import "../companies.css";
 
 export function generateStaticParams() {
-  /* AutoData has its own model page at app/companies/autodata (the static
-     route wins over this dynamic one); the other four keep this template. */
-  return companies.filter((c) => c.slug !== "autodata").map((c) => ({ slug: c.slug }));
+  /* AutoData, FastTrack, Axxion and PAG Direct have their own model pages under
+     app/companies/<slug> (the static route wins over this dynamic one); the
+     remaining companies keep this template. */
+  return companies
+    .filter(
+      (c) =>
+        c.slug !== "autodata" &&
+        c.slug !== "fasttrack" &&
+        c.slug !== "axxion" &&
+        c.slug !== "pag-direct",
+    )
+    .map((c) => ({ slug: c.slug }));
 }
 
 export async function generateMetadata({
