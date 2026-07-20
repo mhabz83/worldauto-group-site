@@ -163,7 +163,19 @@ export function waypointTrigger(cfg: WaypointTriggerConfig): ScrollTrigger | nul
       out.transform = lerpString(s0.wp.transform, s1.wp.transform, local);
     }
     if (s0.wp.opacity !== undefined && s1.wp.opacity !== undefined) {
-      out.opacity = s0.wp.opacity + (s1.wp.opacity - s0.wp.opacity) * local;
+      let o = s0.wp.opacity + (s1.wp.opacity - s0.wp.opacity) * local;
+      /* Rest-state floor (design review): a full 0-to-1 scroll-linked fade
+         must never rest mid-fade — the heritage copy sat at ~30% at a
+         natural stop. Anything past the hidden edge renders at >= 0.85, so
+         every rest state reads either fully hidden or fully present.
+         Partial fades (e.g. the values glow at .75→1) keep their curve. */
+      if (
+        Math.min(s0.wp.opacity, s1.wp.opacity) === 0 &&
+        Math.max(s0.wp.opacity, s1.wp.opacity) === 1
+      ) {
+        o = o <= 0.001 ? 0 : Math.max(o, 0.85);
+      }
+      out.opacity = o;
     }
     if (cfg.apply) {
       cfg.apply(out, p);

@@ -8,7 +8,7 @@ The corporate marketing site for World Automotive Group (worldauto.group). The s
 - **React 19** + **TypeScript**
 - **Tailwind CSS v4** (`@theme inline`, tokens in `app/tokens.css`)
 - **Three.js 0.185** for the WebGL hero (`EffectComposer`, `UnrealBloomPass`, `LineSegments`)
-- Fonts: Suisse Intl (local, `app/fonts/`)
+- Fonts: Switzer + Khand (Fontshare, local, `app/fonts/`)
 - Intended host: **Vercel**
 
 ## Run locally

@@ -21,3 +21,13 @@ The optimized derivative is distributed only as part of this website in
 - **License:** [Fontshare Free Font License (ITF FFL)](https://www.fontshare.com/licenses/itf-ffl) — free for personal and commercial use, self-hosting permitted
 - **Files:** `app/fonts/Khand-Semibold.woff2` (source mirror) and `public/fonts/Khand-Semibold.woff2` (served)
 - **Usage:** hero statement and major section titles only (`--font-display`)
+
+## Switzer (body voice)
+
+- **Title:** Switzer Light (300) and Regular (400)
+- **Creator:** Indian Type Foundry
+- **Source:** [Fontshare](https://www.fontshare.com/fonts/switzer)
+- **License:** [Fontshare Free Font License (ITF FFL)](https://www.fontshare.com/licenses/itf-ffl) — free for personal and commercial use, self-hosting permitted
+- **Files:** `app/fonts/Switzer-Light.woff2`, `app/fonts/Switzer-Regular.woff2` (source mirrors) and `public/fonts/Switzer-*.woff2` / `.woff` (served)
+- **Usage:** all body copy and UI text (`--font-sans`)
+- **Note:** replaced the previously bundled Suisse Intl files (Swiss Typefaces, commercial) on 2026-07-20 because no group license was on record. Switzer matches the width and neo-grotesk tone; the type scale and weights are unchanged.

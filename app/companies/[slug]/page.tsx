@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageShell, Scrim } from "@/components/site/PageShell";
+import { VicimusNetworkPlate } from "@/components/blocks/VicimusNetworkPlate";
 import { companies } from "@/content/site";
 import "../companies.css";
 
@@ -114,7 +115,7 @@ export default async function CompanyPage({
           className={`co-ops${company.ops.image ? "" : " co-ops--motif"}`}
           aria-label={`${company.name} operations`}
         >
-          {company.ops.image && (
+          {company.ops.image ? (
             <>
               <Image
                 className="co-ops-img"
@@ -125,6 +126,10 @@ export default async function CompanyPage({
               />
               <div aria-hidden className="co-ops-tint" />
             </>
+          ) : (
+            /* No photography at group level: the network-of-dealerships
+               data-flow plate carries the band instead (Vicimus). */
+            <VicimusNetworkPlate />
           )}
           <div className="co-ops-inner">
             <p className="co-kicker">{company.ops.label}</p>

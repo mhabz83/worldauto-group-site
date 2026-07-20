@@ -121,6 +121,86 @@
 .co-ops--motif .co-ops-inner {
   z-index: 1;
 }
+
+/* ---- Network-of-dealerships data-flow plate (Vicimus ops band) ----------- */
+/* Wireframe storefronts feeding animated signal packets into one
+   group-level hub, drawn over the perspective grid. All lines take the
+   company hue (--co); soft edge fades keep the plate seated in the band. */
+.co-net {
+  position: absolute;
+  inset: 0;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 12%, #000 88%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0%, #000 12%, #000 88%, transparent 100%);
+}
+.co-net svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.co-net-line {
+  stroke: color-mix(in srgb, var(--co) 30%, transparent);
+  stroke-width: 1;
+}
+.co-net-flow {
+  stroke: color-mix(in srgb, var(--co) 88%, white);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-dasharray: 14 560;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--co) 65%, transparent));
+  animation: coNetFlow 5.5s linear infinite;
+}
+.co-net-node {
+  stroke: color-mix(in srgb, var(--co) 62%, transparent);
+  stroke-width: 1.5;
+}
+.co-net-faint {
+  stroke: color-mix(in srgb, var(--co) 30%, transparent);
+  stroke-width: 1;
+}
+.co-net-dot {
+  fill: color-mix(in srgb, var(--co) 92%, white);
+}
+.co-net-arc {
+  stroke: color-mix(in srgb, var(--co) 60%, transparent);
+  stroke-width: 1.6;
+}
+.co-net-arc--outer {
+  stroke: color-mix(in srgb, var(--co) 32%, transparent);
+}
+.co-net-hub {
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--co) 45%, transparent));
+  animation: coNetPulse 4.6s ease-in-out infinite;
+}
+.co-net-cell {
+  animation: coNetPulse 4.6s ease-in-out infinite;
+}
+@keyframes coNetFlow {
+  to {
+    stroke-dashoffset: -574;
+  }
+}
+@keyframes coNetPulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .co-net-flow {
+    animation: none;
+    stroke-dasharray: none;
+    stroke: color-mix(in srgb, var(--co) 45%, transparent);
+    filter: none;
+  }
+  .co-net-hub,
+  .co-net-cell {
+    animation: none;
+  }
+}
 .co-ops-inner {
   position: relative;
   width: 100%;

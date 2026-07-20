@@ -69,22 +69,23 @@ const headerLinks = [
 
 type NavSection = (typeof headerLinks)[number]["section"];
 
-/* Chapter rail ranges — ORDERED document positions, independent of the
-   header scrollspy. The active chapter is the last one whose start element
+/* Chapter ranges — ORDERED document positions, the ONE source of truth for
+   BOTH scrollspies (design review: the top nav's own element probe could
+   disagree with the rail — THE GROUP underlined while the rail ticked
+   03 THE MODEL). The active chapter is the last one whose start element
    has passed the viewport centre, so the tick can only ever move forward
-   while scrolling down (design review: the scrollspy-driven rail ran
-   02→01 over the story band and 05→02 over the companies recap). Every
-   band belongs to a chapter: the story/foresight/commitment band opens
-   The Model, the numbers band and companies recap ride out the Team
-   chapter, and Partner picks up at the verticals ("who we partner with").
-   Clicks tween to the chapter's first section (its range start). */
+   while scrolling down. Every band belongs to a chapter: the
+   story/foresight/commitment band opens The Model, the numbers band and
+   companies recap ride out the Team chapter, and Partner picks up at the
+   verticals ("who we partner with"). `section` names the header nav item
+   the chapter lights up; clicks tween to the chapter's range start. */
 const railChapters = [
-  { label: "The Group", id: "group" },
-  { label: "Companies", id: "companies" },
-  { label: "The Model", id: "story" },
-  { label: "Heritage", id: "heritage" },
-  { label: "Team", id: "team" },
-  { label: "Partner", id: "verticals" },
+  { label: "The Group", id: "group", section: "group" },
+  { label: "Companies", id: "companies", section: "companies" },
+  { label: "The Model", id: "story", section: "model" },
+  { label: "Heritage", id: "heritage", section: "heritage" },
+  { label: "Team", id: "team", section: "team" },
+  { label: "Partner", id: "verticals", section: "partner" },
 ] as const;
 
 const companyProofHighlights: Record<(typeof companies)[number]["slug"], string> = {
@@ -137,6 +138,9 @@ function Header() {
      CSS vars, so each pixel row of the rail matches the band beneath it. */
   const [railVisible, setRailVisible] = useState(false);
   const [activeChapter, setActiveChapter] = useState(0);
+  /* ticks-only mode while a light band crosses the rail box (the labels
+     are unreadable over the dotted map plate) */
+  const [railTicksOnly, setRailTicksOnly] = useState(false);
   const railRef = useRef<HTMLElement>(null);
   /* company tab rail: only while the journey's five company stops hold the
      viewport; underlines the stop under the centre line */
@@ -163,18 +167,12 @@ function Header() {
       setOnLight(light);
 
       const probe = window.innerHeight / 2;
-      let active: string | undefined;
-      for (const el of document.querySelectorAll<HTMLElement>("[data-nav-section]")) {
-        const r = el.getBoundingClientRect();
-        if (r.top <= probe && r.bottom >= probe) active = el.dataset.navSection;
-      }
-      // Sections without a nav owner (e.g. the numbers stack) clear the
-      // highlight instead of leaving the previous item stuck active.
-      setActiveSection((active as NavSection | undefined) ?? null);
 
       // Chapter rail: appears once the opening frame has mostly scrolled
       // away. Active chapter = the LAST ordered range start above the
-      // viewport centre — monotonic by construction.
+      // viewport centre — monotonic by construction. The SAME chapter drives
+      // the top-nav underline (setActiveSection below), so the two
+      // indicators can never point at different chapters.
       const hero = document.getElementById("group");
       setRailVisible(!hero || hero.getBoundingClientRect().bottom < window.innerHeight * 0.5);
       let chapter = 0;
@@ -183,6 +181,7 @@ function Header() {
         if (el && el.getBoundingClientRect().top <= probe) chapter = i;
       });
       setActiveChapter(chapter);
+      setActiveSection(railChapters[chapter].section);
 
       // Rail ink mask: measure where the light bands intersect the rail's
       // own box and hand the union to CSS as percentages. The ink duplicate
@@ -211,6 +210,11 @@ function Header() {
           rail.style.setProperty("--rail-lt", "100%");
           rail.style.setProperty("--rail-lb", "100%");
         }
+        // While ANY light band crosses the rail, drop to ticks-only (the
+        // phone treatment): over the light dotted map plate the label
+        // glyphs had map dots running through them (design review) — ticks
+        // stay legible where 10px caps cannot.
+        setRailTicksOnly(bandBottom > bandTop);
       }
 
       // Company tabs: live from the "Five companies" intro stop until the
@@ -326,7 +330,7 @@ function Header() {
           decorative but still clickable where visible. */}
       <nav
         ref={railRef}
-        className={`journey-rail${railVisible ? "" : " journey-rail--hidden"}`}
+        className={`journey-rail${railVisible ? "" : " journey-rail--hidden"}${railTicksOnly ? " journey-rail--ticks" : ""}`}
         aria-label="Page chapters"
         aria-hidden={!railVisible}
       >
@@ -357,6 +361,16 @@ function Header() {
           </div>
         ))}
       </nav>
+
+      {/* Full-width navy scrim behind the company tab strip (design review):
+          page copy scrolling up out of a stop dissolves to 0% under this
+          gradient BEFORE it can reach the tab row — no more chips or journey
+          copy running through FASTTRACK/AUTODATA/AXXION. Sits above the
+          copy layer (z 3) and below the header and bars (z 8+). */}
+      <div
+        className={`journey-cotabs-scrim${tabsVisible ? " is-visible" : ""}`}
+        aria-hidden="true"
+      />
 
       {/* Company tab rail — a five-name index under the nav while the
           journey's company stops hold the frame. */}
@@ -762,6 +776,13 @@ export function LandingJourney() {
         .journey-rail-copy--ink { clip-path: inset(var(--rail-lt) -14px calc(100% - var(--rail-lb)) -14px); }
         .journey-rail-copy--dark-bottom { clip-path: inset(var(--rail-lb) -14px 0 -14px); }
         .journey-rail a { display: flex; align-items: center; gap: 9px; font-size: 10px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: rgba(255,255,255,.46); text-decoration: none; transition: color .3s ease; }
+        .journey-rail-num, .journey-rail-label { transition: opacity .3s ease; }
+        /* ticks-only while a light band crosses the rail: 10px caps cannot
+           survive the dotted map plate, so labels and numbers step out and
+           every chapter keeps a small tick (the phone treatment). */
+        .journey-rail--ticks .journey-rail-num, .journey-rail--ticks .journey-rail-label { opacity: 0; }
+        .journey-rail--ticks .journey-rail-tick { opacity: .38; transform: none; background: currentColor; }
+        .journey-rail--ticks a.is-active .journey-rail-tick { opacity: 1; background: var(--highlight); }
         .journey-rail a:hover { color: rgba(255,255,255,.9); }
         .journey-rail a.is-active { color: #fff; }
         .journey-rail-tick { flex: 0 0 auto; width: 14px; height: 2px; background: var(--highlight); opacity: 0; transform: scaleX(.35); transform-origin: left; transition: opacity .3s ease, transform .3s ease; }
@@ -774,6 +795,12 @@ export function LandingJourney() {
         @media (max-width: 1199px) {
           .journey-rail-label { display: none; }
         }
+        /* Company tab strip scrim — full-width page-navy fading to
+           transparent: solid through the header + tab rows (0–120px), then
+           a ~56px hand-off fade. Exiting stop copy reads 0% before the bar
+           zone. Above the copy layer (z 3), below the fixed bars (z 8+). */
+        .journey-cotabs-scrim { position: fixed; z-index: 7; inset: 0 0 auto; height: 176px; background: #000835; pointer-events: none; opacity: 0; transition: opacity .4s ease; -webkit-mask-image: linear-gradient(180deg,#000 0%,#000 68%,transparent 100%); mask-image: linear-gradient(180deg,#000 0%,#000 68%,transparent 100%); }
+        .journey-cotabs-scrim.is-visible { opacity: 1; }
         /* Company tab rail — under the nav while the company stops are on. */
         .journey-cotabs { position: fixed; z-index: 9; top: 82px; left: 50%; transform: translate(-50%,-8px); display: flex; align-items: center; gap: clamp(1rem,2.6vw,2.3rem); padding: .5rem .25rem; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .4s ease, transform .4s ease, visibility 0s linear .4s; }
         .journey-cotabs.is-visible { opacity: 1; visibility: visible; pointer-events: auto; transform: translate(-50%,0); transition: opacity .4s ease, transform .4s ease, visibility 0s linear 0s; }
@@ -849,7 +876,7 @@ export function LandingJourney() {
         .journey-panel h2 { font-size: clamp(2.35rem,5vw,4.5rem); }
         /* hero statement — the single anchor of the opening frame now that the
            wordmark overlay is gone (the nav carries the brand). Display voice,
-           promoted scale. Every other journey heading stays Suisse. */
+           promoted scale. Every other journey heading stays Switzer. */
         .journey-panel h1 { max-width: 11ch; font-family: var(--font-display); font-weight: var(--font-display-weight); font-size: clamp(4rem,9vw,10rem); letter-spacing: var(--tracking-display); line-height: .96; }
         /* the promoted statement needs a wider panel than the company cards */
         .journey-stop--kind-hero .journey-panel { width: min(58rem,62vw); }
@@ -885,6 +912,9 @@ export function LandingJourney() {
           .journey-rail-label, .journey-rail-num { display: none; }
           .journey-rail-tick { width: 9px; opacity: .32; transform: none; background: currentColor; }
           .journey-rail a.is-active .journey-rail-tick { width: 14px; opacity: 1; background: var(--highlight); }
+          /* phone bar geometry: 64px header + tab row ≈ 100px, then the
+             56px hand-off fade */
+          .journey-cotabs-scrim { height: 156px; -webkit-mask-image: linear-gradient(180deg,#000 0%,#000 64%,transparent 100%); mask-image: linear-gradient(180deg,#000 0%,#000 64%,transparent 100%); }
           .journey-cotabs { top: 66px; left: 0; right: 0; transform: translateY(-8px); justify-content: center; gap: .9rem; padding-inline: .75rem; overflow-x: auto; scrollbar-width: none; }
           .journey-cotabs.is-visible { transform: translateY(0); }
           .journey-cotabs::-webkit-scrollbar { display: none; }

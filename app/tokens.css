@@ -3,25 +3,28 @@
    Single source of truth shared by the WorldAuto Group site and the Madar site.
    Decisions locked 2026-07-07:
      - Dual accent: blue = structure/links, orange = energy/emphasis
-     - Sans-led: Suisse Intl everywhere (no serif)
+     - Sans-led: Switzer everywhere (no serif)
      - Synced by hand between the two projects (copy this file into each app)
    Reconciles WorldAuto (#02040a navy, blue #0b6fd8) with Madar
-   (#060a3d navy, orange #ff6340, Suisse) into one system.
+   (#060a3d navy, orange #ff6340, one shared grotesk) into one system.
    ============================================================================ */
 
 /* ---- Fonts (files live beside this in ./fonts) --------------------------- */
+/* Body voice: Switzer (Fontshare, ITF Free Font License — self-hosting
+   permitted). A Swiss-style neo-grotesk of the same width and tone as the
+   previous body face; scale and weights unchanged (300/400). */
 @font-face {
-  font-family: "Suisse Intl";
-  src: url("/fonts/SuisseIntl-Regular.woff2") format("woff2"),
-       url("/fonts/SuisseIntl-Regular.woff") format("woff");
+  font-family: "Switzer";
+  src: url("/fonts/Switzer-Regular.woff2") format("woff2"),
+       url("/fonts/Switzer-Regular.woff") format("woff");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "Suisse Intl";
-  src: url("/fonts/SuisseIntl-Light.woff2") format("woff2"),
-       url("/fonts/SuisseIntl-Light.woff") format("woff");
+  font-family: "Switzer";
+  src: url("/fonts/Switzer-Light.woff2") format("woff2"),
+       url("/fonts/Switzer-Light.woff") format("woff");
   font-weight: 300;
   font-style: normal;
   font-display: swap;
@@ -31,7 +34,7 @@
 /* Chosen over Archivo Expanded and Clash Display in the 2026-07 comparison:
    condensed caps grotesk, engineered and automotive, holds the display clamp
    at every viewport. Used ONLY for the hero statement and the major section
-   titles; all body copy stays Suisse. */
+   titles; all body copy stays Switzer. */
 @font-face {
   font-family: "Khand";
   src: url("/fonts/Khand-Semibold.woff2") format("woff2");
@@ -81,7 +84,7 @@
   --hairline-strong: rgba(255, 255, 255, 0.18);
 
   /* ---- Type — sans-led ---------------------------------------------------- */
-  --font-sans: "Suisse Intl", ui-sans-serif, system-ui, Helvetica, Arial, sans-serif;
+  --font-sans: "Switzer", ui-sans-serif, system-ui, Helvetica, Arial, sans-serif;
   /* Display voice — hero statement + major section titles ONLY */
   --font-display: "Khand", var(--font-sans);
   --font-display-weight: 600;

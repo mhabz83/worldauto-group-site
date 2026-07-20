@@ -3,7 +3,7 @@
 
 /* ------------------------------------------------------------------ */
 /*  MADAR — sits on the shared WAG brand tokens (app/tokens.css).      */
-/*  tokens.css owns colour, dual accent, Suisse, spacing, motion.      */
+/*  tokens.css owns colour, dual accent, Switzer, spacing, motion.      */
 /*  Below: only Madar/WAG-specific extras the components still use.    */
 /* ------------------------------------------------------------------ */
 
@@ -53,7 +53,7 @@
   --color-hairline: var(--hairline);
   --color-hairline-strong: var(--hairline-strong);
 
-  /* sans-led: every family utility resolves to Suisse */
+  /* sans-led: every family utility resolves to Switzer */
   --font-serif: var(--font-sans);
   --font-grotesk: var(--font-sans);
   --font-sans-util: var(--font-sans);
@@ -134,7 +134,7 @@ body {
 }
 
 /* display voice — Khand Semibold via the shared tokens (tokens.css). Page-level
-   hero titles only; each page keeps its own size scale. Body copy stays Suisse. */
+   hero titles only; each page keeps its own size scale. Body copy stays Switzer. */
 .type-display {
   font-family: var(--font-display);
   font-weight: var(--font-display-weight);
@@ -499,12 +499,19 @@ html.gsap [data-reveal] {
   transition: background 0.45s ease;
 }
 .journey-header--solid {
-  background: rgba(0, 8, 53, 0.96);
+  background: #000835;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
-/* Inner pages are opaque already — no scrim below the solid bar. */
+/* Below the fully opaque inner-page bar: a ~56px page-navy-to-transparent
+   hand-off scrim, so page copy scrolling under the bar dissolves before it
+   can touch the nav labels (design review: card text read through the bar
+   mid-scroll on /companies). */
 .journey-header--solid::before {
-  content: none;
+  inset: 100% 0 auto;
+  height: 56px;
+  background: linear-gradient(180deg, #000835, transparent);
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 .journey-desktop-nav {
   display: flex;

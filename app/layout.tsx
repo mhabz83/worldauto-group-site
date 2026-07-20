@@ -3,7 +3,7 @@ import "./globals.css";
 import { SkipToContent } from "@/components/primitives/SkipToContent";
 import { ScrollFX } from "@/components/site/ScrollFX";
 
-/* Suisse Intl loads via @font-face in the shared brand tokens (app/tokens.css). */
+/* Switzer loads via @font-face in the shared brand tokens (app/tokens.css). */
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://worldauto.group"),
