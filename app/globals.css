@@ -3,7 +3,7 @@
 
 /* ------------------------------------------------------------------ */
 /*  MADAR — sits on the shared WAG brand tokens (app/tokens.css).      */
-/*  tokens.css owns colour, dual accent, Switzer, spacing, motion.      */
+/*  tokens.css owns colour, dual accent, Suisse Intl, spacing, motion.      */
 /*  Below: only Madar/WAG-specific extras the components still use.    */
 /* ------------------------------------------------------------------ */
 
@@ -53,7 +53,7 @@
   --color-hairline: var(--hairline);
   --color-hairline-strong: var(--hairline-strong);
 
-  /* sans-led: every family utility resolves to Switzer */
+  /* sans-led: every family utility resolves to Suisse Intl */
   --font-serif: var(--font-sans);
   --font-grotesk: var(--font-sans);
   --font-sans-util: var(--font-sans);
@@ -134,7 +134,7 @@ body {
 }
 
 /* display voice — Khand Semibold via the shared tokens (tokens.css). Page-level
-   hero titles only; each page keeps its own size scale. Body copy stays Switzer. */
+   hero titles only; each page keeps its own size scale. Body copy stays Suisse Intl. */
 .type-display {
   font-family: var(--font-display);
   font-weight: var(--font-display-weight);

@@ -22,12 +22,11 @@ The optimized derivative is distributed only as part of this website in
 - **Files:** `app/fonts/Khand-Semibold.woff2` (source mirror) and `public/fonts/Khand-Semibold.woff2` (served)
 - **Usage:** hero statement and major section titles only (`--font-display`)
 
-## Switzer (body voice)
+## Suisse Intl (body voice)
 
-- **Title:** Switzer Light (300) and Regular (400)
-- **Creator:** Indian Type Foundry
-- **Source:** [Fontshare](https://www.fontshare.com/fonts/switzer)
-- **License:** [Fontshare Free Font License (ITF FFL)](https://www.fontshare.com/licenses/itf-ffl) — free for personal and commercial use, self-hosting permitted
-- **Files:** `app/fonts/Switzer-Light.woff2`, `app/fonts/Switzer-Regular.woff2` (source mirrors) and `public/fonts/Switzer-*.woff2` / `.woff` (served)
-- **Usage:** all body copy and UI text (`--font-sans`)
-- **Note:** replaced the previously bundled Suisse Intl files (Swiss Typefaces, commercial) on 2026-07-20 because no group license was on record. Switzer matches the width and neo-grotesk tone; the type scale and weights are unchanged.
+- **Title:** Suisse Intl Light (300) and Regular (400)
+- **Source:** Swiss Typefaces (commercial)
+- **License:** Commercial license held by the group — confirmed by Mounir, 20 July 2026. Do not remove or substitute this face without his explicit approval.
+- **Files:** `app/fonts/SuisseIntl-*.woff2` (source mirrors) and `public/fonts/SuisseIntl-*.woff2` / `.woff` (served)
+- **Note:** briefly substituted with Switzer on 20 July 2026 during an automated license-caution pass; restored the same day on the CEO's confirmation that the license is held.
+

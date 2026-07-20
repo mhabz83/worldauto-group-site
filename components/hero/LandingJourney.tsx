@@ -801,7 +801,7 @@ export function LandingJourney() {
         .journey-panel h2 { font-size: clamp(2.35rem,5vw,4.5rem); }
         /* hero statement — the single anchor of the opening frame now that the
            wordmark overlay is gone (the nav carries the brand). Display voice,
-           promoted scale. Every other journey heading stays Switzer. */
+           promoted scale. Every other journey heading stays Suisse Intl. */
         .journey-panel h1 { max-width: 11ch; font-family: var(--font-display); font-weight: var(--font-display-weight); font-size: clamp(4rem,9vw,10rem); letter-spacing: var(--tracking-display); line-height: .96; }
         /* the promoted statement needs a wider panel than the company cards */
         .journey-stop--kind-hero .journey-panel { width: min(58rem,62vw); }
