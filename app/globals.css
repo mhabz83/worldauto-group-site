@@ -413,12 +413,32 @@ html.gsap [data-reveal] {
   align-items: center;
   gap: clamp(1rem, 3vw, 3rem);
   padding: 0 var(--gutter);
-  background: linear-gradient(180deg, rgba(0, 8, 53, 0.96), rgba(0, 8, 53, 0.58) 70%, transparent);
+  transition: background 0.45s ease;
+}
+/* Header ground (design review): a 96px masked gradient scrim behind the
+   bar — solid where the wordmark, nav labels, and CTA sit, dissolving
+   below — so page copy passing beneath never sits inside the chrome at
+   full strength. The scrim carries the header background; the bar element
+   itself stays transparent (except the --solid inner-page variant). */
+.journey-header::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0 0 auto;
+  height: 96px;
+  pointer-events: none;
+  background: rgba(0, 8, 53, 0.97);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 74%, rgba(0, 0, 0, 0.7) 82%, rgba(0, 0, 0, 0.35) 90%, rgba(0, 0, 0, 0.1) 96%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 74%, rgba(0, 0, 0, 0.7) 82%, rgba(0, 0, 0, 0.35) 90%, rgba(0, 0, 0, 0.1) 96%, transparent 100%);
   transition: background 0.45s ease;
 }
 .journey-header--solid {
   background: rgba(0, 8, 53, 0.96);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+/* Inner pages are opaque already — no scrim below the solid bar. */
+.journey-header--solid::before {
+  content: none;
 }
 .journey-desktop-nav {
   display: flex;
@@ -489,8 +509,8 @@ html.gsap [data-reveal] {
 }
 /* Theme flip: the homepage story tail has ui-light sections; the header
    re-skins so the nav stays legible over paper. */
-.journey-header--light {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(255, 255, 255, 0.66) 70%, transparent);
+.journey-header--light::before {
+  background: rgba(255, 255, 255, 0.985);
 }
 .journey-header--light .journey-wordmark {
   color: var(--wag-ink);

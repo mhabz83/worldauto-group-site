@@ -376,6 +376,10 @@ export function LandingJourney() {
 
       // Every stop exits — including the last one, which fades before the
       // story tail's opaque sections slide over the fixed canvas.
+      // Exit window retuned (design review): panels must be fully dissolved
+      // before their top edge reaches the fixed header band, so the fade now
+      // starts at bottom 75% and completes by bottom 52% — before the panel
+      // copy can interleave with the wordmark, nav labels, or CTA.
       gsap.fromTo(
         panel,
         { yPercent: 0, opacity: 1 },
@@ -386,8 +390,8 @@ export function LandingJourney() {
           immediateRender: false,
           scrollTrigger: {
             trigger: stop,
-            start: "bottom 48%",
-            end: "bottom 12%",
+            start: "bottom 75%",
+            end: "bottom 52%",
             scrub: MOTION.exitScrub,
           },
         },
@@ -542,8 +546,8 @@ export function LandingJourney() {
              and clear room for it under the statement. The anchor statement
              steps down so "Automotive." holds as one word on a 390px screen. */
           .journey-panel h1 { max-width: none; font-size: clamp(3rem,14.2vw,5.5rem); }
-          .journey-stop--kind-hero .journey-panel { width: 100%; padding-bottom: 5rem; }
-          .journey-scroll-cue { bottom: 1.1rem; gap: .55rem; }
+          .journey-stop--kind-hero .journey-panel { width: 100%; padding-bottom: 6.75rem; }
+          .journey-scroll-cue { bottom: 1.6rem; gap: .55rem; }
           .journey-scroll-cue-line { height: 34px; }
         }
         @media (prefers-reduced-motion: reduce) {
