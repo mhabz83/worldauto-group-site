@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageShell, Scrim } from "@/components/site/PageShell";
+import { GridExploreButton } from "@/components/site/CompanyPreview";
 import { companies } from "@/content/site";
 import "./companies.css";
 
@@ -55,9 +56,14 @@ export default function CompaniesPage() {
                   <h2 className="mt-5 text-xl font-medium text-hi">{c.name}</h2>
                   <p className="mt-3 text-mid">{c.oneLiner}</p>
                 </div>
-                <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
+                <div className="co-tile-foot mt-8 flex flex-wrap items-center justify-between gap-4">
                   <span className="type-mono text-faint">{c.chipHint}</span>
-                  <span className="co-tile-btn">Explore {c.name} →</span>
+                  <GridExploreButton
+                    slug={c.slug}
+                    name={c.name}
+                    hue={c.hue}
+                    ink={ctaInk[c.slug]}
+                  />
                 </div>
               </Link>
             ))}
@@ -77,7 +83,7 @@ export default function CompaniesPage() {
                   and share what works across the group.
                 </p>
               </div>
-              <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
+              <div className="co-tile-foot mt-8 flex flex-wrap items-center justify-between gap-4">
                 <span className="type-mono text-faint">the model</span>
                 <span className="co-tile-btn co-tile-btn--ghost">
                   See the model →

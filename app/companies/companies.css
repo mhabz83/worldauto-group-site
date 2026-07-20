@@ -45,6 +45,30 @@
   filter: brightness(1.08);
   box-shadow: 0 0 20px color-mix(in srgb, var(--co) 45%, transparent);
 }
+/* Axxion runs the pure company orange (#FF4200), which sits too close to the
+   group's "Partner With Us" action orange. Distinguish its Explore button with
+   a deeper fill and a bright hue outline, so the group CTA stays the one
+   unmistakable pure-signal orange. */
+.co-tile-btn[data-co="axxion"] {
+  background: color-mix(in srgb, #ff4200 82%, #02040f);
+  border: 1px solid color-mix(in srgb, #ff4200 85%, white);
+}
+/* Footer row: keep the CTA on its own line on narrow tiles, so it can never
+   clip at the right edge before the display font loads (fallback metrics run
+   wider). Applies to the five company tiles and the group tile alike, so their
+   button rhythm matches on mobile. */
+@media (max-width: 520px) {
+  .co-tile-foot {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .co-tile-foot .co-tile-btn {
+    flex-basis: auto;
+  }
+}
+
 /* Group-standard tile: matching ghost button in the house voice. */
 .co-tile-btn--ghost {
   background: transparent;

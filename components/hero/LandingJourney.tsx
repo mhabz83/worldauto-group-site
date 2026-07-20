@@ -10,6 +10,7 @@ import { ScrollToPlugin } from "gsap/ScrollToPlugin";
 import { companies, nav } from "@/content/site";
 import { StoryTail } from "@/components/about/StoryTail";
 import { ClientsCarousel } from "@/components/about/ClientsCarousel";
+import { JourneyExploreLink } from "@/components/site/CompanyPreview";
 import { NeonJourney } from "./NeonJourney";
 import { journeyContent, stopAccents } from "./journeyContent";
 
@@ -487,13 +488,16 @@ function CompanyStop({ company }: { company: (typeof companies)[number] }) {
         {company.capabilities.map((capability) => <li key={capability}>{capability}</li>)}
       </ul>
       <div className="journey-links">
-        <Link
+        <JourneyExploreLink
           href={`/companies/${company.slug}`}
           className="journey-explore-btn"
           style={{ "--stop-ink": stopInk[company.slug] ?? "#ffffff" } as React.CSSProperties}
+          slug={company.slug}
+          name={company.name}
+          hue={accent}
         >
           Explore {company.name} →
-        </Link>
+        </JourneyExploreLink>
         <a href={company.url} target="_blank" rel="noreferrer">Visit site</a>
       </div>
       {company.slug === "autodata" && <ClientsCarousel />}
@@ -836,6 +840,10 @@ export function LandingJourney() {
            wins the cascade. The "Visit site" link stays a plain text link. */
         .journey-links a.journey-explore-btn { min-height: 48px; padding: .72rem 1.15rem; background: var(--stop-accent); color: var(--stop-ink,#fff); border-radius: 4px; font-size: .6875rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; text-decoration: none; white-space: nowrap; transition: filter var(--dur-fast) ease, box-shadow var(--dur-fast) ease; }
         .journey-links a.journey-explore-btn:hover, .journey-links a.journey-explore-btn:focus-visible { filter: brightness(1.08); box-shadow: 0 0 22px color-mix(in srgb, var(--stop-accent) 45%, transparent); }
+        /* Axxion's pure orange (#FF4200) sits too close to the group's action
+           orange; give its Explore button a deeper fill and a hue outline so
+           the group CTA stays the one unmistakable pure-signal orange. */
+        .journey-links a.journey-explore-btn[data-co="axxion"] { background: color-mix(in srgb, #ff4200 82%, #02040f); border: 1px solid color-mix(in srgb, #ff4200 85%, white); }
         /* AutoData clients marquee — full-colour transparent logos on one soft
            light tray (no per-logo cards). The tray fades at both ends. */
         .journey-clients { margin-top: 1.5rem; max-width: 100%; }
