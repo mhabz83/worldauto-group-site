@@ -8,7 +8,9 @@ import { companies } from "@/content/site";
 import "../companies.css";
 
 export function generateStaticParams() {
-  return companies.map((c) => ({ slug: c.slug }));
+  /* AutoData has its own model page at app/companies/autodata (the static
+     route wins over this dynamic one); the other four keep this template. */
+  return companies.filter((c) => c.slug !== "autodata").map((c) => ({ slug: c.slug }));
 }
 
 export async function generateMetadata({

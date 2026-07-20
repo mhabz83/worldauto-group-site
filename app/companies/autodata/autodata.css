@@ -1,0 +1,673 @@
+/* ==========================================================================
+   AutoData model page (/companies/autodata).
+   Madar's data-analytics bones under WAG tokens: Khand display caps,
+   Suisse body, navy scale, AutoData cyan (--co, #42D7FF) as the signal
+   colour playing the role Madar gives orange. Orange stays the action
+   colour. Everything sits on app/tokens.css; the only literal hue is the
+   company cyan already declared in content/site.ts.
+   ========================================================================== */
+
+/* ---- S0 · Hero ----------------------------------------------------------- */
+.ad-hero {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  overflow: clip;
+}
+.ad-hero-bg {
+  position: absolute;
+  inset: 0;
+}
+.ad-hero-bg img {
+  object-fit: cover;
+}
+/* Navy tint seats the Madar render on our page: deeper at top (header) and
+   bottom (title), open in the middle so the neon breathes. */
+.ad-hero-tint {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(2, 4, 15, 0.62) 0%, rgba(2, 4, 15, 0.12) 30%, rgba(2, 4, 15, 0.22) 62%, rgba(2, 4, 15, 0.9) 100%),
+    radial-gradient(58% 44% at 16% 82%, rgba(2, 4, 15, 0.6) 0%, transparent 70%);
+}
+.ad-hero-content {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 8.5rem var(--gutter) clamp(3rem, 7vh, 5rem);
+}
+.ad-hero-foot {
+  margin-top: clamp(3rem, 12vh, 8rem);
+}
+.ad-hero-rule {
+  margin-top: 0.9rem;
+  border-top: 1px solid var(--hairline-strong);
+}
+.ad-hero-title {
+  margin-top: 1.4rem;
+  font-size: var(--fs-display-hero);
+  text-transform: uppercase;
+}
+.ad-hero-signal {
+  margin-top: 0.9rem;
+  color: #fff;
+  font-size: clamp(1.35rem, 2.6vw, 2.1rem);
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+/* scroll cue, bottom right like the reference */
+.ad-scrollcue {
+  position: absolute;
+  right: var(--gutter);
+  bottom: clamp(3rem, 7vh, 5rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  color: color-mix(in srgb, var(--co) 80%, white);
+}
+.ad-scrollcue i {
+  position: relative;
+  width: 1px;
+  height: 46px;
+  background: color-mix(in srgb, var(--co) 34%, transparent);
+  overflow: hidden;
+}
+.ad-scrollcue i::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 1px;
+  height: 16px;
+  background: var(--co);
+  animation: ad-cue 2.2s var(--ease-reveal) infinite;
+}
+@keyframes ad-cue {
+  from { transform: translateY(-18px); }
+  to { transform: translateY(48px); }
+}
+
+/* ---- Chapter rail (left edge, desktop) ----------------------------------- */
+.ad-chapters {
+  position: relative;
+}
+.ad-rail {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: clamp(3.4rem, 5vw, 5rem);
+  z-index: 4;
+  pointer-events: none;
+}
+.ad-rail-inner {
+  position: sticky;
+  top: 50vh;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding-left: clamp(0.8rem, 1.4vw, 1.4rem);
+  opacity: 0;
+  transition: opacity var(--dur-med) var(--ease-reveal);
+}
+.ad-rail[data-visible] .ad-rail-inner {
+  opacity: 1;
+}
+.ad-rail-track {
+  position: relative;
+  width: 1px;
+  height: 200px;
+  background: rgba(140, 160, 190, 0.28);
+}
+.ad-rail-fill {
+  position: absolute;
+  inset: 0;
+  transform-origin: top;
+  background: var(--co);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--co) 65%, transparent);
+}
+.ad-rail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ad-rail-list a {
+  pointer-events: auto;
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  text-decoration: none;
+}
+.ad-rail-num {
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  font-size: 1.05rem;
+  line-height: 1;
+  color: rgba(150, 168, 196, 0.66);
+  transition: color var(--dur-fast) ease;
+}
+.ad-rail-label {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(150, 168, 196, 0.55);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity var(--dur-fast) ease, transform var(--dur-fast) ease, color var(--dur-fast) ease;
+  white-space: nowrap;
+}
+.ad-rail-list a[aria-current] .ad-rail-num {
+  color: var(--co);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--co) 55%, transparent);
+}
+/* The label expands only on hover or focus so it never sits over the chapter
+   copy; the persistent state is just the numbers with the active one in cyan. */
+.ad-rail-list a:hover .ad-rail-label,
+.ad-rail-list a:focus-visible .ad-rail-label {
+  opacity: 1;
+  transform: translateX(0);
+}
+.ad-rail-list a[aria-current] .ad-rail-label {
+  color: #fff;
+}
+/* over the light chapter the rail neutrals flip to ink */
+.ad-rail[data-on-light] .ad-rail-num {
+  color: rgba(7, 9, 14, 0.4);
+}
+.ad-rail[data-on-light] .ad-rail-label {
+  color: rgba(7, 9, 14, 0.45);
+}
+.ad-rail[data-on-light] .ad-rail-list a[aria-current] .ad-rail-num {
+  color: color-mix(in srgb, var(--co) 62%, var(--wag-ink));
+  text-shadow: none;
+}
+.ad-rail[data-on-light] .ad-rail-list a[aria-current] .ad-rail-label {
+  color: var(--wag-ink);
+}
+.ad-rail[data-on-light] .ad-rail-track {
+  background: rgba(7, 9, 14, 0.16);
+}
+/* phone: slim progress bar under the fixed header */
+.ad-rail-bar {
+  display: none;
+}
+@media (max-width: 899px) {
+  .ad-rail {
+    display: none;
+  }
+  .ad-rail-bar {
+    display: block;
+    position: fixed;
+    z-index: 7;
+    top: 64px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: transparent;
+    opacity: 0;
+    transition: opacity var(--dur-med) ease;
+    pointer-events: none;
+  }
+  .ad-rail-bar[data-visible] {
+    opacity: 1;
+  }
+  .ad-rail-bar span {
+    display: block;
+    height: 100%;
+    transform-origin: left;
+    background: var(--co);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--co) 60%, transparent);
+  }
+}
+
+/* ---- Chapter slides ------------------------------------------------------- */
+.ad-ch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 92svh;
+  padding: clamp(5rem, 12vh, 8rem) var(--gutter);
+  scroll-margin-top: 5rem;
+}
+.ad-ch--dark {
+  background: linear-gradient(180deg, rgba(2, 4, 15, 0.94) 0%, rgba(4, 6, 26, 0.96) 100%);
+  border-top: 1px solid var(--hairline);
+  border-bottom: 1px solid var(--hairline);
+}
+.ad-ch--light {
+  background: var(--wag-paper);
+  color: var(--text-mid);
+  overflow: clip;
+}
+.ad-ch-bg {
+  position: absolute;
+  inset: 0;
+  opacity: 0.9;
+}
+.ad-ch-bg img {
+  object-fit: cover;
+}
+.ad-ch-inner {
+  position: relative;
+  width: 100%;
+  max-width: 90rem;
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: clamp(2.5rem, 5vw, 5rem);
+  align-items: center;
+}
+@media (min-width: 900px) {
+  .ad-ch {
+    /* clear the left rail */
+    padding-left: calc(var(--gutter) + clamp(2.4rem, 4vw, 4rem));
+  }
+}
+/* light slide: media left, copy right */
+.ad-ch-inner--flip {
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+}
+/* the Madar dark-slide hairline between copy and media */
+@media (min-width: 900px) {
+  .ad-ch--dark .ad-ch-copy {
+    border-right: 1px solid var(--hairline);
+    padding-right: clamp(2rem, 4vw, 4rem);
+  }
+}
+.ad-ch-num {
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  font-size: clamp(2.6rem, 5vw, 4rem);
+  line-height: 1;
+  color: color-mix(in srgb, var(--co) 38%, transparent);
+}
+.ad-ch--light .ad-ch-num {
+  color: color-mix(in srgb, var(--co) 60%, var(--wag-mist));
+}
+.ad-ch .co-kicker {
+  margin-top: 1.1rem;
+}
+.ad-ch--light .co-kicker {
+  color: color-mix(in srgb, var(--co) 48%, var(--wag-ink));
+}
+.ad-ch-title {
+  margin-top: 0.6rem;
+  font-size: clamp(2.4rem, 4.6vw, 4.2rem);
+  text-transform: uppercase;
+}
+.ad-ch-body {
+  margin-top: 1.4rem;
+  max-width: 46ch;
+  color: var(--text-mid);
+}
+/* chips on the light slide need ink borders, not the dark-page fill */
+.ad-ch--light .co-chips li {
+  background: rgba(255, 255, 255, 0.8);
+  color: rgba(7, 9, 14, 0.82);
+  border-color: color-mix(in srgb, var(--co) 55%, rgba(7, 9, 14, 0.2));
+}
+
+/* ---- Media plates --------------------------------------------------------- */
+/* Dark slides: the Madar "monitor" grammar with our cyan keyline: 1px
+   stroke, 10px radius, 8px inset gap, soft glow seating it on the navy. */
+.ad-plate {
+  margin: 0;
+}
+.ad-frame {
+  border: 1px solid color-mix(in srgb, var(--co) 58%, transparent);
+  border-radius: 10px;
+  padding: 8px;
+  background: rgba(2, 4, 15, 0.5);
+  box-shadow:
+    0 0 44px color-mix(in srgb, var(--co) 12%, transparent),
+    0 28px 64px rgba(0, 0, 0, 0.5);
+}
+/* minimal browser chrome around flat product captures */
+.ad-browser {
+  border-radius: 5px;
+  overflow: hidden;
+  background: #fff;
+}
+.ad-browser-bar {
+  display: flex;
+  gap: 6px;
+  padding: 9px 12px;
+  background: var(--wag-mist);
+  border-bottom: 1px solid rgba(7, 9, 14, 0.08);
+}
+.ad-browser-bar i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(7, 9, 14, 0.18);
+}
+.ad-browser img {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* grade: settle the white UI onto the navy page */
+  filter: saturate(0.88) brightness(0.95) contrast(1.02);
+}
+.ad-caption {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 1rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-low);
+}
+.ad-caption > span {
+  width: 1.6rem;
+  height: 1px;
+  background: var(--co);
+  flex: none;
+}
+
+/* light slide media: tablet capture with soft shadow, no stroke, plus the
+   four checklist stage cards echoing Madar's card cluster */
+.ad-insp-media {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  gap: clamp(1.2rem, 2.5vw, 2.2rem);
+  align-items: center;
+}
+.ad-tablet {
+  width: clamp(220px, 24vw, 320px);
+}
+.ad-tablet img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: saturate(0.92) drop-shadow(0 26px 44px rgba(7, 9, 14, 0.28));
+}
+.ad-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ad-cards li {
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+  padding: 1.1rem 1.15rem 1.05rem;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(7, 9, 14, 0.1);
+  border-top: 2px solid color-mix(in srgb, var(--co) 72%, rgba(7, 9, 14, 0.15));
+  border-radius: 8px;
+  color: var(--wag-ink);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  box-shadow: 0 14px 34px rgba(7, 9, 14, 0.08);
+}
+.ad-cards li span {
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  font-size: 1.15rem;
+  line-height: 1;
+  color: color-mix(in srgb, var(--co) 55%, var(--wag-ink));
+}
+
+/* chapter 03: the typographic history timeline inside the keyline frame */
+.ad-timeline {
+  position: relative;
+  margin: 0;
+  padding: clamp(1.6rem, 3vw, 2.6rem) clamp(1.4rem, 3vw, 2.8rem);
+  list-style: none;
+  border-radius: 5px;
+  background: linear-gradient(180deg, var(--wag-navy-800) 0%, var(--wag-navy-700) 130%);
+}
+.ad-timeline li {
+  position: relative;
+  display: flex;
+  gap: 1.3rem;
+  padding: 1.05rem 0;
+}
+.ad-timeline li + li {
+  border-top: 1px solid var(--hairline);
+}
+.ad-timeline-tick {
+  flex: none;
+  width: 0.85rem;
+  height: 0.85rem;
+  margin-top: 0.35rem;
+  border: 1px solid color-mix(in srgb, var(--co) 80%, transparent);
+  background: color-mix(in srgb, var(--co) 18%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--co) 35%, transparent);
+}
+.ad-timeline h3 {
+  color: #fff;
+  font-size: 1.02rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.ad-timeline p {
+  margin-top: 0.15rem;
+  font-size: 0.9rem;
+  color: var(--text-low);
+  line-height: 1.5;
+}
+
+/* ---- Hero subhead + call-to-action buttons ------------------------------- */
+.ad-hero-sub {
+  margin-top: 1.4rem;
+  max-width: 48ch;
+  color: var(--text-mid);
+  font-size: clamp(1rem, 1.4vw, 1.15rem);
+  line-height: 1.6;
+}
+.ad-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  margin-top: 1.8rem;
+}
+.ad-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 4px;
+  padding: 0.85rem 1.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease;
+}
+.ad-btn--solid {
+  background: var(--highlight);
+  color: #fff;
+}
+.ad-btn--solid:hover {
+  background: var(--highlight-hover);
+}
+.ad-btn--ghost {
+  color: #fff;
+  border: 1px solid color-mix(in srgb, var(--co) 55%, transparent);
+  background: color-mix(in srgb, var(--co) 8%, transparent);
+}
+.ad-btn--ghost:hover {
+  border-color: var(--co);
+  background: color-mix(in srgb, var(--co) 16%, transparent);
+}
+
+/* ---- Chapter lead line (the verbatim product headline) ------------------- */
+.ad-ch-lead {
+  margin-top: 1rem;
+  max-width: 42ch;
+  color: #fff;
+  font-size: clamp(1.15rem, 1.9vw, 1.5rem);
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+.ad-ch--light .ad-ch-lead {
+  color: var(--wag-ink);
+}
+
+/* ---- Standing: awards + recognised data partnerships -------------------- */
+.ad-standing {
+  position: relative;
+  background: linear-gradient(180deg, var(--wag-navy-900) 0%, var(--wag-navy-800) 100%);
+  border-top: 1px solid var(--hairline);
+  padding: clamp(4.5rem, 10vh, 7rem) var(--gutter);
+}
+.ad-standing-inner {
+  max-width: 82rem;
+  margin-inline: auto;
+}
+.ad-standing-title {
+  margin-top: 0.5rem;
+  font-size: clamp(2.2rem, 4.4vw, 3.8rem);
+  text-transform: uppercase;
+  line-height: 0.98;
+}
+.ad-standing-cols {
+  margin-top: clamp(2.4rem, 5vw, 3.5rem);
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: clamp(2rem, 5vw, 4.5rem);
+}
+.ad-standing-label {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 1.4rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-low);
+}
+.ad-standing-label span {
+  width: 1.6rem;
+  height: 1px;
+  background: var(--co);
+  flex: none;
+}
+.ad-award-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ad-award-list li {
+  display: flex;
+  gap: 1.2rem;
+  padding: 1.05rem 0;
+}
+.ad-award-list li + li {
+  border-top: 1px solid var(--hairline);
+}
+.ad-award-year {
+  flex: none;
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  font-size: 1.15rem;
+  line-height: 1.2;
+  color: var(--co);
+}
+.ad-award-list p {
+  color: var(--text-mid);
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+.ad-standing-facts {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.6rem 2.4rem;
+}
+.ad-standing-facts dt {
+  margin-bottom: 0.4rem;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.98rem;
+}
+.ad-standing-facts dd {
+  margin: 0;
+  color: var(--text-low);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+/* ---- Closing call to action ---------------------------------------------- */
+.ad-close-line {
+  margin-top: 1rem;
+  max-width: 20ch;
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  text-transform: uppercase;
+  font-size: clamp(2.2rem, 5vw, 4rem);
+  line-height: 0.98;
+}
+.ad-close-body {
+  margin-top: 1.3rem;
+  max-width: 42ch;
+  color: var(--text-mid);
+  font-size: clamp(1.05rem, 1.6vw, 1.25rem);
+  line-height: 1.55;
+}
+.ad-contact {
+  margin-top: 2rem;
+  color: var(--text-low);
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+}
+
+/* ---- Responsive ----------------------------------------------------------- */
+@media (max-width: 899px) {
+  .ad-ch {
+    min-height: 0;
+  }
+  .ad-ch-inner,
+  .ad-ch-inner--flip {
+    grid-template-columns: 1fr;
+  }
+  /* copy reads first on phones, media follows */
+  .ad-ch-inner--flip .ad-insp-media {
+    order: 2;
+  }
+  .ad-insp-media {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+  .ad-cards {
+    width: 100%;
+  }
+  .ad-scrollcue {
+    display: none;
+  }
+  .ad-standing-cols {
+    grid-template-columns: 1fr;
+    gap: 2.6rem;
+  }
+  .ad-standing-facts {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ad-scrollcue i::after {
+    animation: none;
+  }
+  .ad-rail-inner,
+  .ad-rail-bar,
+  .ad-rail-num,
+  .ad-rail-label {
+    transition: none;
+  }
+}
