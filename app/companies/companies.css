@@ -39,11 +39,32 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
   white-space: nowrap;
-  transition: filter var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+  transition:
+    filter 180ms ease-out,
+    box-shadow 180ms ease-out,
+    transform 180ms ease-out;
 }
-.co-tile:hover .co-tile-btn {
-  filter: brightness(1.08);
-  box-shadow: 0 0 20px color-mix(in srgb, var(--co) 45%, transparent);
+/* Hover feedback: glow bloom + a forward nudge (the whole label, arrow
+   included, reads as "this is going somewhere") + a brightness/saturation
+   lift standing in for a background fill shift — kept as a filter rather
+   than a literal background-color so it layers cleanly over the axxion
+   tile's own deeper fill below, instead of overwriting it. */
+.co-tile:hover .co-tile-btn,
+.co-tile:focus-visible .co-tile-btn {
+  filter: brightness(1.14) saturate(1.2);
+  box-shadow: 0 0 28px 3px color-mix(in srgb, var(--co) 55%, transparent);
+  transform: translateX(4px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .co-tile-btn {
+    transition: filter 1ms linear;
+  }
+  .co-tile:hover .co-tile-btn,
+  .co-tile:focus-visible .co-tile-btn {
+    filter: brightness(1.14) saturate(1.2);
+    box-shadow: none;
+    transform: none;
+  }
 }
 /* Axxion runs the pure company orange (#FF4200), which sits too close to the
    group's "Partner With Us" action orange. Distinguish its Explore button with
@@ -75,11 +96,20 @@
   color: color-mix(in srgb, var(--co) 72%, white);
   border: 1px solid color-mix(in srgb, var(--co) 55%, transparent);
 }
-.co-tile--group:hover .co-tile-btn--ghost {
+.co-tile--group:hover .co-tile-btn--ghost,
+.co-tile--group:focus-visible .co-tile-btn--ghost {
   filter: none;
-  box-shadow: none;
-  background: color-mix(in srgb, var(--co) 12%, transparent);
-  border-color: color-mix(in srgb, var(--co) 80%, transparent);
+  box-shadow: 0 0 24px 2px color-mix(in srgb, var(--co) 40%, transparent);
+  background: color-mix(in srgb, var(--co) 16%, transparent);
+  border-color: color-mix(in srgb, var(--co) 85%, transparent);
+  transform: translateX(4px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .co-tile--group:hover .co-tile-btn--ghost,
+  .co-tile--group:focus-visible .co-tile-btn--ghost {
+    box-shadow: none;
+    transform: none;
+  }
 }
 /* the group-standard tile speaks in the house voice, not a company hue */
 .co-tile--group {

@@ -19,7 +19,7 @@ export default function ContactPage() {
             <p data-reveal className="type-kicker text-accent">Contact</p>
             <h1
               data-reveal
-              className="mt-6 font-light leading-[0.95] text-hi"
+              className="type-display mt-6 leading-[0.95] text-hi"
               style={{ fontSize: "var(--fs-display)" }}
             >
               Build With{" "}
