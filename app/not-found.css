@@ -1,0 +1,54 @@
+/* ============================================================================
+   404 — scoped styles only. Not shared with any other page.
+
+   The copy on this page is unchanged and correct. The problem this file
+   fixes: the page sat on flat near-black with zero motion, the only page
+   on the site with no atmosphere. This adds one neon road, in the same
+   blue/orange language as the homepage hero and the "Group in Numbers"
+   road motif, running away from the viewer and dissolving into nothing
+   before it reaches a horizon — a literal dead end. Slow drift only,
+   nothing that competes with the copy, and it turns off completely under
+   prefers-reduced-motion.
+   ============================================================================ */
+
+.nf-road {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  opacity: 0.9;
+  pointer-events: none;
+  animation: nf-road-drift 18s ease-in-out infinite;
+  will-change: transform;
+}
+
+.nf-road svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Text sits in its own stacking context above the road. */
+.nf-content {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes nf-road-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(0, -16px, 0) scale(1.01);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nf-road {
+    animation: none;
+    transform: none;
+  }
+}
