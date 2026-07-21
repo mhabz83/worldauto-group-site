@@ -149,6 +149,32 @@ export function ValuesTimeline() {
           },
         });
 
+        /* Model -> Heritage handoff, staggered. Its own tightly-scrubbed
+           trigger fades the value column (the last one visible is step-04)
+           fully out — opacity to 0 with a slight lift — across the final
+           stretch of the values phase, finishing at ~3.80 viewports (just
+           before the heritage copy for the first beat begins its own fade at
+           ~3.82 viewports and before the phase boundary at 4.00). So the Model
+           copy is gone before any heritage text or the "1990s" year appears;
+           the only thing that carries across the seam is the shared orbital
+           ring / braid. Written through `apply` so it is a smooth fade, not
+           the waypoint opacity rest-floor snap. */
+        waypointTrigger({
+          el: valuesTextRef.current,
+          measure: sticky,
+          scrub: true,
+          waypoints: [
+            { a: -332, b: 0 },
+            { a: -380, b: 0 },
+          ],
+          apply: (_v, p) => {
+            const vt = valuesTextRef.current;
+            if (!vt) return;
+            vt.style.opacity = String(1 - p);
+            vt.style.transform = `translateY(${(-22 * p).toFixed(2)}px)`;
+          },
+        });
+
         if (md) {
           /* desktop timeline items: year ±160px, pin ±80px, pinLine pattern */
           itemRefs.current.forEach((item, i) => {
@@ -156,10 +182,24 @@ export function ValuesTimeline() {
             waypointTrigger({
               el: yearRefs.current[i],
               measure: item,
-              waypoints: [
-                { a: 100, b: 0, transform: "translateY(160px)" },
-                { a: 0, b: 100, transform: "translateY(-160px)" },
-              ],
+              waypoints:
+                i === 0
+                  ? [
+                      /* first heritage year holds hidden through the phase
+                         seam (opacity 0 up to and at the boundary), then fades
+                         in just AFTER it — so "1990s" never shares the frame
+                         with the exiting Model copy. Transform stays linear
+                         160 -> -160 across the whole item, so the year parallax
+                         is unchanged; only opacity is gated. */
+                      { a: 100, b: 0, transform: "translateY(160px)", opacity: 0 },
+                      { a: 0, b: 0, transform: "translateY(0px)", opacity: 0 },
+                      { a: -24, b: 0, transform: "translateY(-38.4px)", opacity: 1 },
+                      { a: 0, b: 100, transform: "translateY(-160px)", opacity: 1 },
+                    ]
+                  : [
+                      { a: 100, b: 0, transform: "translateY(160px)" },
+                      { a: 0, b: 100, transform: "translateY(-160px)" },
+                    ],
             });
             waypointTrigger({
               el: pinRefs.current[i],
@@ -334,7 +374,7 @@ export function ValuesTimeline() {
             </div>
           </div>
 
-          <div className="ax-values-text">
+          <div ref={valuesTextRef} className="ax-values-text">
             <div className="ax-container">
               <div className="ax-values-text-inner">
                 <div className="ax-values-text-col">

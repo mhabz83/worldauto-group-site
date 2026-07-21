@@ -687,7 +687,13 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
 /* ------------------------------------------------------------------ */
 
 .ax-light {
-  background: var(--wag-paper);
+  /* Keep the tonal break, but not a blank white plate: a very faint grid/road
+     texture rides on the paper so the section belongs to the same world as the
+     dark chapters. */
+  background:
+    linear-gradient(rgba(7, 9, 14, 0.035) 1px, transparent 1px) 0 0 / 100% 46px,
+    linear-gradient(90deg, rgba(7, 9, 14, 0.035) 1px, transparent 1px) 0 0 / 46px 100%,
+    var(--wag-paper);
   color: rgba(7, 9, 14, 0.78);
 }
 .ax-light .ax-h1,
@@ -729,24 +735,42 @@ html.gsap .ax [data-ax-swap-item][data-inactive] {
   gap: var(--ax-gap);
   align-content: start;
 }
+/* Dark glass tiles in the site's own language — no flat light-grey cards.
+   A hairline neon top-accent (the group structure hue), the number set in the
+   Khand display face, sitting on the light section as a deliberate dark inset. */
 .ax-fact-card {
+  position: relative;
+  overflow: hidden;
   aspect-ratio: 1 / 1;
-  border-radius: 5px;
-  background: rgba(7, 9, 14, 0.05);
+  border-radius: 6px;
+  background: linear-gradient(158deg, rgba(2, 4, 15, 0.95), rgba(4, 12, 46, 0.9));
+  border: 1px solid rgba(19, 103, 254, 0.28);
+  box-shadow: 0 22px 46px -26px rgba(2, 4, 15, 0.6);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: clamp(14px, 1.6vw, 24px);
+  padding: clamp(16px, 1.7vw, 26px);
+}
+.ax-fact-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  background: linear-gradient(90deg, #1367fe, #42d7ff);
 }
 .ax-fact-card-value {
-  font-size: clamp(1.6rem, 2.6vw, 2.4rem);
-  font-weight: 300;
-  letter-spacing: -0.02em;
-  color: var(--wag-ink);
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  letter-spacing: var(--tracking-display);
+  font-size: clamp(2.1rem, 3.4vw, 3.2rem);
+  line-height: 0.9;
+  color: #fff;
 }
 .ax-fact-card-label {
   font-size: var(--ax-t2);
-  color: rgba(7, 9, 14, 0.6);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.58);
 }
 @media (max-width: 767px) {
   .ax-giants-title,

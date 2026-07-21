@@ -881,6 +881,13 @@ export function LandingJourney() {
           .journey-scroll-cue { display: none; }
           /* scenes hold still and stay visible (no GSAP in this mode) */
           .journey-scene { will-change: auto; opacity: 1 !important; transform: none !important; }
+          /* Explore button hover: reduced-motion keeps a static colour change
+             only — the fill still lightens, but the glow bloom and the arrow
+             nudge (both motion) are dropped, and nothing transitions. */
+          .journey-links a.journey-explore-btn { transition: background-color 0s; }
+          .journey-links a.journey-explore-btn:hover, .journey-links a.journey-explore-btn:focus-visible { filter: none; box-shadow: none; }
+          .journey-links a.journey-explore-btn .journey-btn-arrow { transition: none; }
+          .journey-links a.journey-explore-btn:hover .journey-btn-arrow, .journey-links a.journey-explore-btn:focus-visible .journey-btn-arrow { transform: none; }
         }
         html.webgl-unavailable .journey-webgl { display: none !important; }
         html.webgl-unavailable .journey-static-frame { opacity: 1 !important; transform: none !important; }
