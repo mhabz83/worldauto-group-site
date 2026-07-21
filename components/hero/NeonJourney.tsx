@@ -613,6 +613,18 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
     const mount = mountRef.current;
     if (!mount) return;
     document.documentElement.classList.remove("webgl-unavailable");
+
+    // Hero-ready signal for the logo-reveal hand-off: fire ONCE, the first time
+    // the hero has actually painted (first composed frame, the reduced-motion
+    // static frame, or — if WebGL is unavailable — the fallback still image),
+    // so the reveal never hands off into a blank or half-loaded hero. A window
+    // flag backs the event so a listener that attaches late still sees it.
+    const markHeroReady = () => {
+      const w = window as unknown as Record<string, unknown>;
+      if (w.__wagHeroReady) return;
+      w.__wagHeroReady = true;
+      window.dispatchEvent(new Event("wag:hero-ready"));
+    };
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let W = window.innerWidth;
     let H = window.innerHeight;
@@ -631,6 +643,7 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
       renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
     } catch {
       document.documentElement.classList.add("webgl-unavailable");
+      markHeroReady(); // fallback still image is the hero here
       return;
     }
     renderer.setPixelRatio(renderPixelRatio);
@@ -929,6 +942,7 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
       undefined,
       (e) => {
         document.documentElement.classList.add("webgl-unavailable");
+        markHeroReady(); // fall back to the still; let the reveal hand off
         console.error("[NeonJourney] vehicle asset failed", e);
       },
     );
@@ -1041,6 +1055,7 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
       undefined,
       (e) => {
         document.documentElement.classList.add("webgl-unavailable");
+        markHeroReady(); // fall back to the still; let the reveal hand off
         console.error("[NeonJourney] road asset failed", e);
       },
     );
@@ -1144,6 +1159,7 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
     let raf = 0;
     let running = false;
     let journeyOnScreen = true; // false once the wrapper scrolls fully past
+    let firstFramePainted = false;
     let last = performance.now();
     const frame = () => {
       const now = performance.now();
@@ -1160,6 +1176,10 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
         fittedVehicle.position.y -= par * plateParallaxWorld;
       }
       composer.render();
+      if (!firstFramePainted) {
+        firstFramePainted = true;
+        markHeroReady(); // first live frame is on screen
+      }
       publishPose();
       raf = requestAnimationFrame(frame);
     };
@@ -1203,6 +1223,7 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
       updateCamera(REDUCED_MOTION_PROGRESS, startTime + CAMERA.introMs);
       updateUniforms(1200, REDUCED_MOTION_PROGRESS);
       composer.render();
+      markHeroReady(); // the one static frame is the hero in reduced motion
       publishPose();
     };
 

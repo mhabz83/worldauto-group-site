@@ -47,11 +47,20 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  background: transparent;
+  font-family: var(--font-sans, "Helvetica Neue", Arial, sans-serif);
+  isolation: isolate;
+}
+
+/* Navy backdrop as its own layer (behind the trails) so the hand-off can
+   dissolve it to expose the WebGL hero without disturbing the trails or the
+   travelling wordmark. Same navy as the hero underneath, so the join reads as
+   one continuous scene. */
+.wag-backdrop {
+  position: absolute; inset: 0; z-index: 0;
   background:
     radial-gradient(120% 90% at 50% 62%, #060a1c 0%, var(--navy) 60%),
     var(--navy);
-  font-family: var(--font-sans, "Helvetica Neue", Arial, sans-serif);
-  isolation: isolate;
 }
 
 /* light-trails svg */
@@ -173,6 +182,50 @@
 @keyframes wagTag {
   from { opacity: 0; transform: translateX(-50%) translateY(6px); }
   to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ============ HAND-OFF: resolve INTO the hero (replaces the fade-out) ======
+   The reveal does not just fade: the backdrop dissolves to expose the WebGL
+   hero (same navy underneath, so the join is seamless), the trails sweep DOWN
+   toward the hero's neon road, and the centred wordmark travels + shrinks onto
+   the real nav wordmark (FLIP transform set in JS via --mark-tf) then
+   cross-fades to it. Driven by transitions, not @keyframes, so the reduced
+   motion path (which never adds .handoff) is unaffected. */
+.wag-stage.handoff .wag-backdrop {
+  opacity: 0;
+  transition: opacity 0.8s var(--ease) 0.05s;
+}
+.wag-stage.handoff .wag-trails {
+  opacity: 0;
+  transform: translateY(16%) scale(1.05);
+  transform-origin: 50% 42%;
+  transition: opacity 0.7s ease 0.12s, transform 1.05s var(--ease-race) 0s;
+}
+.wag-stage.handoff .wag-underglow {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.wag-stage.handoff .wag-tag {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-6px);
+  transition: opacity 0.4s ease, transform 0.6s var(--ease);
+}
+.wag-stage.handoff .wag-mark {
+  transform: var(--mark-tf, none);
+  opacity: 0;
+  transition: transform 1.2s var(--ease) 0s, opacity 0.34s ease 0.86s;
+  will-change: transform, opacity;
+}
+
+/* Keep the REAL nav wordmark hidden under the overlay for the whole reveal,
+   then cross-hand it in exactly as the travelling wordmark lands, so there is
+   never a jump and never two logos on screen at once. Both rules are one class
+   under a root class (equal specificity), so the land rule is placed second to
+   win while both classes are briefly present during the cross-fade. */
+:root.wag-reveal-active .journey-wordmark { opacity: 0; }
+:root.wag-handoff-land .journey-wordmark {
+  opacity: 1;
+  transition: opacity 0.34s ease;
 }
 
 /* ============ STATIC: final resting state (reduced-motion) ============ */
