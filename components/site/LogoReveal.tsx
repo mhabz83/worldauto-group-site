@@ -34,6 +34,9 @@ const FADE_MS = 600; // fallback opacity fade (no nav target / no measure)
 const PLAY_HOLD_MS = 4500;
 const REDUCED_HOLD_MS = 800;
 // hand-off choreography
+// Let the just-resumed hero paint a few frames behind the still-opaque backdrop
+// (linking its GPU shader programs unseen) before the visible dissolve begins.
+const PREWARM_MS = 280;
 const HANDOFF_MS = 1200; // wordmark travel + backdrop dissolve + trail sweep
 const CROSSHAND_MS = 340; // trailing window where the real nav logo fades up
 // safety net: force the hand-off even if the hero never signals ready, so the
@@ -104,42 +107,55 @@ export function LogoReveal() {
       handedOff = true;
       removeReadyListener?.();
 
-      const mark = stage?.querySelector<HTMLElement>(".wag-mark") ?? null;
-      const nav = document.querySelector<HTMLElement>(".journey-wordmark");
+      // Tell the hero to leave its parked/warmed state and start its render loop
+      // NOW — while the backdrop is still fully OPAQUE. The hero's first real
+      // frames link their GPU shader programs (a one-time driver stall), so we
+      // let those land here, hidden, and only start the visible dissolve after a
+      // short pre-warm so the hand-off reveals an already-running, hitch-free
+      // hero. The hero has its own safety timeout too, so a missed event never
+      // freezes it.
+      window.dispatchEvent(new Event("wag:reveal-handoff"));
 
-      if (stage && mark && nav) {
-        // FLIP: map the centred reveal wordmark onto the real nav wordmark's
-        // live rect (height match = size match; centre-to-centre = position).
-        // The last-moment cross-fade hides the small font difference between
-        // the two lockups, so a box match is all we need here.
-        const src = mark.getBoundingClientRect();
-        const dst = nav.getBoundingClientRect();
-        if (src.height > 0 && dst.height > 0) {
-          const scale = dst.height / src.height;
-          const dx = dst.left + dst.width / 2 - (src.left + src.width / 2);
-          const dy = dst.top + dst.height / 2 - (src.top + src.height / 2);
-          stage.style.setProperty(
-            "--mark-tf",
-            `translate(${dx.toFixed(2)}px, ${dy.toFixed(2)}px) scale(${scale.toFixed(4)})`,
-          );
-          stage.classList.add("handoff");
-          // Cross-hand: bring the real nav logo up exactly as the travelling
-          // wordmark lands, then remove the overlay.
-          timers.push(
-            window.setTimeout(
-              () => root.classList.add("wag-handoff-land"),
-              HANDOFF_MS - CROSSHAND_MS,
-            ),
-          );
-          timers.push(window.setTimeout(finish, HANDOFF_MS + 60));
-          return;
+      const startVisibleHandoff = () => {
+        const mark = stage?.querySelector<HTMLElement>(".wag-mark") ?? null;
+        const nav = document.querySelector<HTMLElement>(".journey-wordmark");
+
+        if (stage && mark && nav) {
+          // FLIP: map the centred reveal wordmark onto the real nav wordmark's
+          // live rect (height match = size match; centre-to-centre = position).
+          // The last-moment cross-fade hides the small font difference between
+          // the two lockups, so a box match is all we need here.
+          const src = mark.getBoundingClientRect();
+          const dst = nav.getBoundingClientRect();
+          if (src.height > 0 && dst.height > 0) {
+            const scale = dst.height / src.height;
+            const dx = dst.left + dst.width / 2 - (src.left + src.width / 2);
+            const dy = dst.top + dst.height / 2 - (src.top + src.height / 2);
+            stage.style.setProperty(
+              "--mark-tf",
+              `translate(${dx.toFixed(2)}px, ${dy.toFixed(2)}px) scale(${scale.toFixed(4)})`,
+            );
+            stage.classList.add("handoff");
+            // Cross-hand: bring the real nav logo up exactly as the travelling
+            // wordmark lands, then remove the overlay.
+            timers.push(
+              window.setTimeout(
+                () => root.classList.add("wag-handoff-land"),
+                HANDOFF_MS - CROSSHAND_MS,
+              ),
+            );
+            timers.push(window.setTimeout(finish, HANDOFF_MS + 60));
+            return;
+          }
         }
-      }
 
-      // Fallback (no nav target / could not measure): the original plain
-      // opacity fade-out.
-      setHiding(true);
-      timers.push(window.setTimeout(finish, FADE_MS + 40));
+        // Fallback (no nav target / could not measure): the original plain
+        // opacity fade-out.
+        setHiding(true);
+        timers.push(window.setTimeout(finish, FADE_MS + 40));
+      };
+
+      timers.push(window.setTimeout(startVisibleHandoff, PREWARM_MS));
     };
 
     // Once the reveal has settled, wait for the hero's first painted frame,

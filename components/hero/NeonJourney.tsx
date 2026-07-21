@@ -629,6 +629,15 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
     let W = window.innerWidth;
     let H = window.innerHeight;
     let disposed = false;
+    // The logo-reveal overlay paints an OPAQUE navy backdrop over this canvas for
+    // the whole intro, so every hero frame rendered during the reveal is wasted
+    // work that only stutters the reveal's own animation. When the reveal is
+    // covering us we warm the hero once (compile shaders + signal ready), then
+    // PARK it — no render loop — until the reveal begins its hand-off and the
+    // backdrop starts to dissolve, at which point we go live against an already
+    // warmed, shader-compiled hero. Repeat visits / reduced motion never idle.
+    let idleForReveal =
+      !reduce && document.documentElement.classList.contains("wag-reveal-active");
     const targetPixelRatio = () => Math.max(0.75, Math.min(
       window.devicePixelRatio,
       RENDER.maxPixelRatio,
@@ -636,6 +645,17 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
       RENDER.maxHeight / H,
     ));
     let renderPixelRatio = targetPixelRatio();
+
+    // When the logo reveal is covering us on a first visit, defer ALL of the
+    // heavy WebGL construction (renderer + composer + reflector + shader setup,
+    // ~120ms of synchronous work) until just after the reveal's opening frames.
+    // The hero is fully occluded and parked until the hand-off ~5s later, so a
+    // short delay is invisible but keeps that 120ms off the main thread while the
+    // trails are racing in — the reveal opens clean. `boot()` holds the whole
+    // set-up; `teardown` is its cleanup, wired to the effect's unmount.
+    let teardown = () => {};
+    let bootTimer = 0;
+    const boot = () => {
 
     /* ------------------------------ renderer ------------------------------ */
     let renderer: THREE.WebGLRenderer;
@@ -831,6 +851,9 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
     const lineMaterials: THREE.ShaderMaterial[] = [];
     const circleLines: THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>[] = [];
     let renderStatic = () => {}; // re-render hook for reduced motion
+    // Re-paint the single parked frame (reduced motion, or the warmed hero while
+    // it idles behind the reveal) so it reflects assets that finished loading.
+    let paintParkedFrame = () => {};
     let fittedVehicle: THREE.Group | null = null;
     const vehicleBasePos = new THREE.Vector3(); // fitted pose, parallax origin
     let plateParallaxWorld = 0; // PLATE_PARALLAX of viewport height, world units
@@ -937,7 +960,7 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
         scene.add(vehicle);
         disposables.push(plateGeo, plateMat, texture);
         fitVehicleToOpeningFrame();
-        renderStatic();
+        paintParkedFrame();
       },
       undefined,
       (e) => {
@@ -1050,7 +1073,7 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
         });
 
         scene.add(container);
-        renderStatic();
+        paintParkedFrame();
       },
       undefined,
       (e) => {
@@ -1185,7 +1208,7 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
     };
 
     const startLoop = () => {
-      if (running || reduce || document.hidden || !journeyOnScreen) return;
+      if (running || reduce || document.hidden || !journeyOnScreen || idleForReveal) return;
       running = true;
       last = performance.now();
       raf = requestAnimationFrame(frame);
@@ -1227,6 +1250,43 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
       publishPose();
     };
 
+    // Warm the hero without starting the loop: render exactly one frame at the
+    // opening pose (this is what compiles every shader and uploads textures, the
+    // expensive one-time cost) and signal ready. Used while the hero idles behind
+    // the reveal, so the hand-off later reveals an already-compiled hero.
+    const renderOneFrame = () => {
+      if (disposed) return;
+      const now = performance.now();
+      updateCamera(smoothed, now);
+      updateUniforms(now - startTime, smoothed);
+      composer.render();
+      markHeroReady();
+      publishPose();
+    };
+
+    paintParkedFrame = () => {
+      if (disposed) return;
+      if (reduce) renderStatic();
+      else if (idleForReveal) renderOneFrame();
+    };
+
+    // Resume from the parked state and go live. Fired when the reveal starts its
+    // hand-off (backdrop begins dissolving), with a safety timeout so the hero
+    // can never stay frozen if the event is missed.
+    let resumeSafety = 0;
+    const resumeFromReveal = () => {
+      if (disposed || !idleForReveal) return;
+      idleForReveal = false;
+      window.removeEventListener("wag:reveal-handoff", resumeFromReveal);
+      window.clearTimeout(resumeSafety);
+      // Force the first full draw of the populated scene RIGHT NOW, synchronously,
+      // while the reveal backdrop is still opaque. This is where the GPU links its
+      // shader programs (the one heavy frame); doing it here keeps that stall
+      // hidden, so the loop that follows hands off already running clean.
+      renderOneFrame();
+      startLoop();
+    };
+
     /* Past the journey wrapper the tail's opaque sections own the screen:
        stop rendering (no wasted GPU) and hide the fixed canvas so it can
        never peek through light sections. Resumes when scrolled back. */
@@ -1257,6 +1317,13 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
 
     if (reduce) {
       renderStatic();
+    } else if (idleForReveal) {
+      // Warm one frame (compile shaders, signal ready), then hold — no loop —
+      // so the reveal's own animation gets the main thread to itself. Go live
+      // the instant the reveal hands off (or a safety timeout, whichever first).
+      renderOneFrame();
+      window.addEventListener("wag:reveal-handoff", resumeFromReveal);
+      resumeSafety = window.setTimeout(resumeFromReveal, 6500);
     } else {
       startLoop();
     }
@@ -1264,9 +1331,11 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
     document.addEventListener("visibilitychange", onVisibilityChange);
 
     /* ------------------------------- cleanup ------------------------------ */
-    return () => {
+    teardown = () => {
       disposed = true;
       stopLoop();
+      window.clearTimeout(resumeSafety);
+      window.removeEventListener("wag:reveal-handoff", resumeFromReveal);
       window.removeEventListener("resize", onResize);
       document.removeEventListener("visibilitychange", onVisibilityChange);
       journeyTrigger.kill();
@@ -1282,6 +1351,19 @@ export function NeonJourney({ boundsRef }: NeonJourneyProps = {}) {
       renderer.dispose();
       document.documentElement.classList.remove("webgl-unavailable");
       if (renderer.domElement.parentNode === mount) mount.removeChild(renderer.domElement);
+    };
+    }; // end boot
+
+    if (idleForReveal) {
+      // First-visit reveal: let the trails open clean, then build the hero.
+      bootTimer = window.setTimeout(boot, 600);
+    } else {
+      boot();
+    }
+
+    return () => {
+      window.clearTimeout(bootTimer);
+      teardown();
     };
   }, [boundsRef]);
 

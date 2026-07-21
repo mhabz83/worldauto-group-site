@@ -200,6 +200,15 @@
   transform: translateY(16%) scale(1.05);
   transform-origin: 50% 42%;
   transition: opacity 0.7s ease 0.12s, transform 1.05s var(--ease-race) 0s;
+  /* Drop the per-frame SVG gaussian-blur filter the instant the trails start
+     fading: during the hand-off they are already dissolving, so the glow loss
+     is imperceptible, but it frees the compositor from re-rastering a filtered
+     layer every frame while the live hero is rendering underneath. */
+  filter: none;
+  will-change: opacity, transform;
+}
+.wag-stage.handoff .wag-backdrop {
+  will-change: opacity;
 }
 .wag-stage.handoff .wag-underglow {
   opacity: 0;
