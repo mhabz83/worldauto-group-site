@@ -825,21 +825,32 @@ export function LandingJourney() {
            orange; give its Explore button a deeper fill and a hue outline so
            the group CTA stays the one unmistakable pure-signal orange. */
         .journey-links a.journey-explore-btn[data-co="axxion"] { background: color-mix(in srgb, #ff4200 82%, #02040f); border: 1px solid color-mix(in srgb, #ff4200 85%, white); }
-        /* AutoData clients marquee — monochrome white knockouts directly on
-           the dark world (no white plate), under a thin "TRUSTED BY" label,
-           evenly tracked. Fades in with the panel and softens at both ends. */
-        .journey-clients { margin-top: 1.6rem; max-width: 100%; }
-        .journey-clients-label { margin: 0 0 .75rem; color: rgba(255,255,255,.5); font-size: .64rem; font-weight: 600; letter-spacing: .26em; text-transform: uppercase; }
-        .journey-clients-marquee { position: relative; overflow: hidden; -webkit-mask-image: linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); mask-image: linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); }
-        .journey-clients-track { display: flex; width: max-content; align-items: center; gap: 38px; padding: 4px 0; animation: journeyClients 40s linear infinite; will-change: transform; }
+        /* AutoData clients marquee — two treatments under a thin "TRUSTED BY"
+           label, evenly tracked, fading in with the panel and softening at both
+           ends. Simple wordmarks are knocked out to a quiet white and float on
+           the dark world; colour / plate / fine-emblem marks sit on a subtle
+           dark glass chip in their own lightly desaturated colours so they stay
+           recognisable. Optical size is normalised by height, with square
+           emblems (is-sq) given a little more height to match visual weight. */
+        .journey-clients { margin-top: 1.7rem; max-width: 100%; }
+        .journey-clients-label { margin: 0 0 .85rem; color: rgba(255,255,255,.5); font-size: .64rem; font-weight: 600; letter-spacing: .26em; text-transform: uppercase; }
+        .journey-clients-marquee { position: relative; overflow: hidden; -webkit-mask-image: linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent); mask-image: linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent); }
+        .journey-clients-track { display: flex; width: max-content; align-items: center; gap: 30px; padding: 6px 0; animation: journeyClients 46s linear infinite; will-change: transform; }
         .journey-clients-marquee:hover .journey-clients-track { animation-play-state: paused; }
         @keyframes journeyClients { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-        .journey-clients-chip { flex: 0 0 auto; height: 30px; display: inline-flex; align-items: center; justify-content: center; }
-        .journey-clients-chip img { height: 21px; width: auto; max-width: 118px; object-fit: contain; display: block; filter: brightness(0) invert(1); opacity: .6; transition: opacity .2s ease; }
-        .journey-clients-marquee:hover .journey-clients-chip img { opacity: .82; }
+        .journey-clients-chip { flex: 0 0 auto; height: 54px; display: inline-flex; align-items: center; justify-content: center; }
+        .journey-clients-chip img { width: auto; object-fit: contain; display: block; }
+        /* mono — simple wordmarks knocked out to quiet white */
+        .journey-clients-chip.is-mono img { height: 25px; max-width: 152px; filter: brightness(0) invert(1); opacity: .72; transition: opacity .25s ease; }
+        .journey-clients-marquee:hover .journey-clients-chip.is-mono img { opacity: .95; }
+        /* chip — colour / plate / emblem marks on a subtle dark glass chip */
+        .journey-clients-chip.is-chip { padding: 8px 13px; border-radius: 11px; background: rgba(255,255,255,.055); border: 1px solid rgba(255,255,255,.085); box-shadow: inset 0 1px 0 rgba(255,255,255,.05); transition: background .25s ease, border-color .25s ease; }
+        .journey-clients-marquee:hover .journey-clients-chip.is-chip { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.13); }
+        .journey-clients-chip.is-chip img { height: 26px; max-width: 138px; filter: saturate(.82); opacity: .97; }
+        .journey-clients-chip.is-chip.is-sq img { height: 38px; max-width: 74px; }
         @media (prefers-reduced-motion: reduce) {
           .journey-clients-marquee { -webkit-mask-image: none; mask-image: none; }
-          .journey-clients-track { animation: none; flex-wrap: wrap; width: auto; justify-content: center; gap: 22px 30px; }
+          .journey-clients-track { animation: none; flex-wrap: wrap; width: auto; justify-content: center; gap: 18px 24px; }
           .journey-clients-dup { display: none; }
         }
         @media (max-width: 900px) {
