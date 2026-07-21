@@ -476,7 +476,7 @@ function CompanyStop({ company }: { company: (typeof companies)[number] }) {
           name={company.name}
           hue={accent}
         >
-          Explore {company.name} →
+          Explore {company.name} <span className="journey-btn-arrow" aria-hidden="true">→</span>
         </JourneyExploreLink>
         <a href={company.url} target="_blank" rel="noreferrer">Visit site</a>
       </div>
@@ -754,10 +754,15 @@ export function LandingJourney() {
         .journey-stop--end { justify-content: flex-end; }
         .journey-panel { width: min(43rem,48vw); padding: clamp(1.4rem,3vw,2.8rem); background: linear-gradient(105deg,rgba(0,5,31,.96) 0%,rgba(0,8,53,.82) 52%,rgba(0,6,42,.42) 78%,transparent 100%); -webkit-mask-image: linear-gradient(180deg,transparent 0%,#000 9%,#000 91%,transparent 100%); mask-image: linear-gradient(180deg,transparent 0%,#000 9%,#000 91%,transparent 100%); will-change: transform,opacity; }
         .journey-stop--end .journey-panel { background: linear-gradient(255deg,rgba(0,5,31,.96) 0%,rgba(0,8,53,.82) 52%,rgba(0,6,42,.42) 78%,transparent 100%); }
-        /* LOCKED company card: one position (lower-left), one width, across
-           all five stops. The panel stacks above its signature scene. */
-        .journey-stop--kind-company { align-items: flex-end; padding-bottom: clamp(6.5rem,15svh,10.5rem); }
-        .journey-stop--kind-company .journey-panel { position: relative; z-index: 1; width: min(36rem,44vw); }
+        /* Company card: ONE shared layout across all five stops — vertically
+           centred in the viewport with a fixed max-height and internal
+           top/bottom padding, so name → subtitle → description → tags → CTA
+           always fits between the sub-nav and the fold. (Was bottom-anchored,
+           which clipped the name+subtitle of the taller stops — Axxion,
+           AutoData, Vicimus — above the fold.) The panel stacks above its
+           signature scene. */
+        .journey-stop--kind-company { align-items: center; padding-block: clamp(4.5rem,9svh,6.5rem); }
+        .journey-stop--kind-company .journey-panel { position: relative; z-index: 1; width: min(36rem,44vw); max-height: calc(100svh - 11rem); padding-block: clamp(1.6rem,2.6vw,2.4rem); }
         /* the locked company card steps right of the chapter rail's column
            (placed after the base padding rules so it wins the cascade) */
         @media (min-width: 1200px) {
@@ -810,24 +815,31 @@ export function LandingJourney() {
            and the "Partner With Us" header CTA. Solid in the stop hue with
            readable ink (--stop-ink). Scoped past ".journey-links a" so it
            wins the cascade. The "Visit site" link stays a plain text link. */
-        .journey-links a.journey-explore-btn { min-height: 48px; padding: .72rem 1.15rem; background: var(--stop-accent); color: var(--stop-ink,#fff); border-radius: 4px; font-size: .6875rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; text-decoration: none; white-space: nowrap; transition: filter var(--dur-fast) ease, box-shadow var(--dur-fast) ease; }
-        .journey-links a.journey-explore-btn:hover, .journey-links a.journey-explore-btn:focus-visible { filter: brightness(1.08); box-shadow: 0 0 22px color-mix(in srgb, var(--stop-accent) 45%, transparent); }
+        .journey-links a.journey-explore-btn { min-height: 48px; padding: .72rem 1.15rem; background: var(--stop-accent); color: var(--stop-ink,#fff); border-radius: 4px; font-size: .6875rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; text-decoration: none; white-space: nowrap; transition: filter 180ms ease-out, box-shadow 180ms ease-out, background-color 180ms ease-out; }
+        .journey-links a.journey-explore-btn .journey-btn-arrow { display: inline-block; transition: transform 180ms ease-out; }
+        /* Journey button hover: themed glow bloom + a ~4px arrow nudge + a
+           subtle lighter fill, all ~180ms ease-out. */
+        .journey-links a.journey-explore-btn:hover, .journey-links a.journey-explore-btn:focus-visible { filter: brightness(1.1); background: color-mix(in srgb, var(--stop-accent) 88%, #fff); box-shadow: 0 0 30px color-mix(in srgb, var(--stop-accent) 58%, transparent), 0 6px 18px -8px color-mix(in srgb, var(--stop-accent) 70%, transparent); }
+        .journey-links a.journey-explore-btn:hover .journey-btn-arrow, .journey-links a.journey-explore-btn:focus-visible .journey-btn-arrow { transform: translateX(4px); }
         /* Axxion's pure orange (#FF4200) sits too close to the group's action
            orange; give its Explore button a deeper fill and a hue outline so
            the group CTA stays the one unmistakable pure-signal orange. */
         .journey-links a.journey-explore-btn[data-co="axxion"] { background: color-mix(in srgb, #ff4200 82%, #02040f); border: 1px solid color-mix(in srgb, #ff4200 85%, white); }
-        /* AutoData clients marquee — full-colour transparent logos on one soft
-           light tray (no per-logo cards). The tray fades at both ends. */
-        .journey-clients { margin-top: 1.5rem; max-width: 100%; }
-        .journey-clients-marquee { position: relative; overflow: hidden; background: rgba(255,255,255,.95); border-radius: 10px; -webkit-mask-image: linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent); mask-image: linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent); }
-        .journey-clients-track { display: flex; width: max-content; gap: 30px; padding: 12px 26px; animation: journeyClients 40s linear infinite; will-change: transform; }
+        /* AutoData clients marquee — monochrome white knockouts directly on
+           the dark world (no white plate), under a thin "TRUSTED BY" label,
+           evenly tracked. Fades in with the panel and softens at both ends. */
+        .journey-clients { margin-top: 1.6rem; max-width: 100%; }
+        .journey-clients-label { margin: 0 0 .75rem; color: rgba(255,255,255,.5); font-size: .64rem; font-weight: 600; letter-spacing: .26em; text-transform: uppercase; }
+        .journey-clients-marquee { position: relative; overflow: hidden; -webkit-mask-image: linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); mask-image: linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); }
+        .journey-clients-track { display: flex; width: max-content; align-items: center; gap: 38px; padding: 4px 0; animation: journeyClients 40s linear infinite; will-change: transform; }
         .journey-clients-marquee:hover .journey-clients-track { animation-play-state: paused; }
         @keyframes journeyClients { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-        .journey-clients-chip { flex: 0 0 auto; height: 40px; display: inline-flex; align-items: center; justify-content: center; }
-        .journey-clients-chip img { height: 30px; width: auto; max-width: 140px; object-fit: contain; display: block; }
+        .journey-clients-chip { flex: 0 0 auto; height: 30px; display: inline-flex; align-items: center; justify-content: center; }
+        .journey-clients-chip img { height: 21px; width: auto; max-width: 118px; object-fit: contain; display: block; filter: brightness(0) invert(1); opacity: .6; transition: opacity .2s ease; }
+        .journey-clients-marquee:hover .journey-clients-chip img { opacity: .82; }
         @media (prefers-reduced-motion: reduce) {
           .journey-clients-marquee { -webkit-mask-image: none; mask-image: none; }
-          .journey-clients-track { animation: none; flex-wrap: wrap; width: auto; justify-content: center; gap: 22px; }
+          .journey-clients-track { animation: none; flex-wrap: wrap; width: auto; justify-content: center; gap: 22px 30px; }
           .journey-clients-dup { display: none; }
         }
         @media (max-width: 900px) {
@@ -848,7 +860,7 @@ export function LandingJourney() {
           .journey-cotabs button { font-size: 9px; letter-spacing: .13em; white-space: nowrap; }
           .journey-static-image { object-position: 65% center; }.journey-stop,.journey-stop--end { align-items: flex-end; justify-content: stretch; padding: 5rem 0 0; }
           .journey-stop:first-child { min-height: 100svh !important; }
-          .journey-panel,.journey-stop--end .journey-panel,.journey-stop--kind-company .journey-panel { width: 100%; padding: 5.5rem var(--gutter) max(1.5rem,env(safe-area-inset-bottom)); background: linear-gradient(0deg,rgba(0,5,31,.98),rgba(0,8,53,.84) 62%,transparent); -webkit-mask-image: none; mask-image: none; }
+          .journey-panel,.journey-stop--end .journey-panel,.journey-stop--kind-company .journey-panel { width: 100%; max-height: none; padding: 5.5rem var(--gutter) max(1.5rem,env(safe-area-inset-bottom)); background: linear-gradient(0deg,rgba(0,5,31,.98),rgba(0,8,53,.84) 62%,transparent); -webkit-mask-image: none; mask-image: none; }
           .journey-panel h2 { font-size: clamp(2.45rem,12vw,4.6rem); }
           /* first stop is 100svh on mobile: park the cue at the true bottom
              and clear room for it under the statement. The anchor statement

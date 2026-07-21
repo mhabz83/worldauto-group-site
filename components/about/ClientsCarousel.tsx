@@ -1,7 +1,8 @@
 /* AutoData clients & partners — a self-scrolling logo marquee shown inside the
-   AutoData stop of the homepage journey. Real logos in full colour on uniform
-   white chips (colours untouched). Styling lives in LandingJourney's styled-jsx
-   (journey-clients-*). Pure-CSS seamless loop; collapses under reduced motion. */
+   AutoData stop of the homepage journey. Logos are monochrome white knockouts
+   directly on the dark world (no white plate), under a thin "Trusted by"
+   label. Styling lives in LandingJourney's styled-jsx (journey-clients-*).
+   Pure-CSS seamless loop; collapses under reduced motion. */
 
 export const autodataClients = [
   { name: "AXA", logo: "/clients/axa.png" },
@@ -24,6 +25,7 @@ export const autodataClients = [
 export function ClientsCarousel() {
   return (
     <div className="journey-clients" aria-label="AutoData clients and partners">
+      <p className="journey-clients-label">Trusted by</p>
       <div className="journey-clients-marquee">
         <div className="journey-clients-track">
           {autodataClients.map((c) => (

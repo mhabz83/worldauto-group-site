@@ -42,6 +42,7 @@ export function ValuesTimeline() {
   const ringsG1 = useRef<SVGGElement>(null);
   const ringsG2 = useRef<SVGGElement>(null);
   const braidRef = useRef<SVGSVGElement>(null);
+  const valuesTextRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const yearRefs = useRef<(HTMLDivElement | null)[]>([]);
   const textRefs = useRef<(HTMLDivElement | null)[]>([]);
